@@ -101,3 +101,38 @@ per the Bun-first rule above.
 `bun run audit` fails the build on any comment in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`,
 `.cjs`, or any measured file over 300 lines. It warns at 250. Markdown, JSON, and TOML
 may contain comments — they are documentation and configuration.
+
+## Data model decisions
+
+- IDs are `Bun.randomUUIDv7()` text primary keys. Time-sortable, so DAG walks and
+  recency lists get index locality without a separate sort column.
+- Timestamps are `integer({ mode: "timestamp_ms" })`. Drizzle returns `Date`.
+- Every `*Json` column is `text({ mode: "json" }).$type<T>()`. Never `JSON.parse` a
+  column at a call site.
+- `worlds` and `characters` carry `userId`. `worlds` also carries
+  `visibility: "private" | "public"` — the Community Browser filters on it.
+- Stats are per-world. `worlds.statDefinitionsJson` declares them and
+  `worlds.pointBudget` sets the point-buy budget (default 20).
+  `characters.statsJson` is `Record<statId, rank>`.
+- Point-buy: rank 1 is free, cumulative cost per stat is `[0, 1, 2, 4, 6]`, max rank 5.
+- Migrations are `drizzle-kit generate` SQL committed to `packages/db/migrations`,
+  applied at director startup. A user's existing database upgrades deterministically.
+
+## Protocol decisions
+
+- Every message carries `v: 1`. Every client message carries `msgId`; the director
+  echoes it on the matching response and on `ERROR`.
+- `PING` / `PONG` heartbeat detects dead sockets.
+- `RESUME_TURN { turnId, fromSentenceIndex }` replays a dropped stream. The director
+  buffers an in-flight turn until commit.
+
+## API surface
+
+Everything the director serves is versioned in the path.
+
+- `/api/v1/auth/*` — Better Auth, mounted with `basePath: "/api/v1/auth"`
+- `/api/v1/*` — REST routes
+- `/api/v1/ws` — WebSocket upgrade
+- `/health` — unversioned, for liveness only
+
+The path version and the `v` field in the WS envelope move together. Bump both or neither.
