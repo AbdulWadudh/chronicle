@@ -8,7 +8,7 @@ import {
   SourceCodeIcon,
   VolumeHighIcon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
+import type { GroupMeta } from "~/components/common/SettingsGroup";
 
 export interface FieldMeta {
   label: string;
@@ -17,12 +17,6 @@ export interface FieldMeta {
   multiline?: boolean;
   mono?: boolean;
   options?: readonly string[];
-}
-
-export interface GroupMeta {
-  title: string;
-  blurb: string;
-  icon: IconSvgElement;
 }
 
 type FieldMetaFor<G extends RuntimeSettingsGroup> = Record<

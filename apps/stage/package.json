@@ -22,6 +22,7 @@
     "gsap": "latest",
     "motion": "latest",
     "react": "19.2.8",
+    "react-colorful": "latest",
     "react-dom": "19.2.8",
     "react-router": "latest",
     "sonner": "latest",

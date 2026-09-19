@@ -170,3 +170,27 @@ export const NUMERIC_ORDER: readonly NumericTokenKey[] = [
   "blurIntensity",
   "glassOpacity",
 ];
+
+export type FontTokenKey = Extract<keyof ThemeTokens, "fontUI" | "fontNarrative" | "fontMono">;
+
+export interface FontTokenMeta {
+  label: string;
+  hint: string;
+}
+
+export const FONT_TOKENS: Record<FontTokenKey, FontTokenMeta> = {
+  fontUI: {
+    label: "Interface font",
+    hint: "Labels, buttons and everything that is not story prose.",
+  },
+  fontNarrative: {
+    label: "Narrative font",
+    hint: "The story itself. A serif often reads more comfortably over long passages.",
+  },
+  fontMono: {
+    label: "Monospace font",
+    hint: "Checkpoint names, sampler ids and other literal values.",
+  },
+};
+
+export const FONT_ORDER: readonly FontTokenKey[] = ["fontUI", "fontNarrative", "fontMono"];

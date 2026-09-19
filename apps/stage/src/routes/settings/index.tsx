@@ -1,124 +1,85 @@
-import { RUNTIME_SETTING_GROUPS, SETTING_BOUNDS, type SettingBound } from "@chronicle/shared";
-import { CheckmarkCircle02Icon, RefreshIcon } from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, SlidersHorizontalIcon, TvSmartIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AnimatePresence, motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { BackButton } from "~/components/common/BackButton";
 import { PageHeader } from "~/components/common/PageHeader";
 import { Screen } from "~/components/common/Screen";
-import { Spinner } from "~/components/common/Spinner";
-import { Button } from "~/components/ui/button";
+import { SettingsGroup } from "~/components/common/SettingsGroup";
+import { Label } from "~/components/ui/label";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { Appearance } from "./appearance";
-import { DiffusionPresets } from "./DiffusionPresets";
-import { fieldMeta, GROUP_META } from "./fields";
-import { SettingRow } from "./SettingRow";
-import { SettingsGroup } from "./SettingsGroup";
-import { useSettings } from "./useSettings";
+import { Switch } from "~/components/ui/switch";
+import { useThemeStore } from "~/theme/store";
+import { ThemeColors, ThemeShape, ThemeTypography } from "./appearance";
 
-type BoundTable = Record<string, Record<string, SettingBound>>;
-
-function boundFor(group: string, field: string): SettingBound | undefined {
-  return (SETTING_BOUNDS as BoundTable)[group]?.[field];
-}
-
-function SaveStatus({ status }: { status: ReturnType<typeof useSettings>["status"] }) {
-  return (
-    <AnimatePresence mode="wait">
-      {status === "idle" ? null : (
-        <motion.span
-          key={status}
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 4 }}
-          transition={{ duration: 0.18 }}
-          aria-live="polite"
-          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] ${
-            status === "failed"
-              ? "border-danger/30 bg-danger/10 text-danger"
-              : "border-success/25 bg-success/10 text-success"
-          }`}
-        >
-          {status === "saving" ? (
-            <Spinner size={11} label="Saving" />
-          ) : status === "saved" ? (
-            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} strokeWidth={2} />
-          ) : null}
-          {status === "saving" ? "Saving" : status === "saved" ? "Saved" : "Not saved"}
-        </motion.span>
-      )}
-    </AnimatePresence>
-  );
-}
+const PANEL = "flex flex-col gap-2.5 rounded-2xl border border-hairline bg-raised px-4 py-3.5";
+const SPLIT = "sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8";
 
 export function Settings() {
   const navigate = useNavigate();
-  const { settings, status, error, update, reset } = useSettings();
-  const back = <BackButton onPress={() => void navigate(-1)} />;
-
-  if (settings === null) {
-    return (
-      <Screen width="wide">
-        <PageHeader title="Runtime settings" leading={back} />
-        <div className="flex flex-1 items-center justify-center text-text-muted">
-          {error === null ? (
-            <Spinner size={22} label="Loading settings" />
-          ) : (
-            <p role="alert" className="text-danger">
-              {error}
-            </p>
-          )}
-        </div>
-      </Screen>
-    );
-  }
+  const cinemaMode = useThemeStore((state) => state.cinemaMode);
+  const toggleCinemaMode = useThemeStore((state) => state.toggleCinemaMode);
 
   return (
     <Screen width="wide">
-      <PageHeader
-        title="Runtime settings"
-        leading={back}
-        trailing={
-          <div className="flex items-center gap-2">
-            <SaveStatus status={status} />
-            <Button variant="outline" size="sm" onClick={reset} className="gap-1.5">
-              <HugeiconsIcon icon={RefreshIcon} size={13} strokeWidth={1.5} />
-              Defaults
-            </Button>
-          </div>
-        }
-      />
-
-      {error !== null ? (
-        <p role="alert" className="mb-3 shrink-0 text-[12px] text-danger">
-          {error}
-        </p>
-      ) : null}
+      <PageHeader title="Settings" leading={<BackButton onPress={() => void navigate(-1)} />} />
 
       <ScrollArea className="-mr-3 min-h-0 flex-1 pr-3">
         <div className="flex flex-col gap-4 pb-8">
-          {RUNTIME_SETTING_GROUPS.map((group, index) => (
-            <SettingsGroup key={group} meta={GROUP_META[group]} index={index}>
-              {group === "image" ? (
-                <DiffusionPresets
-                  image={settings.image}
-                  onApply={(values) => update({ image: values })}
+          <SettingsGroup
+            index={0}
+            meta={{
+              title: "Playback",
+              blurb: "How a turn reveals itself while you read it.",
+              icon: TvSmartIcon,
+            }}
+          >
+            <div className={`${PANEL} ${SPLIT}`}>
+              <div className="min-w-0">
+                <Label htmlFor="cinema-mode">Cinema Mode</Label>
+                <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">
+                  Reveal the narration one sentence at a time, paced by its audio instead of a
+                  timer. Tap the passage to show all of it at once.
+                </p>
+              </div>
+              <div className="flex sm:justify-end">
+                <Switch
+                  id="cinema-mode"
+                  checked={cinemaMode}
+                  onCheckedChange={toggleCinemaMode}
+                  aria-label="Cinema Mode"
                 />
-              ) : null}
+              </div>
+            </div>
+          </SettingsGroup>
 
-              {Object.entries(settings[group]).map(([field, value]) => (
-                <SettingRow
-                  key={field}
-                  field={field}
-                  meta={fieldMeta(group, field)}
-                  value={value as number | boolean | string}
-                  bound={boundFor(group, field)}
-                  onChange={(next) => update({ [group]: { [field]: next } })}
-                />
-              ))}
-            </SettingsGroup>
-          ))}
-          <Appearance index={RUNTIME_SETTING_GROUPS.length} />
+          <ThemeColors index={1} />
+          <ThemeTypography index={2} />
+          <ThemeShape index={3} />
+
+          <button
+            type="button"
+            onClick={() => void navigate("/admin")}
+            className={`${PANEL} flex-row items-center gap-3 text-left transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover motion-reduce:transition-none`}
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-hairline bg-sunken text-text-muted">
+              <HugeiconsIcon icon={SlidersHorizontalIcon} size={17} strokeWidth={1.5} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] font-medium text-text-primary">
+                Runtime settings
+              </span>
+              <span className="mt-0.5 block text-[12px] leading-relaxed text-text-muted">
+                Model, prompt, illustration and dice tuning. These live on the server and change the
+                behaviour for every session, not just this device.
+              </span>
+            </span>
+            <HugeiconsIcon
+              icon={ArrowRight01Icon}
+              size={16}
+              strokeWidth={1.5}
+              className="shrink-0 text-text-muted"
+            />
+          </button>
         </div>
       </ScrollArea>
     </Screen>

@@ -8,20 +8,27 @@ import { useMemo } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export const THEME_STORAGE_KEY = "@chronicle_theme_v2";
+export const THEME_STORAGE_KEY = "@chronicle_theme_v3";
 
 export type ThemePreference = "system" | "dark" | "light";
+
+export type ThemeScheme = "dark" | "light";
+
+export type SchemeOverrides = Record<ThemeScheme, Partial<ThemeTokens>>;
+
+const EMPTY_OVERRIDES: SchemeOverrides = { dark: {}, light: {} };
 
 interface ThemeState {
   preference: ThemePreference;
   systemIsDark: boolean;
-  globalOverrides: Partial<ThemeTokens>;
+  globalOverrides: SchemeOverrides;
   storyOverrides: Record<string, Partial<ThemeTokens>>;
   activeStoryId: string | null;
   cinemaMode: boolean;
   setPreference: (preference: ThemePreference) => void;
   setSystemIsDark: (isDark: boolean) => void;
   setGlobalOverride: (patch: Partial<ThemeTokens>) => void;
+  clearGlobalOverride: (key: keyof ThemeTokens) => void;
   setStoryOverride: (storyId: string, patch: Partial<ThemeTokens>) => void;
   clearStoryOverride: (storyId: string) => void;
   setActiveStory: (storyId: string | null) => void;
@@ -34,14 +41,29 @@ export const useThemeStore = create<ThemeState>()(
     (set) => ({
       preference: "system",
       systemIsDark: true,
-      globalOverrides: {},
+      globalOverrides: { dark: {}, light: {} },
       storyOverrides: {},
       activeStoryId: null,
       cinemaMode: true,
       setPreference: (preference) => set({ preference }),
       setSystemIsDark: (systemIsDark) => set({ systemIsDark }),
       setGlobalOverride: (patch) =>
-        set((state) => ({ globalOverrides: { ...state.globalOverrides, ...patch } })),
+        set((state) => {
+          const scheme = activeScheme(state.preference, state.systemIsDark);
+          return {
+            globalOverrides: {
+              ...state.globalOverrides,
+              [scheme]: { ...state.globalOverrides[scheme], ...patch },
+            },
+          };
+        }),
+      clearGlobalOverride: (key) =>
+        set((state) => {
+          const scheme = activeScheme(state.preference, state.systemIsDark);
+          const next = { ...state.globalOverrides[scheme] };
+          delete next[key];
+          return { globalOverrides: { ...state.globalOverrides, [scheme]: next } };
+        }),
       setStoryOverride: (storyId, patch) =>
         set((state) => ({
           storyOverrides: {
@@ -57,7 +79,7 @@ export const useThemeStore = create<ThemeState>()(
         }),
       setActiveStory: (activeStoryId) => set({ activeStoryId }),
       toggleCinemaMode: () => set((state) => ({ cinemaMode: !state.cinemaMode })),
-      resetTheme: () => set({ globalOverrides: {}, storyOverrides: {} }),
+      resetTheme: () => set({ globalOverrides: { dark: {}, light: {} }, storyOverrides: {} }),
     }),
     {
       name: THEME_STORAGE_KEY,
@@ -70,6 +92,23 @@ export const useThemeStore = create<ThemeState>()(
     },
   ),
 );
+
+function activeScheme(preference: ThemePreference, systemIsDark: boolean): ThemeScheme {
+  if (preference === "system") return systemIsDark ? "dark" : "light";
+  return preference;
+}
+
+export function useScheme(): ThemeScheme {
+  const preference = useThemeStore((state) => state.preference);
+  const systemIsDark = useThemeStore((state) => state.systemIsDark);
+  return activeScheme(preference, systemIsDark);
+}
+
+export function useSchemeOverrides(): Partial<ThemeTokens> {
+  const scheme = useScheme();
+  const overrides = useThemeStore((state) => state.globalOverrides);
+  return overrides[scheme] ?? {};
+}
 
 export function useIsDark(): boolean {
   const preference = useThemeStore((state) => state.preference);
@@ -85,9 +124,10 @@ export function useResolvedTheme(): ThemeTokens {
   const activeStoryId = useThemeStore((state) => state.activeStoryId);
 
   return useMemo(() => {
-    const isDark = preference === "system" ? systemIsDark : preference === "dark";
-    const base = isDark ? DEFAULT_THEME_TOKENS : DEFAULT_LIGHT_THEME_TOKENS;
+    const scheme = activeScheme(preference, systemIsDark);
+    const base = scheme === "dark" ? DEFAULT_THEME_TOKENS : DEFAULT_LIGHT_THEME_TOKENS;
+    const global = globalOverrides[scheme] ?? EMPTY_OVERRIDES[scheme];
     const story = activeStoryId === null ? {} : (storyOverrides[activeStoryId] ?? {});
-    return mergeThemeTokens(mergeThemeTokens(base, globalOverrides), story);
+    return mergeThemeTokens(mergeThemeTokens(base, global), story);
   }, [preference, systemIsDark, globalOverrides, storyOverrides, activeStoryId]);
 }

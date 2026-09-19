@@ -1,8 +1,14 @@
+import type { IconSvgElement } from "@hugeicons/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useReducedMotion } from "~/hooks/useReducedMotion";
-import type { GroupMeta } from "./fields";
+
+export interface GroupMeta {
+  title: string;
+  blurb: string;
+  icon: IconSvgElement;
+}
 
 export interface SettingsGroupProps {
   meta: GroupMeta;
@@ -18,7 +24,7 @@ export function SettingsGroup({ meta, index, children }: SettingsGroupProps) {
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.32, delay: index * 0.05, ease: "easeOut" }}
-      className="overflow-hidden rounded-[20px] border border-hairline bg-card/50"
+      className="overflow-hidden rounded-[20px] border border-hairline bg-card"
     >
       <header className="flex items-start gap-3 border-b border-hairline bg-raised px-4 py-3.5">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-primary/15 bg-primary/[0.06] text-text-accent/80">

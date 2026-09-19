@@ -1,47 +1,53 @@
-import { PaintBoardIcon, RefreshIcon } from "@hugeicons/core-free-icons";
+import { PaintBoardIcon, RefreshIcon, RulerIcon, TextFontIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMemo } from "react";
 import { toast } from "sonner";
+import { SettingsGroup } from "~/components/common/SettingsGroup";
 import { Button } from "~/components/ui/button";
 import { ColorField } from "~/components/ui/color-field";
+import { FontField } from "~/components/ui/font-field";
 import { Label } from "~/components/ui/label";
 import { Select } from "~/components/ui/select";
-import { Slider } from "~/components/ui/slider";
-import { useResolvedTheme, useThemeStore } from "~/theme/store";
-import { SettingsGroup } from "../SettingsGroup";
-import { COLOR_LABELS, COLOR_SECTIONS, NUMERIC_ORDER, NUMERIC_TOKENS } from "./tokens";
+import { useResolvedTheme, useSchemeOverrides, useThemeStore } from "~/theme/store";
+import { MeasureRow } from "./MeasureRow";
+import {
+  COLOR_LABELS,
+  COLOR_SECTIONS,
+  FONT_ORDER,
+  FONT_TOKENS,
+  NUMERIC_ORDER,
+  NUMERIC_TOKENS,
+} from "./tokens";
 
 const PREFERENCES = [{ values: ["system", "dark", "light"] }];
 
-function decimalsOf(step: number): number {
-  return (String(step).split(".")[1] ?? "").length;
-}
+const PANEL = "flex flex-col gap-2.5 rounded-2xl border border-hairline bg-raised px-4 py-3.5";
+const SPLIT = "sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8";
 
-export function Appearance({ index }: { index: number }) {
+export function ThemeColors({ index }: { index: number }) {
   const tokens = useResolvedTheme();
   const preference = useThemeStore((state) => state.preference);
   const setPreference = useThemeStore((state) => state.setPreference);
-  const overrides = useThemeStore((state) => state.globalOverrides);
   const setGlobalOverride = useThemeStore((state) => state.setGlobalOverride);
-  const resetTheme = useThemeStore((state) => state.resetTheme);
-
-  const changed = useMemo(() => Object.keys(overrides).length, [overrides]);
+  const clearGlobalOverride = useThemeStore((state) => state.clearGlobalOverride);
+  const overrides = useSchemeOverrides();
 
   return (
     <SettingsGroup
       index={index}
       meta={{
-        title: "Appearance",
-        blurb: `Every colour and measurement in the interface, applied as you change it. Stored on this device${changed > 0 ? ` · ${changed} changed` : ""}.`,
+        title: "Theme colours",
+        blurb:
+          "Every colour the interface draws with, applied the moment you change it. Each scheme keeps its own set.",
         icon: PaintBoardIcon,
       }}
     >
-      <div className="flex flex-col gap-2.5 rounded-2xl border border-hairline bg-raised px-4 py-3.5 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8">
+      <div className={`${PANEL} ${SPLIT}`}>
         <div className="min-w-0">
           <Label htmlFor="theme-preference">Colour scheme</Label>
           <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">
-            Follow the system, or pin the interface to one scheme. Your edits below apply to the
-            scheme that is showing.
+            Follow the system, or pin the interface to one. Dark and light remember their own
+            colours, so editing one never disturbs the other.
           </p>
         </div>
         <Select
@@ -56,10 +62,7 @@ export function Appearance({ index }: { index: number }) {
       </div>
 
       {COLOR_SECTIONS.map((section) => (
-        <div
-          key={section.title}
-          className="flex flex-col gap-2.5 rounded-2xl border border-hairline bg-raised px-4 py-3.5"
-        >
+        <div key={section.title} className={PANEL}>
           <div>
             <p className="text-[14px] font-medium tracking-[-0.01em] text-text-primary">
               {section.title}
@@ -74,74 +77,112 @@ export function Appearance({ index }: { index: number }) {
                 value={String(tokens[key])}
                 overridden={overrides[key] !== undefined}
                 onChange={(next) => setGlobalOverride({ [key]: next })}
+                onRevert={() => clearGlobalOverride(key)}
               />
             ))}
           </div>
         </div>
       ))}
+    </SettingsGroup>
+  );
+}
 
-      {NUMERIC_ORDER.map((key) => {
-        const meta = NUMERIC_TOKENS[key];
-        const value = Number(tokens[key]);
-        return (
-          <div
-            key={key}
-            className="flex flex-col gap-2.5 rounded-2xl border border-hairline bg-raised px-4 py-3.5 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8 motion-reduce:transition-none"
-          >
-            <div className="min-w-0">
-              <p className="flex items-center gap-1.5 text-[14px] font-medium tracking-[-0.01em] text-text-primary">
-                {meta.label}
-                {overrides[key] !== undefined ? (
-                  <>
-                    <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
-                    <span className="sr-only">Changed from the default</span>
-                  </>
-                ) : null}
-              </p>
-              <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">{meta.hint}</p>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-4">
-                <Slider
-                  value={value}
-                  min={meta.bound.min}
-                  max={meta.bound.max}
-                  step={meta.bound.step}
-                  onValueChange={(next) => {
-                    if (typeof next === "number") setGlobalOverride({ [key]: next });
-                  }}
-                  aria-label={meta.label}
-                />
-                <div className="flex w-[84px] shrink-0 items-baseline justify-end gap-1">
-                  <span className="text-[15px] font-semibold tabular-nums text-text-primary">
-                    {value.toFixed(decimalsOf(meta.bound.step))}
-                  </span>
-                  {meta.unit === undefined ? null : (
-                    <span className="text-[11px] text-text-muted">{meta.unit}</span>
-                  )}
-                </div>
-              </div>
-              <span className="text-right text-[10px] tabular-nums text-text-muted/50">
-                {meta.bound.min}–{meta.bound.max}
-              </span>
-            </div>
+export function ThemeTypography({ index }: { index: number }) {
+  const tokens = useResolvedTheme();
+  const setGlobalOverride = useThemeStore((state) => state.setGlobalOverride);
+  const clearGlobalOverride = useThemeStore((state) => state.clearGlobalOverride);
+  const overrides = useSchemeOverrides();
+
+  return (
+    <SettingsGroup
+      index={index}
+      meta={{
+        title: "Fonts",
+        blurb: "Any family from Google Fonts, searched live and loaded the moment you pick it.",
+        icon: TextFontIcon,
+      }}
+    >
+      {FONT_ORDER.map((key) => (
+        <div key={key} className={`${PANEL} ${SPLIT}`}>
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-[14px] font-medium tracking-[-0.01em] text-text-primary">
+              {FONT_TOKENS[key].label}
+              {overrides[key] !== undefined ? (
+                <>
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
+                  <span className="sr-only">Changed from the default</span>
+                </>
+              ) : null}
+            </p>
+            <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">
+              {FONT_TOKENS[key].hint}
+            </p>
           </div>
-        );
-      })}
+          <div className="flex items-center gap-2">
+            <FontField
+              value={String(tokens[key])}
+              onChange={(next) => setGlobalOverride({ [key]: next })}
+              ariaLabel={FONT_TOKENS[key].label}
+            />
+            {overrides[key] !== undefined ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Revert ${FONT_TOKENS[key].label}`}
+                onClick={() => clearGlobalOverride(key)}
+              >
+                <HugeiconsIcon icon={RefreshIcon} size={13} strokeWidth={1.5} />
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      ))}
+    </SettingsGroup>
+  );
+}
 
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-hairline bg-raised px-4 py-3.5">
+export function ThemeShape({ index }: { index: number }) {
+  const tokens = useResolvedTheme();
+  const setGlobalOverride = useThemeStore((state) => state.setGlobalOverride);
+  const clearGlobalOverride = useThemeStore((state) => state.clearGlobalOverride);
+  const resetTheme = useThemeStore((state) => state.resetTheme);
+  const overrides = useSchemeOverrides();
+
+  const changed = useMemo(() => Object.keys(overrides).length, [overrides]);
+
+  return (
+    <SettingsGroup
+      index={index}
+      meta={{
+        title: "Shape and spacing",
+        blurb: `Corner radius, borders, text size and the blur behind glass${changed > 0 ? ` · ${changed} change${changed === 1 ? "" : "s"} in this scheme` : ""}.`,
+        icon: RulerIcon,
+      }}
+    >
+      {NUMERIC_ORDER.map((key) => (
+        <MeasureRow
+          key={key}
+          meta={NUMERIC_TOKENS[key]}
+          value={Number(tokens[key])}
+          overridden={overrides[key] !== undefined}
+          onChange={(next) => setGlobalOverride({ [key]: next })}
+          onRevert={() => clearGlobalOverride(key)}
+        />
+      ))}
+
+      <div className={`${PANEL} flex-row items-center justify-between gap-4`}>
         <div className="min-w-0">
           <p className="text-[14px] font-medium tracking-[-0.01em] text-text-primary">
             Restore the designed theme
           </p>
           <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">
-            Drops every appearance change on this device. Runtime settings above are untouched.
+            Drops every appearance change in both schemes on this device. Runtime settings are
+            untouched.
           </p>
         </div>
         <Button
           variant="outline"
           size="sm"
-          disabled={changed === 0}
           onClick={() => {
             resetTheme();
             toast.success("Appearance reset", { description: "Back to the designed theme." });
@@ -149,7 +190,7 @@ export function Appearance({ index }: { index: number }) {
           className="gap-1.5"
         >
           <HugeiconsIcon icon={RefreshIcon} size={13} strokeWidth={1.5} />
-          Reset
+          Reset all
         </Button>
       </div>
     </SettingsGroup>

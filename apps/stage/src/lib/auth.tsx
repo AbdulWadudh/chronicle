@@ -50,13 +50,27 @@ async function authRequest(path: string, body: unknown): Promise<AuthResponse> {
   return payload;
 }
 
-async function fetchCurrentUser(token: string): Promise<AuthUser | null> {
-  const response = await fetch(`${directorOrigin()}${API.auth}/get-session`, {
-    headers: { authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) return null;
+type RestoredSession =
+  | { outcome: "signed-in"; user: AuthUser }
+  | { outcome: "rejected" }
+  | { outcome: "unreachable" };
+
+async function restoreSession(token: string): Promise<RestoredSession> {
+  let response: Response;
+  try {
+    response = await fetch(`${directorOrigin()}${API.auth}/get-session`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
+  } catch {
+    return { outcome: "unreachable" };
+  }
+
+  if (response.status === 401 || response.status === 403) return { outcome: "rejected" };
+  if (!response.ok) return { outcome: "unreachable" };
+
   const payload = (await response.json().catch(() => null)) as { user?: AuthUser } | null;
-  return payload?.user ?? null;
+  if (payload?.user === undefined) return { outcome: "rejected" };
+  return { outcome: "signed-in", user: payload.user };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -65,14 +79,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
-      const token = readToken();
-      const restored = token === null ? null : await fetchCurrentUser(token);
-      if (cancelled) return;
-      if (restored === null) clearToken();
-      setUser(restored);
+    const token = readToken();
+
+    if (token === null) {
       setReady(true);
-    })();
+      return;
+    }
+
+    restoreSession(token)
+      .then((restored) => {
+        if (cancelled) return;
+        if (restored.outcome === "rejected") clearToken();
+        setUser(restored.outcome === "signed-in" ? restored.user : null);
+        setReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setReady(true);
+      });
+
     return () => {
       cancelled = true;
     };

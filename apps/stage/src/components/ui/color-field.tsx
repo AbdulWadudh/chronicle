@@ -1,21 +1,27 @@
+import { RefreshIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useId } from "react";
+import { HexAlphaColorPicker, HexColorInput } from "react-colorful";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { cn } from "~/lib/utils";
-
-const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/iu;
 
 export interface ColorFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
   overridden?: boolean;
+  onRevert?: () => void;
   className?: string;
 }
 
-function swatchValue(value: string): string {
-  return HEX.test(value) ? value.slice(0, 7) : "#000000";
-}
-
-export function ColorField({ label, value, onChange, overridden, className }: ColorFieldProps) {
+export function ColorField({
+  label,
+  value,
+  onChange,
+  overridden,
+  onRevert,
+  className,
+}: ColorFieldProps) {
   const id = useId();
 
   return (
@@ -25,33 +31,37 @@ export function ColorField({ label, value, onChange, overridden, className }: Co
         className,
       )}
     >
-      <label
-        htmlFor={id}
-        className="relative size-7 shrink-0 cursor-pointer overflow-hidden rounded-full border border-hairline-strong"
-        style={{ backgroundColor: HEX.test(value) ? value : undefined }}
-        title={`Change ${label}`}
-      >
-        <input
-          id={id}
-          type="color"
-          value={swatchValue(value)}
-          onChange={(event) => onChange(event.target.value)}
-          aria-label={label}
-          className="absolute inset-0 size-full cursor-pointer opacity-0"
+      <Popover>
+        <PopoverTrigger
+          aria-label={`Pick ${label}`}
+          className="chronicle-swatch size-7 shrink-0 cursor-pointer rounded-full border border-hairline-strong outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
+          style={{ "--swatch": value } as React.CSSProperties}
         />
-      </label>
+        <PopoverContent className="w-[228px]">
+          <HexAlphaColorPicker color={value} onChange={onChange} />
+          <div className="mt-3 flex items-center gap-2">
+            <span
+              className="chronicle-swatch size-6 shrink-0 rounded-full border border-hairline-strong"
+              style={{ "--swatch": value } as React.CSSProperties}
+            />
+            <HexColorInput
+              color={value}
+              onChange={onChange}
+              alpha
+              prefixed
+              aria-label={`${label} hex`}
+              className="w-full rounded-[var(--radius-control)] border border-card-border bg-input-surface px-2.5 py-1.5 font-mono text-[12px] text-text-primary uppercase outline-none focus:border-primary/60"
+            />
+          </div>
+        </PopoverContent>
+      </Popover>
 
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-1.5 truncate text-[12px] font-medium text-text-primary">
           {label}
-          {overridden === true ? (
-            <>
-              <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-primary" />
-              <span className="sr-only">Changed from the default</span>
-            </>
-          ) : null}
         </p>
         <input
+          id={id}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           aria-label={`${label} value`}
@@ -59,6 +69,17 @@ export function ColorField({ label, value, onChange, overridden, className }: Co
           className="w-full bg-transparent font-mono text-[10px] tracking-tight text-text-muted outline-none focus:text-text-secondary"
         />
       </div>
+
+      {overridden === true && onRevert !== undefined ? (
+        <button
+          type="button"
+          onClick={onRevert}
+          aria-label={`Revert ${label} to its default`}
+          className="shrink-0 cursor-pointer rounded-full p-1 text-primary transition-colors hover:bg-raised-hover hover:text-text-accent motion-reduce:transition-none"
+        >
+          <HugeiconsIcon icon={RefreshIcon} size={12} strokeWidth={1.8} />
+        </button>
+      ) : null}
     </div>
   );
 }
