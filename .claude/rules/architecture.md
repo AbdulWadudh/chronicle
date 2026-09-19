@@ -207,4 +207,11 @@ produce burnt output — the two rows are not interchangeable. Checkpoint, steps
 sampler and scheduler are all runtime settings (`image.*`), so switching models is a
 settings change, never a code change.
 
+`image.checkpoint` is a path relative to ComfyUI's checkpoints root, which
+`extra_model_paths.yaml` points at `Data/Models/StableDiffusion`. Subfolders are allowed
+(`lightning/model.safetensors`). The value is validated in `checkpointSchema`: backslashes
+normalise to forward slashes, a leading slash is stripped, and absolute paths, `..`
+traversal, and non-model extensions are rejected. It reaches another process as a file
+path, so it is a trust boundary.
+
 Kokoro-FastAPI is not installed yet, so `TTS_ENDPOINT` will fail until it is.

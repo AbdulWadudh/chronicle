@@ -23,8 +23,21 @@ const turnSchema = z.object({
   bufferSize: z.number().int().min(1).max(512).default(32),
 });
 
+const CHECKPOINT_EXTENSIONS = [".safetensors", ".ckpt", ".sft"];
+
+export const checkpointSchema = z
+  .string()
+  .min(1)
+  .transform((value) => value.replaceAll("\\", "/").replace(/^\/+/u, ""))
+  .refine((value) => !/^[a-zA-Z]:/u.test(value), "Checkpoint must be a relative path")
+  .refine((value) => !value.split("/").includes(".."), "Checkpoint must not traverse upwards")
+  .refine(
+    (value) => CHECKPOINT_EXTENSIONS.some((extension) => value.toLowerCase().endsWith(extension)),
+    `Checkpoint must end in ${CHECKPOINT_EXTENSIONS.join(", ")}`,
+  );
+
 const imageSchema = z.object({
-  checkpoint: z.string().min(1).default("DreamShaperXL_Lightning.safetensors"),
+  checkpoint: checkpointSchema.prefault("DreamShaperXL_Lightning.safetensors"),
   width: z.number().int().min(256).max(2048).default(1024),
   height: z.number().int().min(256).max(2048).default(1024),
   steps: z.number().int().min(1).max(60).default(6),
