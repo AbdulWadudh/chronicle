@@ -165,7 +165,7 @@ function Open-LogWindow {
     $tailers[$name] = $tailer
   }
 
-  $paneArgs = @('-w', 'new', 'new-tab', '--title', 'Chronicle AI',
+  $paneArgs = @('-w', 'new', 'new-tab', '--title', 'Chronicle-AI',
     'pwsh', '-NoExit', '-NoProfile', '-File', $tailers[$names[0]])
   for ($i = 1; $i -lt $names.Count; $i += 1) {
     $split = if ($i -eq 1) { '-V' } else { '-H' }
