@@ -1,5 +1,6 @@
 import { API } from "@chronicle/shared";
-import { Globe2, Settings2 } from "lucide-react";
+import { Globe02Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "motion/react";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
@@ -52,7 +53,7 @@ export function Worlds() {
               aria-label="Runtime settings"
               className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.02] text-text-accent"
             >
-              <Settings2 size={16} strokeWidth={1.5} />
+              <HugeiconsIcon icon={Settings02Icon} size={16} strokeWidth={1.5} />
             </button>
             <button
               type="button"
@@ -88,7 +89,7 @@ export function Worlds() {
         key={scope}
         loadPage={loadPage}
         keyExtractor={(world) => world.id}
-        emptyIcon={Globe2}
+        emptyIcon={Globe02Icon}
         emptyLabel={scope === "mine" ? "No worlds yet" : "Nothing shared yet"}
         emptyBody={
           scope === "mine"

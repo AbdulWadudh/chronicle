@@ -1,5 +1,6 @@
 import type { TurnChoice } from "@chronicle/shared";
-import { ArrowUp, type LucideIcon, Sparkles, Square, Wand2 } from "lucide-react";
+import { ArrowUp02Icon, MagicWand01Icon, SparklesIcon, StopIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { type KeyboardEvent, useState } from "react";
 import { useThemeTokens } from "~/theme/ThemeEngine";
 
@@ -64,13 +65,13 @@ export function Composer({
         <legend className="sr-only">Action mode</legend>
         <ModeChip
           label="Scratch"
-          icon={Wand2}
+          icon={MagicWand01Icon}
           active={mode === "scratch"}
           onSelect={() => setMode("scratch")}
         />
         <ModeChip
           label="Enhance"
-          icon={Sparkles}
+          icon={SparklesIcon}
           active={mode === "enhanced"}
           onSelect={() => setMode("enhanced")}
         />
@@ -99,12 +100,7 @@ export function Composer({
             aria-label="Stop generating"
             className="flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-secondary"
           >
-            <Square
-              size={16}
-              strokeWidth={1.5}
-              color={tokens.textSecondary}
-              fill={tokens.textSecondary}
-            />
+            <HugeiconsIcon icon={StopIcon} size={18} strokeWidth={2} color={tokens.textSecondary} />
           </button>
         ) : (
           <button
@@ -116,7 +112,8 @@ export function Composer({
               ready ? "bg-primary" : "bg-white/[0.06]"
             }`}
           >
-            <ArrowUp
+            <HugeiconsIcon
+              icon={ArrowUp02Icon}
               size={20}
               strokeWidth={2}
               color={ready ? tokens.primaryForeground : tokens.textMuted}
@@ -130,12 +127,12 @@ export function Composer({
 
 interface ModeChipProps {
   label: string;
-  icon: LucideIcon;
+  icon: IconSvgElement;
   active: boolean;
   onSelect: () => void;
 }
 
-function ModeChip({ label, icon: Icon, active, onSelect }: ModeChipProps) {
+function ModeChip({ label, icon, active, onSelect }: ModeChipProps) {
   const tokens = useThemeTokens();
   return (
     <label
@@ -150,7 +147,8 @@ function ModeChip({ label, icon: Icon, active, onSelect }: ModeChipProps) {
         onChange={onSelect}
         className="sr-only"
       />
-      <Icon
+      <HugeiconsIcon
+        icon={icon}
         size={13}
         strokeWidth={1.5}
         color={active ? tokens.primaryForeground : tokens.textMuted}

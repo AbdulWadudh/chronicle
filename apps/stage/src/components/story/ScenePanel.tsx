@@ -1,5 +1,5 @@
 import type { TurnNode } from "@chronicle/shared";
-import { ImageOff, Network } from "lucide-react";
+import { HierarchyIcon, ImageNotFound01Icon } from "@hugeicons/core-free-icons";
 import { motion } from "motion/react";
 import { lazy, Suspense } from "react";
 import { EmptyState } from "~/components/common/EmptyState";
@@ -57,11 +57,11 @@ export function ScenePanel({
         ))}
       </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden rounded-[22px] border border-white/[0.06] bg-card">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-white/[0.06] bg-card">
         {tab === "map" ? (
           turns.length === 0 ? (
             <EmptyState
-              icon={Network}
+              icon={HierarchyIcon}
               title="No branches yet"
               body="Every choice you make adds a node here. Take your first action to begin the map."
             />
@@ -83,7 +83,7 @@ export function ScenePanel({
           )
         ) : imageUrl === null ? (
           <EmptyState
-            icon={ImageOff}
+            icon={ImageNotFound01Icon}
             title="No scene yet"
             body="The first illustration appears once your opening turn finishes rendering."
           />
@@ -95,7 +95,7 @@ export function ScenePanel({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.32, ease: "easeOut" }}
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         )}
       </div>

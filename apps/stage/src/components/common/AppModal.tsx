@@ -1,4 +1,5 @@
-import { X } from "lucide-react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { type ReactNode, useEffect, useRef } from "react";
 
 export interface AppModalAction {
@@ -66,7 +67,7 @@ export function AppModal({ visible, title, icon, onClose, children, actions }: A
             aria-label="Close"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-text-secondary"
           >
-            <X size={16} strokeWidth={1.5} />
+            <HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={1.5} />
           </button>
         </div>
 

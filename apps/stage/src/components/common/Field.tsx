@@ -1,4 +1,5 @@
-import { Eye, EyeOff } from "lucide-react";
+import { ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { type InputHTMLAttributes, useId, useState } from "react";
 
 export interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "className"> {
@@ -50,11 +51,7 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
             aria-label={revealed ? "Hide password" : "Show password"}
             className="absolute right-2 flex h-9 items-center justify-center px-2 text-text-muted"
           >
-            {revealed ? (
-              <EyeOff size={18} strokeWidth={1.25} />
-            ) : (
-              <Eye size={18} strokeWidth={1.25} />
-            )}
+            <HugeiconsIcon icon={revealed ? ViewOffIcon : ViewIcon} size={18} strokeWidth={1.25} />
           </button>
         ) : null}
       </div>

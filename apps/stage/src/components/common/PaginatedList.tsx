@@ -1,4 +1,5 @@
-import { CircleAlert, Inbox, type LucideIcon } from "lucide-react";
+import { AlertCircleIcon, InboxIcon } from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 import { type ReactElement, useEffect, useRef } from "react";
 import { EmptyState } from "./EmptyState";
 import { Spinner } from "./Spinner";
@@ -12,7 +13,7 @@ export interface PaginatedListProps<T> {
   renderItem: (item: T) => ReactElement;
   emptyLabel: string;
   emptyBody?: string;
-  emptyIcon?: LucideIcon;
+  emptyIcon?: IconSvgElement;
   autoLoadMore?: boolean;
   numColumns?: number;
   header?: ReactElement;
@@ -24,7 +25,7 @@ export function PaginatedList<T>({
   renderItem,
   emptyLabel,
   emptyBody,
-  emptyIcon = Inbox,
+  emptyIcon = InboxIcon,
   autoLoadMore = true,
   numColumns,
   header,
@@ -57,7 +58,7 @@ export function PaginatedList<T>({
     return (
       <div className="flex flex-1 flex-col">
         {header}
-        <EmptyState icon={CircleAlert} title="That did not load" body={data.error} />
+        <EmptyState icon={AlertCircleIcon} title="That did not load" body={data.error} />
       </div>
     );
   }

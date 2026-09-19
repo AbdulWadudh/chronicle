@@ -1,8 +1,10 @@
 import { API } from "@chronicle/shared";
-import { ChevronLeft, ScrollText, SlidersHorizontal } from "lucide-react";
+import { BookOpen01Icon, PreferenceHorizontalIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "motion/react";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { BackButton } from "~/components/common/BackButton";
 import { EmptyState } from "~/components/common/EmptyState";
 import { Spinner } from "~/components/common/Spinner";
 import { Composer } from "~/components/story/Composer";
@@ -15,7 +17,6 @@ import { useResponsiveLayout } from "~/hooks/useResponsiveLayout";
 import { useTurnStream } from "~/hooks/useTurnStream";
 import { post } from "~/lib/api";
 import { useThemeStore } from "~/theme/store";
-import { useThemeTokens } from "~/theme/ThemeEngine";
 
 const DiceRoller3D = lazy(async () => {
   const module = await import("~/components/canvas/dice");
@@ -38,7 +39,6 @@ const PANEL_TABS_HEIGHT = 44;
 
 export function Play() {
   const navigate = useNavigate();
-  const tokens = useThemeTokens();
   const { id = null } = useParams<{ id: string }>();
   const layout = useResponsiveLayout();
   const cinemaMode = useThemeStore((state) => state.cinemaMode);
@@ -86,15 +86,7 @@ export function Play() {
   return (
     <div className="flex h-full flex-col bg-canvas pt-[var(--safe-top)] pb-[var(--safe-bottom)]">
       <header className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-3 py-2.5">
-        <button
-          type="button"
-          onClick={() => void navigate(-1)}
-          aria-label="Back"
-          className="flex h-9 items-center gap-1 rounded-full px-2 text-[13px] text-text-muted"
-        >
-          <ChevronLeft size={18} strokeWidth={1.5} color={tokens.textMuted} />
-          Back
-        </button>
+        <BackButton onPress={() => void navigate(-1)} label="Back" />
 
         <p className="flex items-center gap-2 text-[12px] text-text-muted">
           <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
@@ -107,7 +99,7 @@ export function Play() {
           aria-label="Open director console"
           className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.02] text-text-accent"
         >
-          <SlidersHorizontal size={16} strokeWidth={1.5} />
+          <HugeiconsIcon icon={PreferenceHorizontalIcon} size={16} strokeWidth={1.5} />
         </button>
       </header>
 
@@ -123,7 +115,7 @@ export function Play() {
       <div className={`flex min-h-0 flex-1 ${layout.isSplit ? "flex-row" : "flex-col"}`}>
         {layout.isSplit || !hasScene ? null : (
           <div
-            className="shrink-0 px-4 pt-3"
+            className="flex shrink-0 flex-col overflow-hidden px-4 pt-3"
             style={{ height: stackedPanelHeight + PANEL_TABS_HEIGHT }}
           >
             {scenePanel}
@@ -138,7 +130,7 @@ export function Play() {
           >
             {stream.committedTurns.length === 0 && !streaming ? (
               <EmptyState
-                icon={ScrollText}
+                icon={BookOpen01Icon}
                 title="Your story has not begun"
                 body="Describe what your character does and the world will answer."
               />
@@ -199,7 +191,7 @@ export function Play() {
         </div>
 
         {layout.isSplit ? (
-          <div className="flex min-h-0 flex-[45] flex-col border-l border-white/[0.06] p-4">
+          <div className="flex min-h-0 flex-[45] flex-col overflow-hidden border-l border-white/[0.06] p-4">
             {scenePanel}
           </div>
         ) : null}

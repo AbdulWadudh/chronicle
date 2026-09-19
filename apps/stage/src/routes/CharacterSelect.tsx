@@ -5,12 +5,13 @@ import {
   type StatBlock,
   type StatDefinition,
 } from "@chronicle/shared";
-import { ChevronLeft, Users } from "lucide-react";
+import { UserMultipleIcon } from "@hugeicons/core-free-icons";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { PointBuyStepper } from "~/components/character/PointBuyStepper";
 import { AppModal } from "~/components/common/AppModal";
+import { BackButton } from "~/components/common/BackButton";
 import { PageHeader } from "~/components/common/PageHeader";
 import { type Page, PaginatedList } from "~/components/common/PaginatedList";
 import { Screen } from "~/components/common/Screen";
@@ -89,16 +90,7 @@ export function CharacterSelect() {
     <Screen wide>
       <PageHeader
         title={world?.title ?? "Choose a character"}
-        leading={
-          <button
-            type="button"
-            onClick={() => void navigate(-1)}
-            aria-label="Back"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-text-muted"
-          >
-            <ChevronLeft size={18} strokeWidth={1.5} />
-          </button>
-        }
+        leading={<BackButton onPress={() => void navigate(-1)} />}
         trailing={
           <button
             type="button"
@@ -121,7 +113,7 @@ export function CharacterSelect() {
         loadPage={loadPage}
         autoLoadMore={false}
         keyExtractor={(character) => character.id}
-        emptyIcon={Users}
+        emptyIcon={UserMultipleIcon}
         emptyLabel="No characters yet"
         emptyBody="Create one to start a story in this world. You will pick their abilities with the point-buy budget."
         renderItem={(character) => (

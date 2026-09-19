@@ -77,7 +77,8 @@ provably breaks the build:
 to `^5` only if the compiler itself, rather than our code, fails a typecheck.
 
 Everything else — `vite`, `tailwindcss`, `react-router`, `motion`, `gsap`,
-`canvaskit-wasm`, `three`, `lucide-react`, `zustand`, `hono`, `drizzle-orm`,
+`canvaskit-wasm`, `three`, `@hugeicons/react`, `@hugeicons/core-free-icons`,
+`zustand`, `hono`, `drizzle-orm`,
 `better-auth`, `bullmq`, `ioredis`, `zod`, `@lancedb/lancedb` — is `"latest"`.
 
 Before bumping `react`, check the peer ranges of `react-router` and `@react-three/fiber`
@@ -373,6 +374,15 @@ The story map draws its nodes and edges with CanvasKit but renders **labels as D
 an overlay that carries the same `translate`/`scale` transform. Canvas text needs a
 bundled TTF that no dependency ships, and it is invisible to a screen reader. Keep labels
 in the overlay.
+
+## Icons
+
+HugeIcons, never lucide. One renderer, `<HugeiconsIcon icon={...} />`, taking icon *data*
+from `@hugeicons/core-free-icons` — not a component per icon. A prop that accepts an icon
+is typed `IconSvgElement`, and call sites pass the bare export.
+
+Verify a name exists in `node_modules/@hugeicons/core-free-icons/dist/types` before using
+it. The names do not match lucide's and a wrong guess typechecks, then renders nothing.
 
 ## Client gotchas
 

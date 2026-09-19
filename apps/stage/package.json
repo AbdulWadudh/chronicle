@@ -12,10 +12,11 @@
   "dependencies": {
     "@chronicle/shared": "workspace:*",
     "@fontsource-variable/plus-jakarta-sans": "latest",
+    "@hugeicons/core-free-icons": "latest",
+    "@hugeicons/react": "latest",
     "@react-three/fiber": "latest",
     "canvaskit-wasm": "latest",
     "gsap": "latest",
-    "lucide-react": "latest",
     "motion": "latest",
     "react": "19.2.8",
     "react-dom": "19.2.8",

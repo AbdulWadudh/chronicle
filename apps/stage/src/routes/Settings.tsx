@@ -4,9 +4,9 @@ import {
   type RuntimeSettingsPatch,
   runtimeSettingsSchema,
 } from "@chronicle/shared";
-import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { BackButton } from "~/components/common/BackButton";
 import { NumberField } from "~/components/common/NumberField";
 import { PageHeader } from "~/components/common/PageHeader";
 import { Screen } from "~/components/common/Screen";
@@ -71,16 +71,7 @@ export function Settings() {
     }
   }
 
-  const back = (
-    <button
-      type="button"
-      onClick={() => void navigate(-1)}
-      aria-label="Back"
-      className="flex h-9 w-9 items-center justify-center rounded-full text-text-muted"
-    >
-      <ChevronLeft size={18} strokeWidth={1.5} />
-    </button>
-  );
+  const back = <BackButton onPress={() => void navigate(-1)} />;
 
   if (settings === null) {
     return (
