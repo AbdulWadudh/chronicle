@@ -236,13 +236,17 @@ in Windows Terminal panes. It writes `.cmd` launchers to `%TEMP%\chronicle-ai` a
 those, because a long `cmd /k "... && ..."` string mangles when passed through
 `Start-Process -ArgumentList`.
 
-Two Windows quirks it works around, both found the hard way:
+Three Windows quirks it works around, all found the hard way:
 
 - `NoDefaultCurrentDirectoryInExePath` is set on this machine, so `cd /d <dir>` followed
-  by a bare `llama-server.exe` fails. Every launcher uses an absolute executable path.
+  by a bare `llama-server.exe` fails. Every command uses an absolute executable path.
   EIDOLON's own `START\*.bat` files have this latent bug.
-- A `wt new-tab` pane silently fails to run these launchers while `split-pane` works. The
-  first pane is therefore a harmless status pane and every service is a `split-pane`.
+- A space in a `wt` argument splits it. `--title 'Chronicle AI'` made Terminal read
+  `Chronicle` as the title and `AI` as the first word of the command, shifting every
+  later argument. Titles are single tokens.
+- `Get-Content -Wait` does not reliably tail when given more than one path, so each
+  service writes one merged log (`> log 2>&1` inside its `.cmd`) and each pane tails
+  exactly one file.
 
 `Get-NetTCPConnection` returns nothing without privileges here, so readiness is a real
 `TcpClient` connect.
@@ -260,6 +264,7 @@ and is the intended replacement for the placeholder hash in `crew/processors/mem
 ## Infrastructure facts
 
 Dragonfly and RustFS run as Docker containers `eidolon-cache` and `eidolon-storage`.
+Docker owns their lifecycle — `scripts/ai-servers.ps1` does not start, stop or list them.
 
 - Dragonfly runs `--cluster_mode=emulated --lock_on_hashtags`, so every BullMQ key for a
   queue must hash to one slot. All queues use `prefix: QUEUE_PREFIX` = `{chronicle}`.
