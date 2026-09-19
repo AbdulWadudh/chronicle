@@ -228,3 +228,31 @@ Kokoro-FastAPI is not installed yet, so `TTS_ENDPOINT` will fail until it is.
 `apps/*` use the `~/*` alias for their own `src`. `packages/*` use relative imports —
 an alias defined in a package's tsconfig is not honoured when another workspace compiles
 it, so `~/client` inside `packages/db` resolves against the *consuming* app and fails.
+
+## Running the AI stack
+
+`scripts\ai-servers.ps1 -Action start|stop|status [-WithEmbeddings]` launches everything
+in Windows Terminal panes. It writes `.cmd` launchers to `%TEMP%\chronicle-ai` and runs
+those, because a long `cmd /k "... && ..."` string mangles when passed through
+`Start-Process -ArgumentList`.
+
+Two Windows quirks it works around, both found the hard way:
+
+- `NoDefaultCurrentDirectoryInExePath` is set on this machine, so `cd /d <dir>` followed
+  by a bare `llama-server.exe` fails. Every launcher uses an absolute executable path.
+  EIDOLON's own `START\*.bat` files have this latent bug.
+- A `wt new-tab` pane silently fails to run these launchers while `split-pane` works. The
+  first pane is therefore a harmless status pane and every service is a `split-pane`.
+
+`Get-NetTCPConnection` returns nothing without privileges here, so readiness is a real
+`TcpClient` connect.
+
+## Model behaviour
+
+Qwen3.5 is a reasoning model: it fills `reasoning_content` and leaves `content` empty
+until thinking ends, which starves a token stream and can burn the whole budget. Every
+request sends `chat_template_kwargs: { enable_thinking: <narrative.thinking> }`, default
+`false`. Turn it on only if the served model benefits and you accept no visible streaming.
+
+`nomic-embed-text-v1.5` on port 8081 (`-WithEmbeddings`) serves 768-dimension embeddings
+and is the intended replacement for the placeholder hash in `crew/processors/memory.ts`.

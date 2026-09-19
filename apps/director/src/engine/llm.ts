@@ -46,6 +46,7 @@ export async function* streamChat(
       stream: true,
       temperature: options.temperature ?? settings.narrative.temperature,
       max_tokens: options.maxTokens ?? settings.narrative.maxTokens,
+      chat_template_kwargs: { enable_thinking: settings.narrative.thinking },
     },
     options.signal,
   );
@@ -92,6 +93,7 @@ export async function completeStructured<T>(
       stream: false,
       temperature: options.temperature ?? settings.structured.temperature,
       max_tokens: options.maxTokens ?? settings.structured.maxTokens,
+      chat_template_kwargs: { enable_thinking: settings.narrative.thinking },
       response_format: {
         type: "json_schema",
         json_schema: { name: options.schemaName, strict: true, schema: options.schema },

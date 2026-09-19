@@ -13,13 +13,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#07070B"
     },
-    "ios": { "supportsTablet": true, "bundleIdentifier": "app.chronicle.stage" },
     "android": {
       "package": "app.chronicle.stage",
-      "adaptiveIcon": { "foregroundImage": "./assets/logo.png", "backgroundColor": "#07070B" }
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#07070B"
+      }
     },
-    "web": { "bundler": "metro", "output": "single" },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
     "plugins": ["expo-router", "expo-secure-store", "expo-audio", "expo-font"],
-    "experiments": { "typedRoutes": true }
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }
