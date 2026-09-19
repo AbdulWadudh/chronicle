@@ -1,47 +1,20 @@
 # Code style
 
-## Zero comments
+Zero comments, the 300-line ceiling, and feature-folder layout come from
+`~/.claude/rules/code.md`. This file holds only what is specific to Chronicle.
 
-No `//`, no `/* */`, no `/** */`, no JSDoc, no annotation banners, in any
-`.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, or `.cjs` file. `bun run audit` fails the build on one.
+## Enforcement
 
-The comment you wanted to write is a rename or an extraction:
+`bun run audit` fails the build on any comment in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`,
+`.cjs`, or any measured file over 300 lines. It warns at 250. Markdown, JSON, and TOML
+may contain comments — they are documentation and configuration.
 
-```ts
-const t = Date.now() - s > 30000;
-
-const hasExceededTurnDeadline = Date.now() - turnStartedAt > TURN_TIMEOUT_MS;
-```
-
-Markdown, JSON, and TOML are exempt — they are documentation and configuration.
-
-## 300-line ceiling
-
-Hard fail above 300. Warning at 250. When a file approaches the warning, split by
-responsibility, never by line count:
+## Where to split
 
 - A screen grows, extract the data hook first, then the presentational subcomponents.
 - A schema grows, one file per table group, re-exported from `schema.ts`.
 - A worker grows, one file per processor under `processors/`.
 - A store grows, one slice per concern, composed in the root store.
-
-## File layout
-
-When a file splits, create a folder named for the feature and put its parts inside.
-Never dump the pieces into a shared flat directory.
-
-```
-components/story/
-  NarrativeStream.tsx
-  ChoicePills.tsx
-  useSentenceGate.ts
-  index.ts
-```
-
-- One folder per feature or section. Its files live only there.
-- Re-export through `index.ts`. Outside code imports the folder, never its internals.
-- Code used by two features moves up a level into a shared folder. Never copied.
-- A directory of unrelated files is a smell. Group it or move it.
 
 ## Bun first
 

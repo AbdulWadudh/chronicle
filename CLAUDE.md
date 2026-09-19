@@ -41,17 +41,6 @@ Never restate one elsewhere — a second copy is a copy that will go stale.
 
 `bun run audit` enforces the 300-line ceiling and the zero-comment rule, and fails the build.
 
-## Skills
-
-Analyse the task before starting it, then:
-
-1. Check the available skills list. If one covers the task, invoke it and follow it.
-2. If nothing fits, run `find-skills` to search for one, and use what it returns.
-3. Only when no skill exists, do it manually with an established idiom.
-
-Say which skill you are using before you use it. A skill that applies is not optional.
-Same check for MCP servers and tools — use what exists before building it.
-
 ## Sub-agent delegation
 
 | Agent | Owns |
