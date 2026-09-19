@@ -3,8 +3,8 @@ import {
   canRaise,
   clampStatRank,
   costOfNextRank,
-  MIN_STAT_RANK,
   remainingPoints,
+  STATS,
   type StatBlock,
   type StatDefinition,
 } from "@chronicle/shared";
@@ -57,7 +57,7 @@ export function PointBuyStepper({ definitions, stats, budget, onChange }: PointB
       </View>
 
       {definitions.map((definition) => {
-        const rank = stats[definition.id] ?? MIN_STAT_RANK;
+        const rank = stats[definition.id] ?? STATS.minRank;
         const nextCost = costOfNextRank(rank);
         return (
           <View

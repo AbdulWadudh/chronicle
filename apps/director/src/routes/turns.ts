@@ -2,7 +2,7 @@ import { database, newId, schema } from "@chronicle/db";
 import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AuthEnv } from "../auth";
+import { type AuthEnv, requireSession } from "../auth";
 
 const checkpointSchema = z.object({
   turnId: z.string().min(1),
@@ -20,6 +20,7 @@ async function ownsCharacter(characterId: string, userId: string): Promise<boole
 }
 
 export const turnRoutes = new Hono<AuthEnv>()
+  .use("*", requireSession)
   .get("/", async (context) => {
     const characterId = new URL(context.req.url).searchParams.get("characterId");
     if (characterId === null) return context.json({ error: "characterId is required." }, 400);

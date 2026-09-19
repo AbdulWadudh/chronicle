@@ -1,8 +1,11 @@
-import { CUMULATIVE_RANK_COST, MAX_STAT_RANK, MIN_STAT_RANK, STAT_MODIFIER_PIVOT } from "./rules";
+import { STATS } from "./rules";
 import type { StatBlock, StatDefinition, StatRank } from "./types";
 
+const CUMULATIVE_COST: readonly number[] = [0, 0, 1, 2, 4, 6];
+const MODIFIER_PIVOT = 3;
+
 function clampRank(rank: number): number {
-  return Math.min(Math.max(Math.trunc(rank), MIN_STAT_RANK), MAX_STAT_RANK);
+  return Math.min(Math.max(Math.trunc(rank), STATS.minRank), STATS.maxRank);
 }
 
 export function clampStatRank(rank: number): StatRank {
@@ -10,11 +13,11 @@ export function clampStatRank(rank: number): StatRank {
 }
 
 export function cumulativeCostOfRank(rank: number): number {
-  return CUMULATIVE_RANK_COST[clampRank(rank)] ?? 0;
+  return CUMULATIVE_COST[clampRank(rank)] ?? 0;
 }
 
 export function costOfNextRank(rank: number): number | null {
-  if (rank >= MAX_STAT_RANK) return null;
+  if (rank >= STATS.maxRank) return null;
   return cumulativeCostOfRank(rank + 1) - cumulativeCostOfRank(rank);
 }
 
@@ -27,18 +30,18 @@ export function remainingPoints(stats: StatBlock, budget: number): number {
 }
 
 export function canRaise(stats: StatBlock, statId: string, budget: number): boolean {
-  const step = costOfNextRank(stats[statId] ?? MIN_STAT_RANK);
+  const step = costOfNextRank(stats[statId] ?? STATS.minRank);
   if (step === null) return false;
   return remainingPoints(stats, budget) >= step;
 }
 
 export function canLower(stats: StatBlock, statId: string): boolean {
-  return (stats[statId] ?? MIN_STAT_RANK) > MIN_STAT_RANK;
+  return (stats[statId] ?? STATS.minRank) > STATS.minRank;
 }
 
 export function baselineStats(definitions: readonly StatDefinition[]): StatBlock {
   const stats: StatBlock = {};
-  for (const definition of definitions) stats[definition.id] = MIN_STAT_RANK;
+  for (const definition of definitions) stats[definition.id] = STATS.minRank;
   return stats;
 }
 
@@ -51,11 +54,11 @@ export function isValidBuild(
   if (Object.keys(stats).length !== declared.size) return false;
   for (const [statId, rank] of Object.entries(stats)) {
     if (!declared.has(statId)) return false;
-    if (rank < MIN_STAT_RANK || rank > MAX_STAT_RANK) return false;
+    if (rank < STATS.minRank || rank > STATS.maxRank) return false;
   }
   return totalSpent(stats) <= budget;
 }
 
 export function statModifier(rank: number): number {
-  return clampRank(rank) - STAT_MODIFIER_PIVOT;
+  return clampRank(rank) - MODIFIER_PIVOT;
 }

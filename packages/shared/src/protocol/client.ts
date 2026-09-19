@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CRITICAL_FAILURE, D20_SIDES } from "../rules";
+import { DICE } from "../rules";
 import { statePatchSchema } from "../types";
 import { envelopeSchema } from "./envelope";
 
@@ -22,7 +22,7 @@ export const resolveDiceSchema = base.extend({
   type: z.literal("RESOLVE_DICE"),
   turnId: z.string(),
   checkId: z.string(),
-  roll: z.number().int().min(CRITICAL_FAILURE).max(D20_SIDES),
+  roll: z.number().int().min(DICE.criticalFailure).max(DICE.sides),
 });
 
 export const regenerateSchema = base.extend({

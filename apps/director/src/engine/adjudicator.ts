@@ -1,12 +1,5 @@
 import type { DiceCheck, StatBlock } from "@chronicle/shared";
-import {
-  CRITICAL_FAILURE,
-  CRITICAL_SUCCESS,
-  D20_SIDES,
-  MAX_DIFFICULTY,
-  MIN_DIFFICULTY,
-  statModifier,
-} from "@chronicle/shared";
+import { DICE, statModifier } from "@chronicle/shared";
 
 export interface CheckProposal {
   stat: string;
@@ -20,11 +13,11 @@ export interface ResolvedCheck extends DiceCheck {
 }
 
 export function rollD20(): number {
-  return 1 + Math.floor(Math.random() * D20_SIDES);
+  return 1 + Math.floor(Math.random() * DICE.sides);
 }
 
 export function clampDifficulty(dc: number): number {
-  return Math.min(Math.max(Math.trunc(dc), MIN_DIFFICULTY), MAX_DIFFICULTY);
+  return Math.min(Math.max(Math.trunc(dc), DICE.minDifficulty), DICE.maxDifficulty);
 }
 
 export function isKnownStat(stat: string, stats: StatBlock): boolean {
@@ -41,7 +34,7 @@ export function resolveCheck(
   const baseModifier = statModifier(stats[proposal.stat] ?? 1);
   const total = roll + baseModifier;
   const critical =
-    roll === CRITICAL_SUCCESS ? "success" : roll === CRITICAL_FAILURE ? "failure" : null;
+    roll === DICE.criticalSuccess ? "success" : roll === DICE.criticalFailure ? "failure" : null;
   const succeeded = critical === "success" ? true : critical === "failure" ? false : total >= dc;
   return { checkId, stat: proposal.stat, dc, baseModifier, roll, succeeded, total, critical };
 }
@@ -55,7 +48,7 @@ export const CHECK_PROPOSAL_SCHEMA = {
   properties: {
     requiresCheck: { type: "boolean" },
     stat: { type: "string" },
-    dc: { type: "integer", minimum: MIN_DIFFICULTY, maximum: MAX_DIFFICULTY },
+    dc: { type: "integer", minimum: DICE.minDifficulty, maximum: DICE.maxDifficulty },
     reason: { type: "string" },
   },
   required: ["requiresCheck"],

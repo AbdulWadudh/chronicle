@@ -1,9 +1,9 @@
 import { AUTH_BASE_PATH } from "@chronicle/db";
-import { API_PREFIX, HEALTH_PATH } from "@chronicle/shared";
+import { API } from "@chronicle/shared";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { type AuthEnv, getAuth, requireSession } from "./auth";
+import { type AuthEnv, getAuth } from "./auth";
 import { characterRoutes } from "./routes/characters";
 import { settingsRoutes } from "./routes/settings";
 import { turnRoutes } from "./routes/turns";
@@ -16,7 +16,7 @@ export function createApp(): Hono<AuthEnv> {
   app.use("*", logger());
   app.use("*", cors({ origin: (origin) => origin, credentials: true }));
 
-  app.get(HEALTH_PATH, (context) =>
+  app.get(API.health, (context) =>
     context.json({
       status: "ok",
       connections: connectionCount(),
@@ -29,14 +29,10 @@ export function createApp(): Hono<AuthEnv> {
     return auth.handler(context.req.raw);
   });
 
-  const api = new Hono<AuthEnv>();
-  api.use("*", requireSession);
-  api.route("/worlds", worldRoutes);
-  api.route("/characters", characterRoutes);
-  api.route("/turns", turnRoutes);
-  api.route("/settings", settingsRoutes);
-
-  app.route(API_PREFIX, api);
+  app.route(API.worlds, worldRoutes);
+  app.route(API.characters, characterRoutes);
+  app.route(API.turns, turnRoutes);
+  app.route(API.settings, settingsRoutes);
 
   app.notFound((context) => context.json({ error: "Not found." }, 404));
   return app;

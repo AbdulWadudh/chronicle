@@ -1,10 +1,11 @@
+import { API } from "@chronicle/shared";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { type Page, PaginatedList } from "~/components/common/PaginatedList";
-import { API_PREFIX, get } from "~/lib/api";
+import { get } from "~/lib/api";
 import { useAuth } from "~/lib/auth";
 
 interface WorldRow {
@@ -33,7 +34,7 @@ export default function WorldSelectScreen() {
       const query = new URLSearchParams({ scope });
       if (cursor !== null) query.set("cursor", cursor);
       signal.throwIfAborted();
-      return get<Page<WorldRow>>(`${API_PREFIX}/worlds?${query.toString()}`);
+      return get<Page<WorldRow>>(`${API.worlds}?${query.toString()}`);
     },
     [scope],
   );

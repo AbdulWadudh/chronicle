@@ -1,4 +1,5 @@
 import {
+  API,
   baselineStats,
   isValidBuild,
   type StatBlock,
@@ -12,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { PointBuyStepper } from "~/components/character/PointBuyStepper";
 import { AppModal } from "~/components/common/AppModal";
 import { type Page, PaginatedList } from "~/components/common/PaginatedList";
-import { API_PREFIX, get, post } from "~/lib/api";
+import { get, post } from "~/lib/api";
 
 interface CharacterRow {
   id: string;
@@ -39,7 +40,7 @@ export default function CharacterSelectScreen() {
 
   useEffect(() => {
     if (worldId === undefined) return;
-    void get<WorldDetail>(`${API_PREFIX}/worlds/${worldId}`)
+    void get<WorldDetail>(`${API.worlds}/${worldId}`)
       .then((detail) => {
         setWorld(detail);
         setStats(baselineStats(detail.statDefinitionsJson));
@@ -53,7 +54,7 @@ export default function CharacterSelectScreen() {
     async (_cursor: string | null, signal: AbortSignal): Promise<Page<CharacterRow>> => {
       signal.throwIfAborted();
       const result = await get<{ items: CharacterRow[] }>(
-        `${API_PREFIX}/characters?worldId=${worldId ?? ""}`,
+        `${API.characters}?worldId=${worldId ?? ""}`,
       );
       return { items: result.items, nextCursor: null };
     },
@@ -63,7 +64,7 @@ export default function CharacterSelectScreen() {
   async function createCharacter(): Promise<void> {
     if (world === null) return;
     try {
-      const created = await post<CharacterRow>(`${API_PREFIX}/characters`, {
+      const created = await post<CharacterRow>(API.characters, {
         worldId: world.id,
         name: name.trim(),
         stats,

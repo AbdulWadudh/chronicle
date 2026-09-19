@@ -1,15 +1,10 @@
-import {
-  DEFAULT_DIRECTOR_HOST,
-  DEFAULT_DIRECTOR_PORT,
-  directorUrl,
-  MIN_AUTH_SECRET_LENGTH,
-} from "@chronicle/shared";
+import { DIRECTOR, directorUrl } from "@chronicle/shared";
 import { z } from "zod";
 import { defaultDatabasePath, defaultVectorDatabasePath } from "./paths";
 
 export const environmentSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  DIRECTOR_PORT: z.coerce.number().int().positive().default(DEFAULT_DIRECTOR_PORT),
+  DIRECTOR_PORT: z.coerce.number().int().positive().default(DIRECTOR.defaultPort),
   STORAGE_ENDPOINT: z.url(),
   STORAGE_ACCESS_KEY: z.string().min(1),
   STORAGE_SECRET_KEY: z.string().min(1),
@@ -22,8 +17,8 @@ export const environmentSchema = z.object({
   LLM_MODEL: z.string().min(1).default("local"),
   DIFFUSION_ENDPOINT: z.url(),
   TTS_ENDPOINT: z.url(),
-  AUTH_SECRET: z.string().min(MIN_AUTH_SECRET_LENGTH),
-  AUTH_BASE_URL: z.url().default(directorUrl(DEFAULT_DIRECTOR_HOST, DEFAULT_DIRECTOR_PORT)),
+  AUTH_SECRET: z.string().min(32),
+  AUTH_BASE_URL: z.url().default(directorUrl(DIRECTOR.defaultHost, DIRECTOR.defaultPort)),
 
   WS_IDLE_TIMEOUT_SECONDS: z.coerce.number().int().positive().default(120),
 });

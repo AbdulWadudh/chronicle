@@ -1,15 +1,9 @@
 import { database, newId, schema } from "@chronicle/db";
-import {
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_POINT_BUDGET,
-  MAX_PAGE_SIZE,
-  statDefinitionSchema,
-  worldStateSchema,
-} from "@chronicle/shared";
+import { STATS, statDefinitionSchema, worldStateSchema } from "@chronicle/shared";
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AuthEnv } from "../auth";
+import { type AuthEnv, requireSession } from "../auth";
 
 const createWorldSchema = z.object({
   title: z.string().min(1),
@@ -18,17 +12,18 @@ const createWorldSchema = z.object({
   coverImageUrl: z.string().nullable().default(null),
   visibility: z.enum(["private", "public"]).default("private"),
   statDefinitions: z.array(statDefinitionSchema).min(1),
-  pointBudget: z.number().int().positive().default(DEFAULT_POINT_BUDGET),
+  pointBudget: z.number().int().positive().default(STATS.defaultPointBudget),
   initialState: worldStateSchema,
 });
 
 const listQuerySchema = z.object({
   scope: z.enum(["mine", "community"]).default("mine"),
-  limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
   cursor: z.string().optional(),
 });
 
 export const worldRoutes = new Hono<AuthEnv>()
+  .use("*", requireSession)
   .get("/", async (context) => {
     const query = listQuerySchema.safeParse(
       Object.fromEntries(new URL(context.req.url).searchParams),

@@ -3,7 +3,7 @@ import { inventorySchema, isValidBuild, statBlockSchema } from "@chronicle/share
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AuthEnv } from "../auth";
+import { type AuthEnv, requireSession } from "../auth";
 
 const createCharacterSchema = z.object({
   worldId: z.string().min(1),
@@ -15,6 +15,7 @@ const createCharacterSchema = z.object({
 });
 
 export const characterRoutes = new Hono<AuthEnv>()
+  .use("*", requireSession)
   .get("/", async (context) => {
     const db = await database();
     const user = context.get("user");

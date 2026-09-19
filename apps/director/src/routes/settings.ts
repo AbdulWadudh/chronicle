@@ -5,10 +5,11 @@ import {
   runtimeSettingsPatchSchema,
 } from "@chronicle/shared";
 import { Hono } from "hono";
-import type { AuthEnv } from "../auth";
+import { type AuthEnv, requireSession } from "../auth";
 import { publishSettingsChange } from "../queue";
 
 export const settingsRoutes = new Hono<AuthEnv>()
+  .use("*", requireSession)
   .get("/", async (context) =>
     context.json({
       settings: await loadSettings(),

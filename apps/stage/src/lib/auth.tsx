@@ -1,3 +1,4 @@
+import { API } from "@chronicle/shared";
 import {
   createContext,
   type ReactNode,
@@ -7,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { AUTH_PREFIX, directorOrigin } from "./api";
+import { directorOrigin } from "./api";
 import { clearToken, readToken, writeToken } from "./session";
 
 export interface AuthUser {
@@ -38,7 +39,7 @@ interface AuthResponse {
 }
 
 async function authRequest(path: string, body: unknown): Promise<AuthResponse> {
-  const response = await fetch(`${directorOrigin()}${AUTH_PREFIX}${path}`, {
+  const response = await fetch(`${directorOrigin()}${API.auth}${path}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
@@ -50,7 +51,7 @@ async function authRequest(path: string, body: unknown): Promise<AuthResponse> {
 }
 
 async function fetchCurrentUser(token: string): Promise<AuthUser | null> {
-  const response = await fetch(`${directorOrigin()}${AUTH_PREFIX}/get-session`, {
+  const response = await fetch(`${directorOrigin()}${API.auth}/get-session`, {
     headers: { authorization: `Bearer ${token}` },
   });
   if (!response.ok) return null;

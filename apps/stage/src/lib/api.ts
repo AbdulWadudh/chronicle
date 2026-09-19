@@ -1,25 +1,18 @@
-import {
-  API_PREFIX,
-  AUTH_PREFIX,
-  DEFAULT_DIRECTOR_HOST,
-  DEFAULT_DIRECTOR_PORT,
-  directorUrl,
-  websocketPath,
-} from "@chronicle/shared";
+import { API, DIRECTOR, directorUrl, websocketPath } from "@chronicle/shared";
 import Constants from "expo-constants";
 import { readToken } from "./session";
 
-export { API_PREFIX, AUTH_PREFIX };
+export { API };
 
 function directorPort(): number {
   const configured = Number(process.env.EXPO_PUBLIC_DIRECTOR_PORT);
-  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_DIRECTOR_PORT;
+  return Number.isFinite(configured) && configured > 0 ? configured : DIRECTOR.defaultPort;
 }
 
 export function directorOrigin(): string {
   const configured = process.env.EXPO_PUBLIC_DIRECTOR_URL;
   if (typeof configured === "string" && configured.length > 0) return configured;
-  const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? DEFAULT_DIRECTOR_HOST;
+  const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? DIRECTOR.defaultHost;
   return directorUrl(host, directorPort());
 }
 

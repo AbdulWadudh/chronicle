@@ -1,6 +1,6 @@
 import { env } from "@chronicle/config";
 import { runMigrations } from "@chronicle/db";
-import { WS_PATH } from "@chronicle/shared";
+import { API } from "@chronicle/shared";
 import { createApp } from "./app";
 import { verifyToken } from "./auth";
 import { websocketHandlers } from "./ws/gateway";
@@ -16,7 +16,7 @@ const server = Bun.serve<SocketData, never>({
   idleTimeout: configuration.WS_IDLE_TIMEOUT_SECONDS,
   async fetch(request, bunServer) {
     const url = new URL(request.url);
-    if (url.pathname !== WS_PATH) return app.fetch(request);
+    if (url.pathname !== API.ws) return app.fetch(request);
 
     const token = url.searchParams.get("token");
     if (token === null) return new Response("Missing token", { status: 401 });
@@ -36,4 +36,4 @@ const server = Bun.serve<SocketData, never>({
 });
 
 console.log(`director listening on http://localhost:${server.port}`);
-console.log(`websocket at ws://localhost:${server.port}${WS_PATH}`);
+console.log(`websocket at ws://localhost:${server.port}${API.ws}`);
