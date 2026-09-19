@@ -36,10 +36,8 @@ turbo run typecheck
    `.js`, `.jsx`, `.mjs`, `.cjs`. Names, types, and control flow carry the meaning.
    `bun run audit` enforces this and fails the build.
 3. **Apps never import apps.** All cross-cutting code lives in `packages/*`.
-4. **Bun first.** On the server and in scripts, use Bun native APIs (`Bun.file`,
-   `Bun.write`, `Bun.Glob`, `Bun.serve`, `bun:sqlite`, `Bun.S3Client`, `Bun.password`).
-   Fall back to a `node:` builtin or an npm package only where Bun has no equivalent.
-   `apps/stage` is exempt — it runs on Hermes. See `.claude/rules/codestyle.md`.
+4. **Bun first.** Use Bun native APIs on the server and in scripts; Node or npm only
+   where Bun has no equivalent. `apps/stage` is exempt (Hermes).
 5. **`expo-av` is banned.** Audio is `expo-audio` only.
 6. **Dependency policy.** Everything resolves to `"latest"` except the Expo client
    surface, which is pinned to the versions Expo SDK 57 requires, and `nativewind`,
