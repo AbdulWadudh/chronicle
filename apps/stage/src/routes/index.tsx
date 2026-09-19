@@ -4,7 +4,7 @@ import { Spinner } from "~/components/common/Spinner";
 import { Toaster } from "~/components/ui/sonner";
 import { AuthProvider, useAuth } from "~/lib/auth";
 import { ThemeEngine } from "~/theme/ThemeEngine";
-import { Admin } from "./admin";
+import { Admin, Runtime } from "./admin";
 import { CharacterSelect } from "./CharacterSelect";
 import { Play } from "./Play";
 import { SignIn } from "./SignIn";
@@ -41,6 +41,7 @@ function AuthGate() {
       <Route path="/play/:id" element={<Play />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/runtime" element={<Runtime />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -153,9 +153,9 @@
       8px 8px;
   }
 
-  .react-colorful {
-    width: 100% !important;
-    height: 168px !important;
+  [data-slot="popover-content"] .react-colorful {
+    width: 100%;
+    height: 168px;
   }
 
   .react-colorful__saturation {

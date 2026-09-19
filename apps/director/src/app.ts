@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { type AuthEnv, getAuth } from "~/auth";
+import { adminRoutes } from "~/routes/admin";
 import { characterRoutes } from "~/routes/characters";
 import { settingsRoutes } from "~/routes/settings";
 import { turnRoutes } from "~/routes/turns";
@@ -34,6 +35,7 @@ export function createApp(): Hono<AuthEnv> {
   app.route(API.characters, characterRoutes);
   app.route(API.turns, turnRoutes);
   app.route(API.settings, settingsRoutes);
+  app.route(API.admin, adminRoutes);
 
   app.all("/api/*", (context) => context.json({ error: "Not found." }, 404));
   app.get("*", serveStage);

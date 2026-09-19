@@ -4,6 +4,7 @@ export const API = {
   characters: "/api/v1/characters",
   turns: "/api/v1/turns",
   settings: "/api/v1/settings",
+  admin: "/api/v1/admin",
   ws: "/api/v1/ws",
   health: "/health",
 } as const;

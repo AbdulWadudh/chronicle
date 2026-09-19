@@ -143,6 +143,7 @@ Path versioning rules are global, in `~/.claude/rules/api.md`. Chronicle mounts:
 
 - `/api/v1/auth/*` — Better Auth, `basePath: "/api/v1/auth"`
 - `/api/v1/*` — REST routes
+- `/api/v1/admin/*` — operator surface, owner only
 - `/api/v1/ws` — WebSocket upgrade
 - `/health` — unversioned liveness
 - everything else — the built client from `STAGE_DIST`, falling back to `index.html` so
@@ -167,6 +168,16 @@ The client obtains a session token over HTTPS, then connects to
 upgrade and closes with 1008 on failure. Cookies are not used — React Native does not
 send them on a WS upgrade. Never log the token.
 
+## Admin access
+
+One owner per installation, resolved by `requireOwner` in `apps/director/src/auth.ts`:
+`AUTH_OWNER_EMAIL` when set, otherwise the earliest-registered account. Everyone else
+gets 403. There is no role column — a roles table for a single-operator local-first app
+is speculation, and the email is the whole rule.
+
+Client screens sit behind `AdminScreen`, which calls `GET /api/v1/admin` once and shows a
+locked state on 403. That is cosmetic; the guard on the director is the real gate.
+
 ## Configuration tiers
 
 Tier rules are global, in `~/.claude/rules/config.md`. Chronicle places them as:
@@ -174,14 +185,15 @@ Tier rules are global, in `~/.claude/rules/config.md`. Chronicle places them as:
 | Tier | Home | Examples |
 | --- | --- | --- |
 | Constants | `@chronicle/shared/rules` | `D20_SIDES`, `CRITICAL_SUCCESS`, rank bounds, cost curve |
-| Environment | `@chronicle/config` | ports, `DATABASE_PATH`, `STAGE_DIST`, `AUTH_SECRET`, the four endpoints |
+| Environment | `@chronicle/config` | ports, `DATABASE_PATH`, `STAGE_DIST`, `AUTH_SECRET`, `AUTH_OWNER_EMAIL`, the four endpoints |
 | Runtime | `@chronicle/shared/settings` schema, stored by `@chronicle/db` | `image.*`, `tts.*`, `narrative.*`, `prompt.*`, `turn.*`, `dice.*` |
 
 - Constants live in `shared` because `apps/stage` needs them and may not import `config`.
 - Runtime settings are one row (`settings.id = "runtime"`) holding the whole nested object.
 - `loadSettings()` caches; `updateSettings()` writes, updates the cache, and notifies.
   The director then publishes `SETTINGS_CHANNEL` so crew invalidates too.
-- The admin surface is `GET/PATCH /api/v1/settings` and `POST /api/v1/settings/reset`.
+- The admin surface is `GET/PATCH /api/v1/settings` and `POST /api/v1/settings/reset`,
+  also mounted under `/api/v1/admin/settings` behind the owner guard.
 - Job payloads carry resolved values. A processor never re-reads a default.
 
 ## Local AI services

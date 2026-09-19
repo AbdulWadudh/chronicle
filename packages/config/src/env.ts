@@ -21,6 +21,7 @@ export const environmentSchema = z.object({
   DIFFUSION_ENDPOINT: endpoint,
   TTS_ENDPOINT: endpoint,
   AUTH_SECRET: z.string().min(32),
+  AUTH_OWNER_EMAIL: z.string().min(3).optional(),
   AUTH_BASE_URL: endpoint.default(BASE_URL),
   AUTH_TRUSTED_ORIGINS: z
     .string()
