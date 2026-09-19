@@ -256,3 +256,27 @@ request sends `chat_template_kwargs: { enable_thinking: <narrative.thinking> }`,
 
 `nomic-embed-text-v1.5` on port 8081 (`-WithEmbeddings`) serves 768-dimension embeddings
 and is the intended replacement for the placeholder hash in `crew/processors/memory.ts`.
+
+## Infrastructure facts
+
+Dragonfly and RustFS run as Docker containers `eidolon-cache` and `eidolon-storage`.
+
+- Dragonfly runs `--cluster_mode=emulated --lock_on_hashtags`, so every BullMQ key for a
+  queue must hash to one slot. All queues use `prefix: QUEUE_PREFIX` = `{chronicle}`.
+  Without the hash tag, BullMQ's Lua scripts fail with a cross-slot script error.
+- BullMQ also rejects `:` in a queue name, so queues are `chronicle-diffusion` etc.
+- RustFS credentials come from the container env (`RUSTFS_ACCESS_KEY` /
+  `RUSTFS_SECRET_KEY`). The `chronicle-assets` bucket must exist before the first upload.
+- ComfyUI's `SaveImage` writes PNG. Scenes are stored as `.png` with `image/png`.
+
+## Prompt construction
+
+Qwen's chat template raises `System message must be at the beginning`, so a request may
+carry at most one system message and it must be first. `buildNarrativePrompt` merges the
+instructions and the world context into a single system message.
+
+Thinking is enabled only for `enhanced` mode and only when `narrative.thinking` is on.
+The budget is enforced client-side: `max_tokens` is raised by `narrative.thinkingBudget`,
+reasoning deltas are dropped from the stream, and if reasoning consumed everything and no
+content arrived, the call is retried once with thinking off. `completeStructured` always
+disables thinking — it needs JSON, not prose.

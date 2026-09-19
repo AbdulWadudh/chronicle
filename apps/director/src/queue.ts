@@ -4,6 +4,7 @@ import {
   type MemoryJob,
   QUEUE_DIFFUSION,
   QUEUE_MEMORY,
+  QUEUE_PREFIX,
   QUEUE_TTS,
   SETTINGS_CHANNEL,
   type TtsJob,
@@ -17,9 +18,11 @@ export function createRedis(): Redis {
 
 const connection = createRedis();
 
-export const diffusionQueue = new Queue<DiffusionJob>(QUEUE_DIFFUSION, { connection });
-export const ttsQueue = new Queue<TtsJob>(QUEUE_TTS, { connection });
-export const memoryQueue = new Queue<MemoryJob>(QUEUE_MEMORY, { connection });
+const queueOptions = { connection, prefix: QUEUE_PREFIX };
+
+export const diffusionQueue = new Queue<DiffusionJob>(QUEUE_DIFFUSION, queueOptions);
+export const ttsQueue = new Queue<TtsJob>(QUEUE_TTS, queueOptions);
+export const memoryQueue = new Queue<MemoryJob>(QUEUE_MEMORY, queueOptions);
 
 export async function closeQueues(): Promise<void> {
   await Promise.all([diffusionQueue.close(), ttsQueue.close(), memoryQueue.close()]);

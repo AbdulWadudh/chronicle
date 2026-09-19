@@ -6,7 +6,8 @@ export const SETTINGS_ROW_ID = "runtime";
 const narrativeSchema = z.object({
   temperature: z.number().min(0).max(2).default(0.9),
   maxTokens: z.number().int().positive().max(8192).default(900),
-  thinking: z.boolean().default(false),
+  thinking: z.boolean().default(true),
+  thinkingBudget: z.number().int().min(0).max(4096).default(512),
 });
 
 const structuredSchema = z.object({

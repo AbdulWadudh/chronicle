@@ -24,7 +24,7 @@ export async function renderScene(job: Job<DiffusionJob>): Promise<string> {
   if (first === undefined) throw new Error(`ComfyUI produced no image for turn ${payload.turnId}`);
 
   const bytes = await fetchImage(first);
-  const imageUrl = await upload(sceneKey(payload.turnId), bytes, "image/webp");
+  const imageUrl = await upload(sceneKey(payload.turnId), bytes, "image/png");
 
   const db = await database();
   await db

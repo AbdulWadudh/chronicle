@@ -1,5 +1,11 @@
 import { invalidateSettings } from "@chronicle/db";
-import { QUEUE_DIFFUSION, QUEUE_MEMORY, QUEUE_TTS, SETTINGS_CHANNEL } from "@chronicle/shared";
+import {
+  QUEUE_DIFFUSION,
+  QUEUE_MEMORY,
+  QUEUE_PREFIX,
+  QUEUE_TTS,
+  SETTINGS_CHANNEL,
+} from "@chronicle/shared";
 import { Worker } from "bullmq";
 import { renderScene } from "~/processors/diffusion";
 import { rememberEpisode } from "~/processors/memory";
@@ -10,7 +16,7 @@ const DIFFUSION_CONCURRENCY = 1;
 const TTS_CONCURRENCY = 3;
 const MEMORY_CONCURRENCY = 2;
 
-const shared = { connection: connection() };
+const shared = { connection: connection(), prefix: QUEUE_PREFIX };
 
 const workers = [
   new Worker(QUEUE_DIFFUSION, renderScene, { ...shared, concurrency: DIFFUSION_CONCURRENCY }),

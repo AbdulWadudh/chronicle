@@ -83,11 +83,14 @@ export function buildNarrativePrompt(
       ? request.action
       : `${request.action}\n(Outcome: ${request.checkOutcome})`;
 
+  const context = buildContext(request.world, request.character, request.state, prompt.recentFacts);
+
   return [
-    { role: "system", content: system },
     {
       role: "system",
-      content: buildContext(request.world, request.character, request.state, prompt.recentFacts),
+      content: `${system}
+
+${context}`,
     },
     ...buildHistory(request.ancestry, prompt.historyDepth),
     { role: "user", content: action },

@@ -129,7 +129,10 @@ async function streamNarrative(
   const messages = buildNarrativePrompt(toNarrativeRequest(input, outcome), settings.prompt);
 
   let narrative = "";
-  for await (const token of streamChat(messages, { signal })) {
+  for await (const token of streamChat(messages, {
+    signal,
+    thinking: input.mode === "enhanced",
+  })) {
     narrative += token;
     send(input.socket, {
       v: PROTOCOL_VERSION,

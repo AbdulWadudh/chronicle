@@ -18,12 +18,11 @@ export function storage(): Bun.S3Client {
 
 export async function upload(key: string, bytes: Uint8Array, type: string): Promise<string> {
   await storage().write(key, bytes, { type });
-  const base = env().STORAGE_ENDPOINT.replace(/\/+$/u, "");
-  return `${base}/${env().STORAGE_BUCKET_ASSETS}/${key}`;
+  return `${env().STORAGE_ENDPOINT}/${env().STORAGE_BUCKET_ASSETS}/${key}`;
 }
 
 export function sceneKey(turnId: string): string {
-  return `scenes/${turnId}.webp`;
+  return `scenes/${turnId}.png`;
 }
 
 export function sentenceKey(turnId: string, sentenceIndex: number): string {
