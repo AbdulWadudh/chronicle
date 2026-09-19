@@ -5,6 +5,7 @@ import {
   type ThemeTokens,
 } from "@chronicle/shared";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useMemo } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -72,14 +73,17 @@ export const useThemeStore = create<ThemeState>()(
   ),
 );
 
-export function selectResolvedTokens(state: ThemeState): ThemeTokens {
-  const isDark = state.preference === "system" ? state.systemIsDark : state.preference === "dark";
-  const base = isDark ? DEFAULT_THEME_TOKENS : DEFAULT_LIGHT_THEME_TOKENS;
-  const story =
-    state.activeStoryId === null ? {} : (state.storyOverrides[state.activeStoryId] ?? {});
-  return mergeThemeTokens(mergeThemeTokens(base, state.globalOverrides), story);
-}
-
 export function useResolvedTheme(): ThemeTokens {
-  return useThemeStore(selectResolvedTokens);
+  const preference = useThemeStore((state) => state.preference);
+  const systemIsDark = useThemeStore((state) => state.systemIsDark);
+  const globalOverrides = useThemeStore((state) => state.globalOverrides);
+  const storyOverrides = useThemeStore((state) => state.storyOverrides);
+  const activeStoryId = useThemeStore((state) => state.activeStoryId);
+
+  return useMemo(() => {
+    const isDark = preference === "system" ? systemIsDark : preference === "dark";
+    const base = isDark ? DEFAULT_THEME_TOKENS : DEFAULT_LIGHT_THEME_TOKENS;
+    const story = activeStoryId === null ? {} : (storyOverrides[activeStoryId] ?? {});
+    return mergeThemeTokens(mergeThemeTokens(base, globalOverrides), story);
+  }, [preference, systemIsDark, globalOverrides, storyOverrides, activeStoryId]);
 }

@@ -344,3 +344,16 @@ launcher never duplicates an `--env-file` or a port.
 `Get-CimInstance` and `Get-NetTCPConnection` both fail without privileges in this shell,
 so readiness is a `TcpClient` connect and process cleanup goes through `netstat -ano`
 plus `Get-Process`. Crew binds no port, so its status cannot be probed.
+
+## Hermes and store gotchas
+
+`three` is pinned to `0.180.0`. From `0.186.0` the CJS build is a deprecation shim that
+calls `process.emitWarning`, which Hermes does not implement, so
+`require("three")` throws `undefined is not a function` the moment
+`@react-three/fiber/native` loads. Do not bump `three` without checking
+`node_modules/three/build/three.cjs` for `emitWarning`.
+
+A Zustand selector must never build a new object. `useThemeStore(selectResolvedTokens)`
+returned a freshly merged token object on every call, so React saw a new snapshot each
+render and looped until `Maximum update depth exceeded`. Select stored values
+individually and combine them in `useMemo`.
