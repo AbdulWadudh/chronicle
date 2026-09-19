@@ -11,8 +11,6 @@ import {
 } from "./session";
 import { runTurn } from "./turnSession";
 
-export const WS_PATH = "/api/v1/ws";
-
 export function websocketHandlers(): {
   open: (socket: ChronicleSocket) => void;
   close: (socket: ChronicleSocket) => void;

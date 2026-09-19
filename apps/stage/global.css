@@ -1,0 +1,27 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@import "nativewind/theme";
+
+@theme {
+  --color-canvas: #07070b;
+  --color-card: #111117;
+  --color-card-border: #23232e;
+  --color-input-surface: #16161d;
+  --color-audio-pill: #1c1c26;
+  --color-text-primary: #f4f4f7;
+  --color-text-secondary: #b7b7c4;
+  --color-text-muted: #72727f;
+  --color-text-accent: #a78bfa;
+  --color-primary: #7c5cff;
+  --color-primary-foreground: #0b0b10;
+  --color-secondary: #1f1f2a;
+  --color-secondary-foreground: #e6e6ee;
+  --color-accent: #22d3ee;
+  --color-accent-foreground: #04141a;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #dc2626;
+  --radius-card: 16px;
+}

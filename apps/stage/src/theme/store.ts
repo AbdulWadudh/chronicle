@@ -1,0 +1,85 @@
+import {
+  DEFAULT_LIGHT_THEME_TOKENS,
+  DEFAULT_THEME_TOKENS,
+  mergeThemeTokens,
+  type ThemeTokens,
+} from "@chronicle/shared";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+export const THEME_STORAGE_KEY = "@chronicle_theme_v2";
+
+export type ThemePreference = "system" | "dark" | "light";
+
+interface ThemeState {
+  preference: ThemePreference;
+  systemIsDark: boolean;
+  globalOverrides: Partial<ThemeTokens>;
+  storyOverrides: Record<string, Partial<ThemeTokens>>;
+  activeStoryId: string | null;
+  cinemaMode: boolean;
+  setPreference: (preference: ThemePreference) => void;
+  setSystemIsDark: (isDark: boolean) => void;
+  setGlobalOverride: (patch: Partial<ThemeTokens>) => void;
+  setStoryOverride: (storyId: string, patch: Partial<ThemeTokens>) => void;
+  clearStoryOverride: (storyId: string) => void;
+  setActiveStory: (storyId: string | null) => void;
+  toggleCinemaMode: () => void;
+  resetTheme: () => void;
+}
+
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set) => ({
+      preference: "system",
+      systemIsDark: true,
+      globalOverrides: {},
+      storyOverrides: {},
+      activeStoryId: null,
+      cinemaMode: true,
+      setPreference: (preference) => set({ preference }),
+      setSystemIsDark: (systemIsDark) => set({ systemIsDark }),
+      setGlobalOverride: (patch) =>
+        set((state) => ({ globalOverrides: { ...state.globalOverrides, ...patch } })),
+      setStoryOverride: (storyId, patch) =>
+        set((state) => ({
+          storyOverrides: {
+            ...state.storyOverrides,
+            [storyId]: { ...state.storyOverrides[storyId], ...patch },
+          },
+        })),
+      clearStoryOverride: (storyId) =>
+        set((state) => {
+          const next = { ...state.storyOverrides };
+          delete next[storyId];
+          return { storyOverrides: next };
+        }),
+      setActiveStory: (activeStoryId) => set({ activeStoryId }),
+      toggleCinemaMode: () => set((state) => ({ cinemaMode: !state.cinemaMode })),
+      resetTheme: () => set({ globalOverrides: {}, storyOverrides: {} }),
+    }),
+    {
+      name: THEME_STORAGE_KEY,
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        preference: state.preference,
+        globalOverrides: state.globalOverrides,
+        storyOverrides: state.storyOverrides,
+        cinemaMode: state.cinemaMode,
+      }),
+    },
+  ),
+);
+
+export function selectResolvedTokens(state: ThemeState): ThemeTokens {
+  const isDark = state.preference === "system" ? state.systemIsDark : state.preference === "dark";
+  const base = isDark ? DEFAULT_THEME_TOKENS : DEFAULT_LIGHT_THEME_TOKENS;
+  const story =
+    state.activeStoryId === null ? {} : (state.storyOverrides[state.activeStoryId] ?? {});
+  return mergeThemeTokens(mergeThemeTokens(base, state.globalOverrides), story);
+}
+
+export function useResolvedTheme(): ThemeTokens {
+  return useThemeStore(selectResolvedTokens);
+}

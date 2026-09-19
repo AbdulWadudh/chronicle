@@ -71,9 +71,18 @@ provably breaks the build:
 | Package | Pin | Reason |
 | --- | --- | --- |
 | `nativewind` | `5.0.0-rc.0` | `^5.0.0` matches nothing; v5 is prerelease-only |
-| `expo` | `~57.0.0` | SDK boundary |
+| `expo` | `~57.0.24` | SDK boundary. Stay on stable, not the 58 beta |
 | `react`, `react-dom`, `react-native` | the versions Expo SDK 57 requires | Expo will not boot on a mismatched React Native |
 | `expo-*` modules | the versions Expo SDK 57 requires | Same |
+| `react-native-css` | `3.1.0-rc.0` | exact peer of `nativewind@5.0.0-rc.0`; `latest` is 3.0.7 |
+
+Client versions come from `node_modules/expo/bundledNativeModules.json`, never from
+`latest`. SDK 57 wants `react-native-gesture-handler@~2.32` while `latest` is 3.x, and
+`@react-native-async-storage/async-storage@2.2` while `latest` is 3.x — both whole majors.
+
+SDK 58 was evaluated on 2026-09-19 and rejected: it pins `react-native@0.88.0-rc.0`, but
+the `react-native-reanimated@4.6.0` it ships declares `react-native: 0.83 - 0.87`. Revisit
+once 58 and RN 0.88 are both stable.
 
 `typescript` stays on `"latest"` (7.0.2, the Go-native compiler) deliberately. Fall back
 to `^5` only if the compiler itself, rather than our code, fails a typecheck.
@@ -104,8 +113,8 @@ per the Bun-first rule above.
 `.cjs`, or any measured file over 300 lines. It warns at 250. Markdown, JSON, and TOML
 may contain comments — they are documentation and configuration.
 
-Generated output is exempt and ignored by the auditor: `migrations/` and its drizzle
-snapshots. The ceiling governs code a human edits. Never hand-edit a generated file.
+Generated output is exempt and ignored by the auditor: `migrations/` with its drizzle
+snapshots, and `*-env.d.ts` ambient type files. The ceiling governs code a human edits. Never hand-edit a generated file.
 
 ## Data model decisions
 

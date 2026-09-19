@@ -1,10 +1,11 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { env } from "@chronicle/config";
+import { AUTH_PREFIX } from "@chronicle/shared";
 import { betterAuth } from "better-auth";
 import type { ChronicleDatabase } from "./client";
 import * as schema from "./schema";
 
-export const AUTH_BASE_PATH = "/api/v1/auth";
+export const AUTH_BASE_PATH = AUTH_PREFIX;
 
 export function createAuth(db: ChronicleDatabase) {
   const configuration = env();

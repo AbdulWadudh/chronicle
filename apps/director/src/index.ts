@@ -1,8 +1,9 @@
 import { env } from "@chronicle/config";
 import { runMigrations } from "@chronicle/db";
+import { WS_PATH } from "@chronicle/shared";
 import { createApp } from "./app";
 import { verifyToken } from "./auth";
-import { WS_PATH, websocketHandlers } from "./ws/gateway";
+import { websocketHandlers } from "./ws/gateway";
 import type { SocketData } from "./ws/session";
 
 await runMigrations();

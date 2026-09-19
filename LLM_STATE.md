@@ -2,7 +2,7 @@
 
 Build progress tracker. Read this first. Update it at every wave gate, before the commit.
 
-**Status:** Wave 3 complete. Awaiting go-ahead for Wave 4.
+**Status:** Wave 4a complete. Awaiting go-ahead for Wave 4b.
 **Updated:** 2026-09-19
 
 ## Waves
@@ -12,7 +12,8 @@ Build progress tracker. Read this first. Update it at every wave gate, before th
 | 1 | Governance, root workspace, audit script | done |
 | 2 | `@chronicle/config`, `@chronicle/shared`, `@chronicle/db` | done |
 | 3 | `@chronicle/director`, `@chronicle/crew` | done |
-| 4 | `@chronicle/stage` | next |
+| 4a | `@chronicle/stage` foundation: theme, hooks, DRY components, screens | done |
+| 4b | Skia flowchart, R3F dice, NarrativeStream, ChoicePills, Director console, settings UI | next |
 
 ## Built
 
@@ -27,6 +28,12 @@ Build progress tracker. Read this first. Update it at every wave gate, before th
   `engine/{llm,prompt,adjudicator}`, `ws/{gateway,session,turnSession,buffer,loader,context}`
 - `apps/crew` — `redis.ts`, `storage.ts` (Bun.S3Client),
   `processors/{diffusion/{client,workflow,index},tts,memory}`
+- `packages/shared/api.ts` — single home for `/api/v1`, WS path, default director port
+- `apps/stage` — Expo SDK 57, NativeWind v5 rc, `theme/{store,tokens,ThemeEngine}`,
+  `hooks/{useGameSocket,useAudioQueue,useTurnStream,useResponsiveLayout}`,
+  `lib/{api,auth,session}`, `components/common/{AppModal,PaginatedList,usePaginatedData}`,
+  `components/character/PointBuyStepper`, routes `_layout`, `(auth)/sign-in`, `index`,
+  `character-select`, `play/[id]`
 
 ## Verified
 
@@ -46,9 +53,11 @@ parsing checked against expected values.
 
 ## Open
 
-- `public/logo_x512.{png,webp}` at root, move into `apps/stage` in Wave 4.
-- `apps/stage` needs its own tsconfig `types` so the root `@types/bun` does not leak the
-  `Bun` global into Hermes code.
+- Placeholder embedding in `crew/processors/memory.ts` — a character-frequency hash, not a
+  real model. Storage and recall work; retrieval quality will be poor until replaced.
+- Nothing has been run on a device or simulator yet. Metro, NativeWind v5 rc and the
+  Expo Router tree are unverified at runtime.
+- Revisit Expo SDK 58 once it and React Native 0.88 are both stable.
 - Nothing has run against live Dragonfly, RustFS, diffusion, TTS, or LLM endpoints.
 - A world with few stats and a large `pointBudget` lets every stat be maxed. World
   authors must size the budget to the stat count.

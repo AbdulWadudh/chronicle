@@ -27,6 +27,8 @@ const MEASURED_EXTENSIONS = new Set([
   ".yml",
 ]);
 
+const GENERATED_SUFFIXES = ["-env.d.ts"];
+
 const SCAN_PATTERN = "**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,toml,yaml,yml}";
 
 interface Violation {
@@ -36,6 +38,7 @@ interface Violation {
 
 function isIgnored(relativePath: string): boolean {
   const segments = relativePath.split("/");
+  if (GENERATED_SUFFIXES.some((suffix) => relativePath.endsWith(suffix))) return true;
   return segments.some((segment) => IGNORED_SEGMENTS.includes(segment));
 }
 

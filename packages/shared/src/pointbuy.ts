@@ -1,8 +1,12 @@
 import { CUMULATIVE_RANK_COST, MAX_STAT_RANK, MIN_STAT_RANK, STAT_MODIFIER_PIVOT } from "./rules";
-import type { StatBlock, StatDefinition } from "./types";
+import type { StatBlock, StatDefinition, StatRank } from "./types";
 
 function clampRank(rank: number): number {
   return Math.min(Math.max(Math.trunc(rank), MIN_STAT_RANK), MAX_STAT_RANK);
+}
+
+export function clampStatRank(rank: number): StatRank {
+  return clampRank(rank) as StatRank;
 }
 
 export function cumulativeCostOfRank(rank: number): number {
