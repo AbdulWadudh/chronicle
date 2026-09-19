@@ -9,10 +9,10 @@ Use Bun native APIs. Node builtins and npm packages only where Bun has no equiva
 - `Bun.file` / `Bun.write` / `Bun.Glob` / `Bun.serve` / `Bun.spawn` / `Bun.$`
 - `bun:sqlite` via `drizzle-orm/bun-sqlite`, `Bun.S3Client`, `Bun.password`, `bun:test`
 - `fetch` and `.env` are built in. No `axios`, no `dotenv`.
-- Bun has no path, mkdir, or homedir API. Keep `node:path`, `node:os` (`homedir` only),
-  `node:fs` (`mkdirSync` only), `node:url`, `node:stream`, `node:buffer`.
+- Bun has no path or homedir API. Keep `node:path`, `node:os` (`homedir` only),
+  `node:url`, `node:stream`, `node:buffer`. No `node:fs` — `Bun.write` creates parents.
 - `process.platform` over `os.platform()`. `Bun.write` already creates parent directories.
-- Keep `ioredis` (BullMQ needs it) and `onnxruntime-node` (no Bun ONNX runtime).
+- Keep `ioredis`. BullMQ requires it as its connection type.
 
 `apps/stage` is exempt. It runs on Hermes, no `Bun.*` or `bun:` imports there.
 
@@ -79,7 +79,7 @@ provably breaks the build:
 to `^5` only if the compiler itself, rather than our code, fails a typecheck.
 
 Everything else — `hono`, `drizzle-orm`, `better-auth`, `bullmq`, `ioredis`, `zod`,
-`@lancedb/lancedb`, `onnxruntime-node`, `three`, `zustand` — is `"latest"`.
+`@lancedb/lancedb`, `three`, `zustand` — is `"latest"`.
 
 `@aws-sdk/client-s3` is **not** a dependency. Object storage goes through `Bun.S3Client`,
 per the Bun-first rule above.
@@ -139,3 +139,38 @@ Path versioning rules are global, in `~/.claude/rules/api.md`. Chronicle mounts:
 - `/api/v1/*` — REST routes
 - `/api/v1/ws` — WebSocket upgrade
 - `/health` — unversioned liveness
+
+## External service contracts
+
+- `LLM_ENDPOINT` — OpenAI-compatible `POST /v1/chat/completions`, SSE streaming.
+- `DIFFUSION_ENDPOINT` — ComfyUI. `POST /prompt` with an API-format workflow and a
+  `client_id`, poll `GET /history/{promptId}`, fetch bytes from `GET /view`. The
+  SDXL-Lightning workflow template lives in `apps/crew/src/processors/diffusion/`.
+- `TTS_ENDPOINT` — Kokoro-FastAPI, OpenAI-compatible `POST /v1/audio/speech`.
+  No in-process ONNX. `onnxruntime-node` is not a dependency.
+- Queue payloads are typed in `@chronicle/shared/jobs`. Director enqueues, crew consumes,
+  neither redefines a shape.
+
+## WebSocket authentication
+
+The client obtains a session token over HTTPS, then connects to
+`/api/v1/ws?token=...`. The director validates it with Better Auth before accepting the
+upgrade and closes with 1008 on failure. Cookies are not used — React Native does not
+send them on a WS upgrade. Never log the token.
+
+## Configuration tiers
+
+Tier rules are global, in `~/.claude/rules/config.md`. Chronicle places them as:
+
+| Tier | Home | Examples |
+| --- | --- | --- |
+| Constants | `@chronicle/shared/rules` | `D20_SIDES`, `CRITICAL_SUCCESS`, rank bounds, cost curve |
+| Environment | `@chronicle/config` | ports, `DATABASE_PATH`, `AUTH_SECRET`, the four endpoints |
+| Runtime | `@chronicle/shared/settings` schema, stored by `@chronicle/db` | `image.*`, `tts.*`, `narrative.*`, `prompt.*`, `turn.*`, `dice.*` |
+
+- Constants live in `shared` because `apps/stage` needs them and may not import `config`.
+- Runtime settings are one row (`settings.id = "runtime"`) holding the whole nested object.
+- `loadSettings()` caches; `updateSettings()` writes, updates the cache, and notifies.
+  The director then publishes `SETTINGS_CHANNEL` so crew invalidates too.
+- The admin surface is `GET/PATCH /api/v1/settings` and `POST /api/v1/settings/reset`.
+- Job payloads carry resolved values. A processor never re-reads a default.

@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-export const MIN_STAT_RANK = 1;
-export const MAX_STAT_RANK = 5;
-
 export const statRankSchema = z.union([
   z.literal(1),
   z.literal(2),

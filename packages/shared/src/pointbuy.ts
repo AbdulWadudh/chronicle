@@ -1,12 +1,12 @@
-import { MAX_STAT_RANK, MIN_STAT_RANK, type StatBlock, type StatDefinition } from "./types";
+import { CUMULATIVE_RANK_COST, MAX_STAT_RANK, MIN_STAT_RANK, STAT_MODIFIER_PIVOT } from "./rules";
+import type { StatBlock, StatDefinition } from "./types";
 
-export const DEFAULT_POINT_BUDGET = 20;
-
-const CUMULATIVE_RANK_COST: readonly number[] = [0, 0, 1, 2, 4, 6];
+function clampRank(rank: number): number {
+  return Math.min(Math.max(Math.trunc(rank), MIN_STAT_RANK), MAX_STAT_RANK);
+}
 
 export function cumulativeCostOfRank(rank: number): number {
-  const clamped = Math.min(Math.max(Math.trunc(rank), MIN_STAT_RANK), MAX_STAT_RANK);
-  return CUMULATIVE_RANK_COST[clamped] ?? 0;
+  return CUMULATIVE_RANK_COST[clampRank(rank)] ?? 0;
 }
 
 export function costOfNextRank(rank: number): number | null {
@@ -23,8 +23,7 @@ export function remainingPoints(stats: StatBlock, budget: number): number {
 }
 
 export function canRaise(stats: StatBlock, statId: string, budget: number): boolean {
-  const current = stats[statId] ?? MIN_STAT_RANK;
-  const step = costOfNextRank(current);
+  const step = costOfNextRank(stats[statId] ?? MIN_STAT_RANK);
   if (step === null) return false;
   return remainingPoints(stats, budget) >= step;
 }
@@ -54,5 +53,5 @@ export function isValidBuild(
 }
 
 export function statModifier(rank: number): number {
-  return Math.min(Math.max(Math.trunc(rank), MIN_STAT_RANK), MAX_STAT_RANK) - 3;
+  return clampRank(rank) - STAT_MODIFIER_PIVOT;
 }

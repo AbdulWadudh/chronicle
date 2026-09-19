@@ -1,4 +1,5 @@
 import type { Inventory, StatBlock, StatDefinition, WorldState } from "@chronicle/shared";
+import { DEFAULT_POINT_BUDGET } from "@chronicle/shared";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { users } from "./auth";
 
@@ -19,7 +20,7 @@ export const worlds = sqliteTable(
     statDefinitionsJson: text("stat_definitions_json", { mode: "json" })
       .$type<StatDefinition[]>()
       .notNull(),
-    pointBudget: integer("point_budget").notNull().default(20),
+    pointBudget: integer("point_budget").notNull().default(DEFAULT_POINT_BUDGET),
     initialStateJson: text("initial_state_json", { mode: "json" }).$type<WorldState>().notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   },

@@ -2,7 +2,7 @@
 
 Build progress tracker. Read this first. Update it at every wave gate, before the commit.
 
-**Status:** Wave 2 complete. Awaiting go-ahead for Wave 3.
+**Status:** Wave 3 complete. Awaiting go-ahead for Wave 4.
 **Updated:** 2026-09-19
 
 ## Waves
@@ -11,8 +11,8 @@ Build progress tracker. Read this first. Update it at every wave gate, before th
 | --- | --- | --- |
 | 1 | Governance, root workspace, audit script | done |
 | 2 | `@chronicle/config`, `@chronicle/shared`, `@chronicle/db` | done |
-| 3 | `@chronicle/director`, `@chronicle/crew` | next |
-| 4 | `@chronicle/stage` | not started |
+| 3 | `@chronicle/director`, `@chronicle/crew` | done |
+| 4 | `@chronicle/stage` | next |
 
 ## Built
 
@@ -21,8 +21,12 @@ Build progress tracker. Read this first. Update it at every wave gate, before th
 - `scripts/audit.ts` — line ceiling + zero-comment scan, ignores generated `migrations/`
 - `packages/config` — `env.ts` (Zod, lazy + cached), `paths.ts` (OS data root, `ensureFile`)
 - `packages/shared` — `types.ts`, `turns.ts`, `theme.ts`, `pointbuy.ts`, `protocol/`
-- `packages/db` — `schema/{auth,world,narrative}`, `client.ts` (bun:sqlite WAL),
-  `auth.ts` (Better Auth at `/api/v1/auth`), `migrate.ts`, migration `0000` generated
+- `packages/db` — `schema/{auth,world,narrative,settings}`, `client.ts` (bun:sqlite WAL),
+  `auth.ts` (Better Auth at `/api/v1/auth`), `settings.ts`, migrations `0000`+`0001`
+- `apps/director` — `app.ts`, `auth.ts`, `queue.ts`, `routes/{worlds,characters,turns,settings}`,
+  `engine/{llm,prompt,adjudicator}`, `ws/{gateway,session,turnSession,buffer,loader,context}`
+- `apps/crew` — `redis.ts`, `storage.ts` (Bun.S3Client),
+  `processors/{diffusion/{client,workflow,index},tts,memory}`
 
 ## Verified
 

@@ -8,6 +8,13 @@
       "when": 1789795467552,
       "tag": "0000_noisy_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789796539331,
+      "tag": "0001_happy_malice",
+      "breakpoints": true
     }
   ]
 }

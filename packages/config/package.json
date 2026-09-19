@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "zod": "latest"
+    "zod": "latest",
+    "@chronicle/shared": "workspace:*"
   }
 }

@@ -1,0 +1,44 @@
+import { AUTH_BASE_PATH } from "@chronicle/db";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { type AuthEnv, getAuth, requireSession } from "./auth";
+import { characterRoutes } from "./routes/characters";
+import { settingsRoutes } from "./routes/settings";
+import { turnRoutes } from "./routes/turns";
+import { worldRoutes } from "./routes/worlds";
+import { activeTurnCount, connectionCount } from "./ws/session";
+
+export const API_PREFIX = "/api/v1";
+
+export function createApp(): Hono<AuthEnv> {
+  const app = new Hono<AuthEnv>();
+
+  app.use("*", logger());
+  app.use("*", cors({ origin: (origin) => origin, credentials: true }));
+
+  app.get("/health", (context) =>
+    context.json({
+      status: "ok",
+      connections: connectionCount(),
+      activeTurns: activeTurnCount(),
+    }),
+  );
+
+  app.on(["GET", "POST"], `${AUTH_BASE_PATH}/*`, async (context) => {
+    const auth = await getAuth();
+    return auth.handler(context.req.raw);
+  });
+
+  const api = new Hono<AuthEnv>();
+  api.use("*", requireSession);
+  api.route("/worlds", worldRoutes);
+  api.route("/characters", characterRoutes);
+  api.route("/turns", turnRoutes);
+  api.route("/settings", settingsRoutes);
+
+  app.route(API_PREFIX, api);
+
+  app.notFound((context) => context.json({ error: "Not found." }, 404));
+  return app;
+}

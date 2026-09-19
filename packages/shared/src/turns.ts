@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CRITICAL_FAILURE, D20_SIDES } from "./rules";
 import { statePatchSchema } from "./types";
 
 export const diceCheckSchema = z.object({
@@ -6,7 +7,7 @@ export const diceCheckSchema = z.object({
   stat: z.string(),
   dc: z.number().int(),
   baseModifier: z.number().int(),
-  roll: z.number().int().min(1).max(20).nullable(),
+  roll: z.number().int().min(CRITICAL_FAILURE).max(D20_SIDES).nullable(),
   succeeded: z.boolean().nullable(),
 });
 

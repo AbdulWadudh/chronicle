@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CRITICAL_FAILURE, D20_SIDES } from "../rules";
 import { turnNodeSchema } from "../turns";
 import { serverEnvelopeSchema } from "./envelope";
 
@@ -36,6 +37,8 @@ export const diceCheckRequiredSchema = base.extend({
   stat: z.string(),
   dc: z.number().int(),
   baseModifier: z.number().int(),
+  roll: z.number().int().min(CRITICAL_FAILURE).max(D20_SIDES),
+  succeeded: z.boolean(),
 });
 
 export const turnCommittedSchema = base.extend({
