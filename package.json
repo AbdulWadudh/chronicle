@@ -10,13 +10,13 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint",
-    "check": "bun run audit && turbo run typecheck",
     "audit": "bun run scripts/audit.ts",
-    "format": "prettier --write ."
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "check": "bun run audit && bun run lint && turbo run typecheck"
   },
   "devDependencies": {
-    "prettier": "latest",
+    "@biomejs/biome": "latest",
     "turbo": "latest",
     "typescript": "latest"
   }

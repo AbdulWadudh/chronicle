@@ -1,6 +1,0 @@
-node_modules
-dist
-.turbo
-.expo
-bun.lock
-public

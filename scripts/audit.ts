@@ -1,11 +1,10 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { extname, join, relative, sep } from "node:path";
+import { extname, join, sep } from "node:path";
 
 const ROOT = join(import.meta.dir, "..");
 const LINE_CEILING = 300;
 const REFACTOR_WARNING = 250;
 
-const IGNORED_DIRECTORIES = new Set([
+const IGNORED_SEGMENTS = [
   "node_modules",
   "dist",
   "build",
@@ -15,24 +14,38 @@ const IGNORED_DIRECTORIES = new Set([
   "public",
   "android",
   "ios",
-]);
+];
 
 const CODE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
-const MEASURED_EXTENSIONS = new Set([...CODE_EXTENSIONS, ".json", ".css", ".toml", ".yaml", ".yml"]);
+const MEASURED_EXTENSIONS = new Set([
+  ...CODE_EXTENSIONS,
+  ".json",
+  ".css",
+  ".toml",
+  ".yaml",
+  ".yml",
+]);
+
+const SCAN_PATTERN = "**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,toml,yaml,yml}";
 
 interface Violation {
   file: string;
   detail: string;
 }
 
-function collectFiles(directory: string, found: string[] = []): string[] {
-  for (const entry of readdirSync(directory)) {
-    if (IGNORED_DIRECTORIES.has(entry)) continue;
-    const absolute = join(directory, entry);
-    if (statSync(absolute).isDirectory()) collectFiles(absolute, found);
-    else found.push(absolute);
+function isIgnored(relativePath: string): boolean {
+  const segments = relativePath.split("/");
+  return segments.some((segment) => IGNORED_SEGMENTS.includes(segment));
+}
+
+function collectFiles(): string[] {
+  const glob = new Bun.Glob(SCAN_PATTERN);
+  const found: string[] = [];
+  for (const match of glob.scanSync({ cwd: ROOT, onlyFiles: true, dot: true })) {
+    const normalized = match.split(sep).join("/");
+    if (!isIgnored(normalized)) found.push(normalized);
   }
-  return found;
+  return found.sort();
 }
 
 function findCommentLine(source: string): number | null {
@@ -56,21 +69,36 @@ function findCommentLine(source: string): number | null {
   return null;
 }
 
-function auditFile(absolute: string, lineViolations: Violation[], commentViolations: Violation[], warnings: Violation[]): void {
-  const extension = extname(absolute);
-  const file = relative(ROOT, absolute).split(sep).join("/");
-  const source = readFileSync(absolute, "utf8");
-  const lineCount = source.split("\n").length;
+interface AuditResult {
+  lineViolations: Violation[];
+  commentViolations: Violation[];
+  warnings: Violation[];
+}
 
-  if (MEASURED_EXTENSIONS.has(extension)) {
-    if (lineCount > LINE_CEILING) lineViolations.push({ file, detail: `${lineCount} lines` });
-    else if (lineCount >= REFACTOR_WARNING) warnings.push({ file, detail: `${lineCount} lines` });
+async function auditRepository(): Promise<AuditResult> {
+  const result: AuditResult = { lineViolations: [], commentViolations: [], warnings: [] };
+
+  for (const file of collectFiles()) {
+    const extension = extname(file);
+    const source = await Bun.file(join(ROOT, file)).text();
+    const lineCount = source.split("\n").length;
+
+    if (MEASURED_EXTENSIONS.has(extension)) {
+      if (lineCount > LINE_CEILING)
+        result.lineViolations.push({ file, detail: `${lineCount} lines` });
+      else if (lineCount >= REFACTOR_WARNING)
+        result.warnings.push({ file, detail: `${lineCount} lines` });
+    }
+
+    if (CODE_EXTENSIONS.has(extension)) {
+      const commentLine = findCommentLine(source);
+      if (commentLine !== null) {
+        result.commentViolations.push({ file, detail: `comment at line ${commentLine}` });
+      }
+    }
   }
 
-  if (CODE_EXTENSIONS.has(extension)) {
-    const commentLine = findCommentLine(source);
-    if (commentLine !== null) commentViolations.push({ file, detail: `comment at line ${commentLine}` });
-  }
+  return result;
 }
 
 function report(title: string, violations: Violation[]): void {
@@ -82,13 +110,7 @@ function report(title: string, violations: Violation[]): void {
   for (const violation of violations) console.log(`      ${violation.file} (${violation.detail})`);
 }
 
-const lineViolations: Violation[] = [];
-const commentViolations: Violation[] = [];
-const warnings: Violation[] = [];
-
-for (const absolute of collectFiles(ROOT)) {
-  auditFile(absolute, lineViolations, commentViolations, warnings);
-}
+const { lineViolations, commentViolations, warnings } = await auditRepository();
 
 report(`line ceiling (<= ${LINE_CEILING})`, lineViolations);
 report("zero comments in code", commentViolations);

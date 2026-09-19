@@ -25,6 +25,40 @@ responsibility, never by line count:
 - A worker grows, one file per processor under `processors/`.
 - A store grows, one slice per concern, composed in the root store.
 
+## Bun first, Node only as fallback
+
+Everything that runs on Bun — `apps/director`, `apps/crew`, `packages/*`, `scripts/` —
+uses the Bun native API. Reach for a `node:` builtin or an npm package **only** when Bun
+has no equivalent. Verified against the pinned Bun runtime:
+
+| Instead of | Use |
+| --- | --- |
+| `fs.readFile`, `fs.readFileSync` | `Bun.file(path).text()` / `.json()` / `.bytes()` |
+| `fs.writeFile`, `fs.writeFileSync` | `Bun.write(path, data)` |
+| `fs.existsSync` | `await Bun.file(path).exists()` |
+| `glob`, `fast-glob`, hand-rolled `readdir` walkers | `new Bun.Glob(pattern).scanSync()` |
+| `http.createServer`, `@hono/node-server` | `Bun.serve()` |
+| `better-sqlite3`, `node:sqlite` | `bun:sqlite` (`drizzle-orm/bun-sqlite`) |
+| `@aws-sdk/client-s3` | `Bun.S3Client` |
+| `bcrypt`, `argon2` | `Bun.password.hash` / `.verify` |
+| `crypto.createHash` | `new Bun.CryptoHasher(algorithm)` |
+| `child_process.spawn`, `execa` | `Bun.spawn` / `Bun.$` |
+| `dotenv` | Bun loads `.env` automatically |
+| `jest`, `vitest` | `bun:test` |
+| `node-fetch`, `axios` | global `fetch` |
+
+Legitimate Node fallbacks, because Bun has no native replacement: `node:path`,
+`node:os`, `node:url`, `node:stream`, `node:buffer`.
+
+Two deliberate exceptions where an npm package wins:
+
+- **`ioredis`** stays. BullMQ requires it as its connection; `Bun.redis` is not a
+  drop-in for that contract.
+- **`onnxruntime-node`** stays. Bun has no ONNX inference runtime.
+
+`apps/stage` is exempt entirely. It runs on Hermes and the browser, not Bun. No `Bun.*`
+global and no `bun:` import may appear anywhere under `apps/stage`.
+
 ## Types
 
 - `strict` plus `noUncheckedIndexedAccess`. Never `any`. Use `unknown` and narrow.

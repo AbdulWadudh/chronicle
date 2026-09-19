@@ -60,4 +60,7 @@ provably breaks the build:
 | `expo-*` modules | the versions Expo SDK 57 requires | Same |
 
 Everything else — `hono`, `drizzle-orm`, `better-auth`, `bullmq`, `ioredis`, `zod`,
-`@aws-sdk/client-s3`, `@lancedb/lancedb`, `onnxruntime-node`, `three`, `zustand` — is `"latest"`.
+`@lancedb/lancedb`, `onnxruntime-node`, `three`, `zustand` — is `"latest"`.
+
+`@aws-sdk/client-s3` is **not** a dependency. Object storage goes through `Bun.S3Client`,
+per the Bun-first rule in `.claude/rules/codestyle.md`.
