@@ -21,20 +21,13 @@ Build progress tracker. Read this first. Update it at every wave gate, before th
 - Governance: `CLAUDE.md`, `.claude/rules/{architecture,codestyle,ui-animations}.md`
 - `scripts/audit.ts` — 300-line ceiling + zero-comment scan, exit 1 on violation
 
-## Locked decisions
+## Process
 
-Do not re-litigate these. Raise a question if one needs to change.
-
-- Deps are `"latest"` except the Expo SDK 57 client surface and `nativewind@5.0.0-rc.0`.
-  `^5.0.0` resolves to nothing — v5 is prerelease-only.
-- `typescript@latest` is 7.0.2 (Go-native). Deliberate. Fall back to `^5` only if the
-  compiler, not our code, fails a typecheck.
-- `LLM_ENDPOINT` is OpenAI-compatible `/v1/chat/completions` + SSE. Structured output via
-  JSON schema, not GBNF, so llama.cpp / vLLM / Ollama are interchangeable.
-- Biome replaces Prettier. Bun native APIs over Node.
-- `@aws-sdk/client-s3` dropped for `Bun.S3Client`. SQLite is `bun:sqlite` via
-  `drizzle-orm/bun-sqlite`. `ioredis` and `onnxruntime-node` stay.
-- Commit at each wave gate. Do not start the next wave unprompted.
+- Stop at each wave gate. Report, wait for the go-ahead, then commit. Never start the
+  next wave unprompted.
+- Surface spec conflicts as questions before writing the files they affect.
+- Settled technical decisions live in `.claude/rules/`, not here. Raise a question
+  rather than quietly changing one.
 
 ## Open
 

@@ -59,6 +59,9 @@ provably breaks the build:
 | `react`, `react-dom`, `react-native` | the versions Expo SDK 57 requires | Expo will not boot on a mismatched React Native |
 | `expo-*` modules | the versions Expo SDK 57 requires | Same |
 
+`typescript` stays on `"latest"` (7.0.2, the Go-native compiler) deliberately. Fall back
+to `^5` only if the compiler itself, rather than our code, fails a typecheck.
+
 Everything else — `hono`, `drizzle-orm`, `better-auth`, `bullmq`, `ioredis`, `zod`,
 `@lancedb/lancedb`, `onnxruntime-node`, `three`, `zustand` — is `"latest"`.
 

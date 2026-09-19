@@ -2,8 +2,8 @@
 
 Local-first interactive visual RPG. Turborepo + Bun workspaces, scope `@chronicle`.
 
-Read `LLM_STATE.md` first — it holds current progress and locked decisions.
-Update it at every wave gate, before the commit.
+Read `LLM_STATE.md` first — current progress and open items. Update it at every wave
+gate, before the commit.
 
 ## Taxonomy
 
@@ -30,23 +30,16 @@ bun run format       # biome check --write
 turbo run typecheck
 ```
 
-## Non-negotiable rules
+## Rules
 
-1. **300-line ceiling.** No file exceeds 300 lines. At 250 lines, decompose into
-   submodules, hooks, atomic components, or schema fragments before continuing.
-   `bun run audit` enforces this and fails the build.
-2. **Zero comments.** No `//`, `/* */`, or `/** */` anywhere in `.ts`, `.tsx`,
-   `.js`, `.jsx`, `.mjs`, `.cjs`. Names, types, and control flow carry the meaning.
-   `bun run audit` enforces this and fails the build.
-3. **Apps never import apps.** All cross-cutting code lives in `packages/*`.
-   When a file splits, make a folder for the feature and keep its parts together —
-   never a flat directory of loose files.
-4. **Bun first.** Use Bun native APIs on the server and in scripts; Node or npm only
-   where Bun has no equivalent. `apps/stage` is exempt (Hermes).
-5. **`expo-av` is banned.** Audio is `expo-audio` only.
-6. **Dependency policy.** Everything resolves to `"latest"` except the Expo client
-   surface, which is pinned to the versions Expo SDK 57 requires, and `nativewind`,
-   pinned to the published v5 release candidate. See `.claude/rules/architecture.md`.
+Every rule lives in exactly one file under `.claude/rules/`, auto-loaded each session.
+Never restate one elsewhere — a second copy is a copy that will go stale.
+
+- `architecture.md` — import boundaries, runtime split, storage paths, model access, dependencies
+- `codestyle.md` — zero comments, 300-line ceiling, file layout, Bun first, types, errors
+- `ui-animations.md` — Reanimated worklets, Skia, R3F, expo-audio, reduced motion
+
+`bun run audit` enforces the 300-line ceiling and the zero-comment rule, and fails the build.
 
 ## Skills
 
