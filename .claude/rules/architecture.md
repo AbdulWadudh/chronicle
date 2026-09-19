@@ -280,3 +280,32 @@ The budget is enforced client-side: `max_tokens` is raised by `narrative.thinkin
 reasoning deltas are dropped from the stream, and if reasoning consumed everything and no
 content arrived, the call is retried once with thinking off. `completeStructured` always
 disables thinking — it needs JSON, not prose.
+
+## Asset layout
+
+Keys are entity-scoped so deleting an entity is a single prefix delete. SQL cascade does
+not touch object storage, so this is the only layout where cleanup is not a manual join.
+
+```
+worlds/<worldId>/cover.png
+worlds/<worldId>/characters/<characterId>/portrait.png
+worlds/<worldId>/characters/<characterId>/turns/<turnId>/scene-<variant>.png
+worlds/<worldId>/characters/<characterId>/turns/<turnId>/audio/<sentenceIndex>.mp3
+```
+
+Builders live in `@chronicle/shared/assets`. Never concatenate a key at a call site.
+
+`REGENERATE` writes a new numbered variant (`scene-2.png`) rather than overwriting, so a
+cached client never serves stale bytes and earlier renders stay comparable.
+
+The bucket has a public-read policy on `s3:GetObject`. Stage renders images and plays
+audio straight from the URL with no auth header, so objects must be readable anonymously.
+Writes still require the RustFS credentials. Do not put anything private in this bucket.
+
+## VRAM budget
+
+Measured on a 16 GB card with everything resident — 9B Q6_K at 32K context with q8_0 KV,
+nomic-embed, ComfyUI holding SDXL Lightning, and Kokoro: **11.9 GB of 16.3 GB**. Keep
+`-ctk q8_0`. Dropping the K cache to q4_0 saves little and measurably hurts long-context
+coherence, which is exactly what a story accumulating turn history depends on. If VRAM
+ever gets tight, lower `-ctv` first — the value cache quantizes far more gracefully.

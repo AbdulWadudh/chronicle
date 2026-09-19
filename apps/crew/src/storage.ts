@@ -20,11 +20,3 @@ export async function upload(key: string, bytes: Uint8Array, type: string): Prom
   await storage().write(key, bytes, { type });
   return `${env().STORAGE_ENDPOINT}/${env().STORAGE_BUCKET_ASSETS}/${key}`;
 }
-
-export function sceneKey(turnId: string): string {
-  return `scenes/${turnId}.png`;
-}
-
-export function sentenceKey(turnId: string, sentenceIndex: number): string {
-  return `audio/${turnId}/${sentenceIndex}.mp3`;
-}

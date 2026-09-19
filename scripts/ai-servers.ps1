@@ -5,21 +5,26 @@ param(
   [string]$Action = 'start',
   [string]$Model = 'G:\AI\MODELS\Qwen3.5_9B\Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf',
   [switch]$WithEmbeddings,
-  [int]$Tail = 20
+  [int]$Tail = 20,
+  [string]$AiRoot = 'G:\AI\EIDOLON',
+  [int]$Context = 32768,
+  [ValidateSet('f16', 'q8_0', 'q5_1', 'q4_0')]
+  [string]$CacheKey = 'q8_0',
+  [ValidateSet('f16', 'q8_0', 'q5_1', 'q4_0')]
+  [string]$CacheValue = 'q8_0'
 )
 
 $ErrorActionPreference = 'Stop'
 
-$Eidolon = 'G:\AI\EIDOLON'
-$EmbedModel = "$Eidolon\MODELS\nomic-embed-text-v1.5.Q5_K_M.gguf"
+$EmbedModel = "$AiRoot\MODELS\nomic-embed-text-v1.5.Q5_K_M.gguf"
 $RunDir = Join-Path $env:LOCALAPPDATA 'chronicle\ai'
 $LogDir = Join-Path $RunDir 'logs'
 
 $Services = @(
-  @{ Name = 'llm'; Port = 8080; Path = "$Eidolon\LLAMA_CPP"; Managed = $true }
-  @{ Name = 'embed'; Port = 8081; Path = "$Eidolon\LLAMA_CPP"; Managed = $true }
-  @{ Name = 'comfy'; Port = 8188; Path = "$Eidolon\COMFY_UI"; Managed = $true }
-  @{ Name = 'tts'; Port = 8880; Path = "$Eidolon\KOKORO_TTS"; Managed = $true }
+  @{ Name = 'llm'; Port = 8080; Path = "$AiRoot\LLAMA_CPP"; Managed = $true }
+  @{ Name = 'embed'; Port = 8081; Path = "$AiRoot\LLAMA_CPP"; Managed = $true }
+  @{ Name = 'comfy'; Port = 8188; Path = "$AiRoot\COMFY_UI"; Managed = $true }
+  @{ Name = 'tts'; Port = 8880; Path = "$AiRoot\KOKORO_TTS"; Managed = $true }
   @{ Name = 'redis'; Port = 6379; Path = $null; Managed = $false }
   @{ Name = 'store'; Port = 9000; Path = $null; Managed = $false }
 )
@@ -84,19 +89,19 @@ function Build-Launchers {
   New-Item -ItemType Directory -Force -Path $RunDir, $LogDir | Out-Null
   return @{
     llm   = Write-Launcher 'llm' @(
-      "cd /d `"$Eidolon\LLAMA_CPP`""
-      "`"$Eidolon\LLAMA_CPP\llama-server.exe`" -m `"$Model`" --host 127.0.0.1 --port 8080 -ngl 99 -c 16384 -fa on -ctk q8_0 -ctv q8_0 --jinja -a chronicle-llm"
+      "cd /d `"$AiRoot\LLAMA_CPP`""
+      "`"$AiRoot\LLAMA_CPP\llama-server.exe`" -m `"$Model`" --host 127.0.0.1 --port 8080 -ngl 99 -c $Context -fa on -ctk $CacheKey -ctv $CacheValue --jinja -a chronicle-llm"
     )
     embed = Write-Launcher 'embed' @(
-      "cd /d `"$Eidolon\LLAMA_CPP`""
-      "`"$Eidolon\LLAMA_CPP\llama-server.exe`" -m `"$EmbedModel`" --host 127.0.0.1 --port 8081 --embeddings -ngl 99 -a chronicle-embed"
+      "cd /d `"$AiRoot\LLAMA_CPP`""
+      "`"$AiRoot\LLAMA_CPP\llama-server.exe`" -m `"$EmbedModel`" --host 127.0.0.1 --port 8081 --embeddings -ngl 99 -a chronicle-embed"
     )
     comfy = Write-Launcher 'comfy' @(
-      "cd /d `"$Eidolon\COMFY_UI`""
-      "`"$Eidolon\COMFY_UI\python_embeded\python.exe`" -s ComfyUI\main.py --windows-standalone-build --port 8188 --fp8_e4m3fn-unet --preview-method taesd --fast fp16_accumulation cublas_ops --reserve-vram 0.8"
+      "cd /d `"$AiRoot\COMFY_UI`""
+      "`"$AiRoot\COMFY_UI\python_embeded\python.exe`" -s ComfyUI\main.py --windows-standalone-build --disable-auto-launch --port 8188 --fp8_e4m3fn-unet --preview-method taesd --fast fp16_accumulation cublas_ops --reserve-vram 0.8"
     )
     tts   = Write-Launcher 'tts' @(
-      "cd /d `"$Eidolon\KOKORO_TTS`""
+      "cd /d `"$AiRoot\KOKORO_TTS`""
       'set PYTHONUTF8=1'
       'set USE_GPU=true'
       'set PROJECT_ROOT=%CD%'
@@ -104,7 +109,7 @@ function Build-Launchers {
       'set MODEL_DIR=src/models'
       'set VOICES_DIR=src/voices/v1_0'
       'set WEB_PLAYER_PATH=%CD%\web'
-      "`"$Eidolon\KOKORO_TTS\.venv\Scripts\python.exe`" -m uvicorn api.src.main:app --host 127.0.0.1 --port 8880"
+      "`"$AiRoot\KOKORO_TTS\.venv\Scripts\python.exe`" -m uvicorn api.src.main:app --host 127.0.0.1 --port 8880"
     )
   }
 }
@@ -130,7 +135,7 @@ function Start-Servers {
   }
 
   "Started headless: $((Get-Wanted).Name -join ', ')"
-  "Model: $(Split-Path $Model -Leaf)"
+  "Model: $(Split-Path $Model -Leaf)  ctx=$Context kv=$CacheKey/$CacheValue"
   "Logs:  $LogDir"
   'Poll with -Action status, read output with -Action logs.'
 }

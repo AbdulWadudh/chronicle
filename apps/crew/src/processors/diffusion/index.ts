@@ -1,5 +1,11 @@
 import { database, schema } from "@chronicle/db";
-import { type DiffusionJob, diffusionJobSchema, imageChannel } from "@chronicle/shared";
+import {
+  type DiffusionJob,
+  diffusionJobSchema,
+  imageChannel,
+  SCENE_CONTENT_TYPE,
+  sceneKey,
+} from "@chronicle/shared";
 import type { Job } from "bullmq";
 import { eq } from "drizzle-orm";
 import {
@@ -10,7 +16,7 @@ import {
 } from "~/processors/diffusion/client";
 import { buildWorkflow } from "~/processors/diffusion/workflow";
 import { publisher } from "~/redis";
-import { sceneKey, upload } from "~/storage";
+import { upload } from "~/storage";
 
 const CLIENT_ID = "chronicle-crew";
 
@@ -24,7 +30,11 @@ export async function renderScene(job: Job<DiffusionJob>): Promise<string> {
   if (first === undefined) throw new Error(`ComfyUI produced no image for turn ${payload.turnId}`);
 
   const bytes = await fetchImage(first);
-  const imageUrl = await upload(sceneKey(payload.turnId), bytes, "image/png");
+  const imageUrl = await upload(
+    sceneKey(payload.worldId, payload.characterId, payload.turnId, payload.variant),
+    bytes,
+    SCENE_CONTENT_TYPE,
+  );
 
   const db = await database();
   await db

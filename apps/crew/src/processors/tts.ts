@@ -1,8 +1,15 @@
 import { env } from "@chronicle/config";
-import { audioChannel, fetchBytes, type TtsJob, ttsJobSchema } from "@chronicle/shared";
+import {
+  AUDIO_CONTENT_TYPE,
+  audioChannel,
+  fetchBytes,
+  sentenceAudioKey,
+  type TtsJob,
+  ttsJobSchema,
+} from "@chronicle/shared";
 import type { Job } from "bullmq";
 import { publisher } from "~/redis";
-import { sentenceKey, upload } from "~/storage";
+import { upload } from "~/storage";
 
 export async function synthesize(job: Job<TtsJob>): Promise<string> {
   const payload = ttsJobSchema.parse(job.data);
@@ -17,9 +24,9 @@ export async function synthesize(job: Job<TtsJob>): Promise<string> {
     },
   });
   const audioUrl = await upload(
-    sentenceKey(payload.turnId, payload.sentenceIndex),
+    sentenceAudioKey(payload.worldId, payload.characterId, payload.turnId, payload.sentenceIndex),
     bytes,
-    "audio/mpeg",
+    AUDIO_CONTENT_TYPE,
   );
 
   await publisher().publish(

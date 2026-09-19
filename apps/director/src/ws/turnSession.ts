@@ -14,6 +14,7 @@ import type { TurnContext } from "~/ws/context";
 import { beginTurn, type ChronicleSocket, finishTurn, send } from "~/ws/session";
 
 const MAX_SEED = 2_147_483_647;
+const FIRST_VARIANT = 1;
 
 interface CheckDecision {
   requiresCheck: boolean;
@@ -154,6 +155,9 @@ async function dispatchMedia(
   const sentences = splitIntoSentences(narrative);
   await diffusionQueue.add("scene", {
     turnId,
+    worldId: context.world.id,
+    characterId: context.character.id,
+    variant: FIRST_VARIANT,
     prompt: buildScenePrompt(context.world, narrative, settings.prompt.sceneChars),
     negativePrompt: settings.image.negativePrompt,
     seed: Math.floor(Math.random() * MAX_SEED),
@@ -169,6 +173,8 @@ async function dispatchMedia(
     sentences.map((text, sentenceIndex) =>
       ttsQueue.add("sentence", {
         turnId,
+        worldId: context.world.id,
+        characterId: context.character.id,
         sentenceIndex,
         text,
         voice: settings.tts.voice,

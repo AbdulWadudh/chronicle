@@ -16,6 +16,9 @@ export function imageChannel(turnId: string): string {
 
 export const diffusionJobSchema = z.object({
   turnId: z.string(),
+  worldId: z.string(),
+  characterId: z.string(),
+  variant: z.number().int().positive(),
   prompt: z.string().min(1),
   negativePrompt: z.string(),
   seed: z.number().int().nonnegative(),
@@ -30,6 +33,8 @@ export const diffusionJobSchema = z.object({
 
 export const ttsJobSchema = z.object({
   turnId: z.string(),
+  worldId: z.string(),
+  characterId: z.string(),
   sentenceIndex: z.number().int().nonnegative(),
   text: z.string().min(1),
   voice: z.string().min(1),
