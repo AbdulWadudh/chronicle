@@ -33,3 +33,6 @@ android/
 *.p8
 *.p12
 *.mobileprovision
+
+.tmpcheck/
+.tmpdb/

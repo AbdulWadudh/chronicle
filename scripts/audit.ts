@@ -14,6 +14,7 @@ const IGNORED_SEGMENTS = [
   "public",
   "android",
   "ios",
+  "migrations",
 ];
 
 const CODE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);

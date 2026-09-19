@@ -1,0 +1,26 @@
+{
+  "name": "@chronicle/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun run src/migrate.ts"
+  },
+  "dependencies": {
+    "@chronicle/config": "workspace:*",
+    "@chronicle/shared": "workspace:*",
+    "better-auth": "latest",
+    "@better-auth/drizzle-adapter": "latest",
+    "drizzle-orm": "latest"
+  },
+  "devDependencies": {
+    "drizzle-kit": "latest"
+  }
+}

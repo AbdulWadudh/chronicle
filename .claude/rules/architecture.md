@@ -9,7 +9,9 @@ Use Bun native APIs. Node builtins and npm packages only where Bun has no equiva
 - `Bun.file` / `Bun.write` / `Bun.Glob` / `Bun.serve` / `Bun.spawn` / `Bun.$`
 - `bun:sqlite` via `drizzle-orm/bun-sqlite`, `Bun.S3Client`, `Bun.password`, `bun:test`
 - `fetch` and `.env` are built in. No `axios`, no `dotenv`.
-- Fine to keep: `node:path`, `node:os`, `node:url`, `node:stream`, `node:buffer`.
+- Bun has no path, mkdir, or homedir API. Keep `node:path`, `node:os` (`homedir` only),
+  `node:fs` (`mkdirSync` only), `node:url`, `node:stream`, `node:buffer`.
+- `process.platform` over `os.platform()`. `Bun.write` already creates parent directories.
 - Keep `ioredis` (BullMQ needs it) and `onnxruntime-node` (no Bun ONNX runtime).
 
 `apps/stage` is exempt. It runs on Hermes, no `Bun.*` or `bun:` imports there.
@@ -101,6 +103,9 @@ per the Bun-first rule above.
 `bun run audit` fails the build on any comment in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`,
 `.cjs`, or any measured file over 300 lines. It warns at 250. Markdown, JSON, and TOML
 may contain comments — they are documentation and configuration.
+
+Generated output is exempt and ignored by the auditor: `migrations/` and its drizzle
+snapshots. The ceiling governs code a human edits. Never hand-edit a generated file.
 
 ## Data model decisions
 
