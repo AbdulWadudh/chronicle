@@ -128,11 +128,9 @@ may contain comments — they are documentation and configuration.
 
 ## API surface
 
-Everything the director serves is versioned in the path.
+Path versioning rules are global, in `~/.claude/rules/api.md`. Chronicle mounts:
 
-- `/api/v1/auth/*` — Better Auth, mounted with `basePath: "/api/v1/auth"`
+- `/api/v1/auth/*` — Better Auth, `basePath: "/api/v1/auth"`
 - `/api/v1/*` — REST routes
 - `/api/v1/ws` — WebSocket upgrade
-- `/health` — unversioned, for liveness only
-
-The path version and the `v` field in the WS envelope move together. Bump both or neither.
+- `/health` — unversioned liveness
