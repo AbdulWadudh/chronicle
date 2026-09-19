@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { GlowBackdrop } from "~/components/common/GlowBackdrop";
 
-export const CONTENT_MAX_WIDTH = 440;
+export const CONTENT_MAX_WIDTH = 380;
 export const WIDE_MAX_WIDTH = 1040;
 
 export interface ScreenProps {
@@ -12,6 +13,7 @@ export interface ScreenProps {
   wide?: boolean;
 }
 
+const FILL = { flex: 1 } as const;
 const SCROLL_CONTENT = { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 24 } as const;
 
 export function Screen({ children, scroll = false, center = false, wide = false }: ScreenProps) {
@@ -26,23 +28,25 @@ export function Screen({ children, scroll = false, center = false, wide = false 
     </View>
   );
 
-  if (!scroll) {
-    return (
-      <SafeAreaView className="flex-1 bg-canvas">
-        <View className="flex-1 px-5 py-6">{inner}</View>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
-      <ScrollView
-        contentContainerStyle={SCROLL_CONTENT}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {inner}
-      </ScrollView>
+    <SafeAreaView style={FILL} className="bg-canvas">
+      <GlowBackdrop />
+      <KeyboardAvoidingView style={FILL} behavior="padding">
+        {scroll ? (
+          <ScrollView
+            style={FILL}
+            contentContainerStyle={SCROLL_CONTENT}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets
+            showsVerticalScrollIndicator={false}
+          >
+            {inner}
+          </ScrollView>
+        ) : (
+          <View className="flex-1 px-5 py-6">{inner}</View>
+        )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

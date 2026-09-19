@@ -1,6 +1,6 @@
 import { BlurView } from "expo-blur";
 import type { ReactNode } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeTokens } from "~/theme/ThemeEngine";
@@ -54,13 +54,19 @@ export function AppModal({ visible, title, icon, onClose, children, actions }: A
         <Animated.View
           entering={SlideInDown.springify().damping(18)}
           exiting={SlideOutDown.duration(180)}
-          className="absolute inset-x-0 bottom-0 max-h-[88%] overflow-hidden rounded-t-3xl border-t border-card-border bg-card"
-          style={{ paddingBottom: insets.bottom }}
+          className="max-h-[88%] overflow-hidden rounded-t-3xl border-t border-card-border bg-card"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            paddingBottom: insets.bottom,
+          }}
         >
           <BlurView
             intensity={tokens.blurIntensity}
             tint={tokens.mode}
-            className="absolute inset-0"
+            style={StyleSheet.absoluteFill}
           />
 
           <View className="flex-row items-center gap-3 border-b border-card-border px-5 py-4">

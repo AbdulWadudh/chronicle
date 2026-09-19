@@ -330,6 +330,9 @@ window leaves them running. `bun app` runs the apps *in* the panes because they 
 watch-mode dev processes you interrupt with Ctrl+C.
 
 Metro runs on **8082**, not its default 8081, because the embeddings server owns 8081.
+The stage pane runs `expo start --android --web`: one Metro serves both targets, never a
+separate run per platform. `bun app:clear` is the same launch with `--clear` for a Metro
+cache reset.
 
 Neither script touches Dragonfly or RustFS. Docker owns those.
 
@@ -345,6 +348,16 @@ launcher never duplicates an `--env-file` or a port.
 so readiness is a `TcpClient` connect and process cleanup goes through `netstat -ano`
 plus `Get-Process`. Crew binds no port, so its status cannot be probed.
 
+## Web platform notes
+
+Skia on web needs CanvasKit loaded before the first render. `apps/stage/index.web.ts`
+calls `LoadSkiaWeb` then `renderRootComponent`; `locateFile` must be absolute (`/${file}`)
+or a nested route resolves the wasm against its own path and gets the SPA fallback HTML.
+The root `postinstall` copies `canvaskit.wasm` into `apps/stage/public`; it is gitignored.
+
+`expo-secure-store` has no web backend. `lib/session.ts` uses AsyncStorage on web, which
+is localStorage — an XSS-readable bearer token, accepted because web is a dev surface.
+
 ## Hermes and store gotchas
 
 `three` is pinned to `0.180.0`. From `0.186.0` the CJS build is a deprecation shim that
@@ -352,6 +365,19 @@ calls `process.emitWarning`, which Hermes does not implement, so
 `require("three")` throws `undefined is not a function` the moment
 `@react-three/fiber/native` loads. Do not bump `three` without checking
 `node_modules/three/build/three.cjs` for `emitWarning`.
+
+NativeWind 5 RC on Tailwind v4 emits CSS *shorthand and logical* properties that React
+Native drops on native while `react-native-web` honours them. So a class can look right
+on web and do nothing on a device. Two confirmed casualties:
+
+- `px-*` / `py-*` / `min-h-*` on **`TextInput`** — inputs fell back to Android's ~5 px
+  EditText inset.
+- `inset-0` / `inset-x-0` — an absolute overlay collapsed to its content instead of
+  filling its parent, which is what tore the seam across `GlowBackdrop`.
+
+Padding, sizing and absolute offsets on a `TextInput` or an overlay go through `style`
+with React Native's own keys (`paddingHorizontal`, `StyleSheet.absoluteFill`). Colour,
+radius and border classes are fine. Verify any layout class on a device, not on web.
 
 A Zustand selector must never build a new object. `useThemeStore(selectResolvedTokens)`
 returned a freshly merged token object on every call, so React saw a new snapshot each

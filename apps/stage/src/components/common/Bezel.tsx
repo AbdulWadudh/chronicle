@@ -9,7 +9,7 @@ export interface BezelProps {
 export function Bezel({ children, tone = "default" }: BezelProps) {
   return (
     <View
-      className="rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-1.5"
+      className="rounded-[22px] border border-white/[0.06] bg-white/[0.02] p-1"
       style={
         tone === "raised"
           ? {
@@ -22,7 +22,7 @@ export function Bezel({ children, tone = "default" }: BezelProps) {
       }
     >
       <View
-        className="overflow-hidden rounded-[22px] border border-white/[0.05] bg-card"
+        className="overflow-hidden rounded-[18px] border border-white/[0.05] bg-card"
         style={{
           shadowColor: "#FFFFFF",
           shadowOpacity: 0.06,

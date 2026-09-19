@@ -1,5 +1,6 @@
-import type { ServerMessage, TurnNode } from "@chronicle/shared";
-import { useCallback, useState } from "react";
+import { API, type ServerMessage, type TurnNode } from "@chronicle/shared";
+import { useCallback, useEffect, useState } from "react";
+import { get } from "~/lib/api";
 import { useAudioQueue } from "./useAudioQueue";
 import { type SocketStatus, useGameSocket } from "./useGameSocket";
 
@@ -38,6 +39,27 @@ export function useTurnStream(characterId: string | null, cinemaMode: boolean): 
   const [error, setError] = useState<string | null>(null);
 
   const audio = useAudioQueue(cinemaMode);
+
+  useEffect(() => {
+    if (characterId === null) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const history = await get<{ items: TurnNode[] }>(
+          `${API.turns}?characterId=${encodeURIComponent(characterId)}`,
+        );
+        if (cancelled) return;
+        setCommittedTurns(history.items);
+        setSceneImageUrl(history.items.at(-1)?.sceneImageUrl ?? null);
+      } catch (cause) {
+        if (!cancelled)
+          setError(cause instanceof Error ? cause.message : "Could not load history.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [characterId]);
 
   const handleMessage = useCallback(
     (message: ServerMessage) => {
@@ -109,15 +131,8 @@ export function useTurnStream(characterId: string | null, cinemaMode: boolean): 
   }, [activeTurnId, socket]);
 
   const acknowledgeDice = useCallback(() => {
-    if (pendingCheck === null) return;
-    socket.send({
-      type: "RESOLVE_DICE",
-      turnId: pendingCheck.turnId,
-      checkId: pendingCheck.checkId,
-      roll: pendingCheck.roll,
-    });
     setPendingCheck(null);
-  }, [pendingCheck, socket]);
+  }, []);
 
   return {
     status: socket.status,

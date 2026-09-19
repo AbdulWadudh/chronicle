@@ -1,6 +1,7 @@
 import { type ClientMessage, PROTOCOL_VERSION, parseClientMessage } from "@chronicle/shared";
 import { replayFrom } from "~/ws/buffer";
 import { loadTurnContext } from "~/ws/loader";
+import { disownSocket, startMediaRelay } from "~/ws/media";
 import {
   type ChronicleSocket,
   cancelTurn,
@@ -18,9 +19,11 @@ export function websocketHandlers(): {
 } {
   return {
     open(socket) {
+      startMediaRelay();
       registerSocket(socket);
     },
     close(socket) {
+      disownSocket(socket);
       forgetSocket(socket);
     },
     message(socket, raw) {

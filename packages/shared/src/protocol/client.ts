@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { DICE } from "../rules";
 import { statePatchSchema } from "../types";
 import { envelopeSchema } from "./envelope";
 
@@ -16,13 +15,6 @@ export const selectChoiceSchema = base.extend({
   type: z.literal("SELECT_CHOICE"),
   parentTurnId: z.string(),
   choiceIndex: z.union([z.literal(0), z.literal(1), z.literal(2)]),
-});
-
-export const resolveDiceSchema = base.extend({
-  type: z.literal("RESOLVE_DICE"),
-  turnId: z.string(),
-  checkId: z.string(),
-  roll: z.number().int().min(DICE.criticalFailure).max(DICE.sides),
 });
 
 export const regenerateSchema = base.extend({
@@ -71,7 +63,6 @@ export const pingSchema = base.extend({
 export const clientMessageSchema = z.discriminatedUnion("type", [
   submitActionSchema,
   selectChoiceSchema,
-  resolveDiceSchema,
   regenerateSchema,
   switchBranchSchema,
   directorOverrideSchema,

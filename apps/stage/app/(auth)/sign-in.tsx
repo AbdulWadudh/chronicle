@@ -4,17 +4,19 @@ import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated"
 import { Bezel } from "~/components/common/Bezel";
 import { Button } from "~/components/common/Button";
 import { Field } from "~/components/common/Field";
-import { GlowBackdrop } from "~/components/common/GlowBackdrop";
 import { Screen } from "~/components/common/Screen";
+import { useResponsiveLayout } from "~/hooks/useResponsiveLayout";
 import { useAuth } from "~/lib/auth";
 
 type Mode = "sign-in" | "sign-up";
 
 const MIN_PASSWORD = 8;
+const CARD_COLUMN = { width: 380 } as const;
 
 export default function SignInScreen() {
   const { signIn, signUp } = useAuth();
   const reduceMotion = useReducedMotion();
+  const { isSplit } = useResponsiveLayout();
 
   const [mode, setMode] = useState<Mode>("sign-in");
   const [name, setName] = useState("");
@@ -47,108 +49,120 @@ export default function SignInScreen() {
     setError(null);
   }
 
-  return (
-    <Screen scroll center>
-      <GlowBackdrop />
-      <Animated.View
-        entering={reduceMotion ? undefined : FadeInDown.duration(600)}
-        className="gap-8"
-      >
-        <View className="items-center gap-4">
-          <Image
-            source={require("../../assets/logo.png")}
-            style={{ width: 76, height: 76 }}
-            resizeMode="contain"
-            accessibilityIgnoresInvertColors
-            alt=""
-          />
-          <View className="items-center gap-2.5">
-            <View className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">
-              <Text className="text-[10px] font-medium uppercase tracking-[0.2em] text-text-accent">
-                Interactive Worlds
-              </Text>
-            </View>
-            <Text className="text-[34px] font-semibold leading-tight tracking-[-0.03em] text-text-primary">
-              Chronicle
-            </Text>
-            <Text className="text-center text-sm leading-relaxed text-text-muted">
-              {isSignUp
-                ? "Create an account to begin your first world."
-                : "Sign in to continue your story."}
-            </Text>
-          </View>
+  const brand = (
+    <View className={isSplit ? "items-start gap-4" : "items-center gap-3"}>
+      <Image
+        source={require("../../assets/logo.png")}
+        style={{ width: 52, height: 52 }}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+        alt=""
+      />
+      <View className={isSplit ? "gap-2" : "items-center gap-2"}>
+        <View className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5">
+          <Text className="text-[9px] font-medium uppercase tracking-[0.18em] text-text-accent">
+            Interactive Worlds
+          </Text>
         </View>
+        <Text className="text-[26px] font-semibold leading-tight tracking-[-0.03em] text-text-primary">
+          Chronicle
+        </Text>
+        <Text
+          className={`text-[13px] leading-relaxed text-text-muted ${isSplit ? "" : "text-center"}`}
+        >
+          {isSignUp
+            ? "Create an account to begin your first world."
+            : "Sign in to continue your story."}
+        </Text>
+      </View>
+    </View>
+  );
 
-        <Bezel tone="raised">
-          <View className="gap-5 px-7 py-8">
-            {isSignUp ? (
-              <Field
-                label="Name"
-                value={name}
-                onChangeText={setName}
-                placeholder="Vell"
-                autoCapitalize="words"
-                autoComplete="name"
-                textContentType="name"
-                returnKeyType="next"
-              />
-            ) : null}
-
+  const card = (
+    <>
+      <Bezel tone="raised">
+        <View className="gap-3.5 px-5 py-6">
+          {isSignUp ? (
             <Field
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="email"
-              textContentType="emailAddress"
+              label="Name"
+              value={name}
+              onChangeText={setName}
+              placeholder="Vell"
+              autoCapitalize="words"
+              autoComplete="name"
+              textContentType="name"
               returnKeyType="next"
             />
+          ) : null}
 
-            <Field
-              label="Password"
-              secure
-              value={password}
-              onChangeText={setPassword}
-              placeholder="At least 8 characters"
-              hint={isSignUp ? `Use ${MIN_PASSWORD} characters or more.` : undefined}
-              autoComplete={isSignUp ? "new-password" : "current-password"}
-              textContentType={isSignUp ? "newPassword" : "password"}
-              returnKeyType="go"
-              onSubmitEditing={() => {
-                if (canSubmit) void submit();
-              }}
-            />
+          <Field
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            returnKeyType="next"
+          />
 
-            {error !== null ? (
-              <View
-                accessibilityLiveRegion="assertive"
-                className="rounded-xl border border-danger/40 bg-danger/10 px-3 py-2"
-              >
-                <Text className="text-sm text-danger">{error}</Text>
-              </View>
-            ) : null}
+          <Field
+            label="Password"
+            secure
+            value={password}
+            onChangeText={setPassword}
+            placeholder="At least 8 characters"
+            hint={isSignUp ? `Use ${MIN_PASSWORD} characters or more.` : undefined}
+            autoComplete={isSignUp ? "new-password" : "current-password"}
+            textContentType={isSignUp ? "newPassword" : "password"}
+            returnKeyType="go"
+            onSubmitEditing={() => {
+              if (canSubmit) void submit();
+            }}
+          />
 
-            <Button
-              label={isSignUp ? "Create account" : "Sign in"}
-              onPress={() => void submit()}
-              busy={busy}
-              disabled={!canSubmit}
-              trailing
-            />
-          </View>
-        </Bezel>
+          {error !== null ? (
+            <View
+              accessibilityLiveRegion="assertive"
+              className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-1.5"
+            >
+              <Text className="text-[13px] text-danger">{error}</Text>
+            </View>
+          ) : null}
 
-        <Pressable onPress={switchMode} hitSlop={12} accessibilityRole="button" className="py-1">
-          <Text className="text-center text-sm text-text-muted">
-            {isSignUp ? "Already have an account? " : "New here? "}
-            <Text className="font-medium text-text-accent">
-              {isSignUp ? "Sign in" : "Create one"}
-            </Text>
+          <Button
+            label={isSignUp ? "Create account" : "Sign in"}
+            onPress={() => void submit()}
+            busy={busy}
+            disabled={!canSubmit}
+            trailing
+          />
+        </View>
+      </Bezel>
+
+      <Pressable onPress={switchMode} hitSlop={12} accessibilityRole="button" className="py-1">
+        <Text className="text-center text-[13px] text-text-muted">
+          {isSignUp ? "Already have an account? " : "New here? "}
+          <Text className="font-medium text-text-accent">
+            {isSignUp ? "Sign in" : "Create one"}
           </Text>
-        </Pressable>
+        </Text>
+      </Pressable>
+    </>
+  );
+
+  return (
+    <Screen scroll center wide={isSplit}>
+      <Animated.View
+        entering={reduceMotion ? undefined : FadeInDown.duration(600)}
+        className={isSplit ? "flex-row items-center gap-14" : "gap-6"}
+      >
+        {isSplit ? <View className="flex-1">{brand}</View> : brand}
+        <View style={isSplit ? CARD_COLUMN : undefined} className="gap-4">
+          {card}
+        </View>
       </Animated.View>
     </Screen>
   );

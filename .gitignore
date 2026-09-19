@@ -38,3 +38,4 @@ android/
 .tmpdb/
 
 *-env.d.ts
+apps/stage/public/canvaskit.wasm

@@ -29,6 +29,7 @@ interface WorldDetail {
   pointBudget: number;
 }
 
+const FILL = { flex: 1 } as const;
 export default function CharacterSelectScreen() {
   const router = useRouter();
   const { worldId } = useLocalSearchParams<{ worldId: string }>();
@@ -83,7 +84,7 @@ export default function CharacterSelectScreen() {
     isValidBuild(stats, world.statDefinitionsJson, world.pointBudget);
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView style={FILL} className="bg-canvas">
       <View className="flex-row items-center justify-between px-4 pt-2">
         <Text className="text-xl font-semibold text-text-primary">
           {world?.title ?? "Choose a character"}

@@ -2,13 +2,11 @@
   "name": "@chronicle/stage",
   "version": "0.0.0",
   "private": true,
-  "main": "expo-router/entry",
+  "main": "index",
   "scripts": {
-    "dev": "expo start --port 8082",
-    "android": "expo start --port 8082 --android",
-    "web": "expo start --port 8082 --web",
+    "dev": "expo start --port 8082 --android --web",
     "typecheck": "tsc --noEmit",
-    "dev:clear": "expo start --port 8082 --clear"
+    "dev:clear": "expo start --port 8082 --android --web --clear"
   },
   "dependencies": {
     "@chronicle/shared": "workspace:*",

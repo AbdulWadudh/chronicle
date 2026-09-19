@@ -22,8 +22,10 @@
     "ai:status": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action status",
     "ai:logs": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action logs",
     "app": "pwsh -NoProfile -File scripts/app-servers.ps1 -Action start",
+    "app:clear": "pwsh -NoProfile -File scripts/app-servers.ps1 -Action start -Clear",
     "app:stop": "pwsh -NoProfile -File scripts/app-servers.ps1 -Action stop",
-    "app:status": "pwsh -NoProfile -File scripts/app-servers.ps1 -Action status"
+    "app:status": "pwsh -NoProfile -File scripts/app-servers.ps1 -Action status",
+    "postinstall": "node node_modules/@shopify/react-native-skia/scripts/setup-canvaskit.js apps/stage/public/static/js"
   },
   "devDependencies": {
     "@biomejs/biome": "latest",

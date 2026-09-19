@@ -37,7 +37,11 @@ export function Button({
 }: ButtonProps) {
   const tokens = useThemeTokens();
   const inert = disabled || busy;
-  const foreground = tone === "primary" ? tokens.primaryForeground : tokens.textSecondary;
+  const foreground = inert
+    ? tokens.textMuted
+    : tone === "primary"
+      ? tokens.primaryForeground
+      : tokens.textSecondary;
 
   return (
     <Pressable
@@ -46,13 +50,19 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: inert, busy }}
-      className={`min-h-[52px] flex-row items-center justify-center gap-2 rounded-full px-6 active:scale-[0.98] active:opacity-90 ${SURFACE[tone]} ${inert ? "opacity-40" : ""}`}
+      className={`min-h-[44px] flex-row items-center justify-center gap-2 rounded-full px-5 active:scale-[0.98] active:opacity-90 ${
+        inert ? "bg-white/[0.06]" : SURFACE[tone]
+      }`}
     >
       {busy ? <ActivityIndicator size="small" color={foreground} /> : null}
-      <Text className={`text-[15px] font-semibold tracking-[-0.01em] ${LABEL[tone]}`}>{label}</Text>
+      <Text
+        className={`text-[14px] font-semibold tracking-[-0.01em] ${inert ? "text-text-muted" : LABEL[tone]}`}
+      >
+        {label}
+      </Text>
       {trailing && !busy ? (
-        <View className="ml-1 h-8 w-8 items-center justify-center rounded-full bg-black/10">
-          <ArrowUpRight size={16} strokeWidth={1.5} color={foreground} />
+        <View className="ml-0.5 h-6 w-6 items-center justify-center rounded-full bg-black/10">
+          <ArrowUpRight size={14} strokeWidth={1.5} color={foreground} />
         </View>
       ) : null}
     </Pressable>

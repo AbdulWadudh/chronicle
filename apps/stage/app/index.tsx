@@ -24,6 +24,7 @@ const SCOPES: { key: Scope; label: string }[] = [
   { key: "community", label: "Community" },
 ];
 
+const FILL = { flex: 1 } as const;
 export default function WorldSelectScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
@@ -40,7 +41,7 @@ export default function WorldSelectScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView style={FILL} className="bg-canvas">
       <View className="flex-row items-center justify-between px-4 pt-2">
         <Text className="text-2xl font-semibold text-text-primary">Chronicle</Text>
         <Pressable onPress={() => void signOut()} hitSlop={8} accessibilityRole="button">

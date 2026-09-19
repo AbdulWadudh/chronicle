@@ -10,14 +10,26 @@ export interface FieldProps extends Omit<TextInputProps, "className"> {
   secure?: boolean;
 }
 
+const INPUT_STYLE = {
+  minHeight: 44,
+  paddingHorizontal: 14,
+  paddingVertical: 10,
+  fontSize: 14,
+  lineHeight: 20,
+} as const;
+
+const SECURE_INPUT_STYLE = { ...INPUT_STYLE, paddingRight: 44 } as const;
+
 export function Field({ label, hint, error, secure = false, ...input }: FieldProps) {
   const tokens = useThemeTokens();
   const [revealed, setRevealed] = useState(false);
+  const [focused, setFocused] = useState(false);
   const invalid = typeof error === "string" && error.length > 0;
+  const border = invalid ? "border-danger" : focused ? "border-primary" : "border-card-border";
 
   return (
-    <View className="gap-2">
-      <Text className="px-1 text-[11px] font-medium uppercase tracking-[0.14em] text-text-muted">
+    <View className="gap-1.5">
+      <Text className="px-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-text-muted">
         {label}
       </Text>
 
@@ -27,9 +39,16 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
           accessibilityLabel={label}
           secureTextEntry={secure && !revealed}
           placeholderTextColor={tokens.textMuted}
-          className={`min-h-[56px] rounded-2xl border bg-input-surface px-5 py-4 text-base text-text-primary ${
-            invalid ? "border-danger" : "border-card-border"
-          } ${secure ? "pr-[60px]" : ""}`}
+          onFocus={(event) => {
+            setFocused(true);
+            input.onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocused(false);
+            input.onBlur?.(event);
+          }}
+          style={secure ? SECURE_INPUT_STYLE : INPUT_STYLE}
+          className={`rounded-2xl border bg-input-surface text-text-primary ${border}`}
         />
         {secure ? (
           <Pressable
@@ -37,7 +56,7 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
             hitSlop={12}
             accessibilityRole="button"
             accessibilityLabel={revealed ? "Hide password" : "Show password"}
-            className="absolute right-4 h-11 justify-center px-2"
+            className="absolute right-2 h-9 justify-center px-2"
           >
             {revealed ? (
               <EyeOff size={18} strokeWidth={1.25} color={tokens.textMuted} />
@@ -49,11 +68,11 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
       </View>
 
       {invalid ? (
-        <Text className="px-1 text-xs text-danger" accessibilityLiveRegion="polite">
+        <Text className="px-0.5 text-[11px] text-danger" accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : hint !== undefined ? (
-        <Text className="px-1 text-xs text-text-muted">{hint}</Text>
+        <Text className="px-0.5 text-[11px] text-text-muted">{hint}</Text>
       ) : null}
     </View>
   );

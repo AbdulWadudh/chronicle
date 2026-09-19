@@ -1,4 +1,4 @@
-import { database, newId, schema } from "@chronicle/db";
+import { database, newId, schema, toTurnNode } from "@chronicle/db";
 import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -35,7 +35,7 @@ export const turnRoutes = new Hono<AuthEnv>()
       .where(eq(schema.turns.characterId, characterId))
       .orderBy(asc(schema.turns.createdAt))
       .all();
-    return context.json({ items });
+    return context.json({ items: items.map(toTurnNode) });
   })
   .post("/checkpoints", async (context) => {
     const body = checkpointSchema.safeParse(await context.req.json().catch(() => null));

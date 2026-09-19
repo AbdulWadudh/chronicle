@@ -34,6 +34,8 @@ const FIELD_BOUNDS: Record<string, { min: number; max: number; step?: number }> 
   defaultDifficulty: { min: 5, max: 30 },
 };
 
+const FILL = { flex: 1 } as const;
+
 export default function SettingsScreen() {
   const router = useRouter();
   const [settings, setSettings] = useState<RuntimeSettings | null>(null);
@@ -73,7 +75,7 @@ export default function SettingsScreen() {
 
   if (settings === null) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-canvas">
+      <SafeAreaView style={FILL} className="items-center justify-center bg-canvas">
         {error === null ? <ActivityIndicator /> : <Text className="text-danger">{error}</Text>}
       </SafeAreaView>
     );
@@ -82,7 +84,7 @@ export default function SettingsScreen() {
   const groups = Object.keys(runtimeSettingsSchema.shape) as Group[];
 
   return (
-    <SafeAreaView className="flex-1 bg-canvas">
+    <SafeAreaView style={FILL} className="bg-canvas">
       <View className="flex-row items-center justify-between px-4 py-2">
         <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button">
           <Text className="text-text-muted">← Back</Text>

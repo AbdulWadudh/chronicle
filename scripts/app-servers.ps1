@@ -2,7 +2,8 @@
 [CmdletBinding()]
 param(
   [ValidateSet('start', 'stop', 'status')]
-  [string]$Action = 'start'
+  [string]$Action = 'start',
+  [switch]$Clear
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,7 +15,7 @@ $RunDir = Join-Path $env:LOCALAPPDATA 'chronicle\app'
 $Apps = [ordered]@{
   director = @{ Port = 3000; Dir = $Root; Command = 'bun run dev:director' }
   crew     = @{ Port = 0; Dir = $Root; Command = 'bun run dev:crew' }
-  stage    = @{ Port = 8082; Dir = (Join-Path $Root 'apps\stage'); Command = 'bun run dev' }
+  stage    = @{ Port = 8082; Dir = (Join-Path $Root 'apps\stage'); Command = if ($Clear) { 'bun run dev:clear' } else { 'bun run dev' } }
 }
 
 function Test-Port([int]$Port) {
@@ -86,6 +87,7 @@ function Start-Apps {
 
   "Started: $($names -join ', ')"
   'director 3000, crew has no port, stage 8082 (Metro moved off 8081 to clear the embed server).'
+  'Stage serves Android and web from the one Metro instance. -Clear resets the Metro cache.'
   'Panes are interactive. Ctrl+C in a pane stops that app.'
 }
 

@@ -1,4 +1,4 @@
-import { loadSettings, newId, schema } from "@chronicle/db";
+import { loadSettings, newId, schema, toTurnNode } from "@chronicle/db";
 import { PROTOCOL_VERSION, splitIntoSentences, type TurnNode } from "@chronicle/shared";
 import {
   CHECK_PROPOSAL_SCHEMA,
@@ -11,6 +11,7 @@ import { buildCheckPrompt, buildNarrativePrompt, buildScenePrompt } from "~/engi
 import { diffusionQueue, memoryQueue, ttsQueue } from "~/queue";
 import { closeBuffer, openBuffer } from "~/ws/buffer";
 import type { TurnContext } from "~/ws/context";
+import { ownTurn } from "~/ws/media";
 import { beginTurn, type ChronicleSocket, finishTurn, send } from "~/ws/session";
 
 const MAX_SEED = 2_147_483_647;
@@ -38,6 +39,7 @@ export async function runTurn(input: StartTurnInput): Promise<void> {
   const turnId = newId();
   const signal = beginTurn(turnId);
   openBuffer(turnId);
+  ownTurn(turnId, socket);
 
   send(socket, {
     v: PROTOCOL_VERSION,
@@ -213,20 +215,7 @@ async function commitTurn(
     createdAt,
   };
   await context.db.insert(schema.turns).values(row);
-  return {
-    id: turnId,
-    parentId: input.parentTurnId,
-    characterId: context.character.id,
-    playerAction: input.action,
-    narrativeText: narrative,
-    choices: [],
-    sceneImageUrl: null,
-    audioUrls: [],
-    stateDiff: null,
-    diceCheck: check,
-    branchIndex: context.branchIndex,
-    createdAt,
-  };
+  return toTurnNode(row);
 }
 
 function toNarrativeRequest(input: StartTurnInput, checkOutcome: string | null) {
