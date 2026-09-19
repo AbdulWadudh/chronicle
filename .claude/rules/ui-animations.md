@@ -79,6 +79,6 @@ Honour `prefers-reduced-motion` through `useReducedMotion()`. Reduced motion rep
 travel with a cross-fade and skips the dice tumble straight to the result face. It never
 removes information, only movement.
 
-Use the element that already has the behaviour: `<dialog>` for a modal (focus trap, Esc,
-`::backdrop`), `<button>` for anything clickable, a real radio group for exclusive
-choices. A `div` with an `onClick` is a bug, not a style choice.
+Controls come from `components/ui` (shadcn on Radix), never raw elements in a screen —
+see `~/.claude/rules/ui-craft.md`. Radix carries the focus trap, the roving tabindex and
+the ARIA wiring; a `div` with an `onClick` is a bug, not a style choice.

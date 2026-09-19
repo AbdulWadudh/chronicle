@@ -7,6 +7,7 @@ import { BackButton } from "~/components/common/BackButton";
 import { PageHeader } from "~/components/common/PageHeader";
 import { Screen } from "~/components/common/Screen";
 import { Spinner } from "~/components/common/Spinner";
+import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { DiffusionPresets } from "./DiffusionPresets";
 import { fieldMeta, GROUP_META } from "./fields";
@@ -79,14 +80,10 @@ export function Settings() {
         trailing={
           <div className="flex items-center gap-2">
             <SaveStatus status={status} />
-            <button
-              type="button"
-              onClick={reset}
-              className="flex h-9 items-center gap-1.5 rounded-full border border-white/[0.07] bg-white/[0.02] px-3 text-[12px] text-text-muted transition-colors hover:border-white/15 hover:text-text-secondary motion-reduce:transition-none"
-            >
+            <Button variant="outline" size="sm" onClick={reset} className="gap-1.5">
               <HugeiconsIcon icon={RefreshIcon} size={13} strokeWidth={1.5} />
               Defaults
-            </button>
+            </Button>
           </div>
         }
       />

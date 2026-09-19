@@ -1,5 +1,6 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Button } from "~/components/ui/button";
 
 export interface BackButtonProps {
   onPress: () => void;
@@ -8,16 +9,15 @@ export interface BackButtonProps {
 
 export function BackButton({ onPress, label }: BackButtonProps) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size={label === undefined ? "icon" : "sm"}
       onClick={onPress}
       aria-label="Back"
-      className={`flex h-9 items-center justify-center gap-1 rounded-full text-[13px] text-text-muted ${
-        label === undefined ? "w-9" : "px-2"
-      }`}
+      className="gap-1"
     >
       <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={1.5} />
       {label}
-    </button>
+    </Button>
   );
 }

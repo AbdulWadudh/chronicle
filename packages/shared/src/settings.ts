@@ -126,6 +126,46 @@ const imageSchema = z.object({
   negativePrompt: z.string().default("text, watermark, blurry"),
 });
 
+export interface VoiceGroup {
+  label: string;
+  voices: readonly string[];
+}
+
+export const KOKORO_VOICES: VoiceGroup[] = [
+  {
+    label: "American female",
+    voices: [
+      "af_heart",
+      "af_alloy",
+      "af_aoede",
+      "af_bella",
+      "af_jessica",
+      "af_kore",
+      "af_nicole",
+      "af_nova",
+      "af_river",
+      "af_sarah",
+      "af_sky",
+    ],
+  },
+  {
+    label: "American male",
+    voices: [
+      "am_adam",
+      "am_echo",
+      "am_eric",
+      "am_fenrir",
+      "am_liam",
+      "am_michael",
+      "am_onyx",
+      "am_puck",
+      "am_santa",
+    ],
+  },
+  { label: "British female", voices: ["bf_alice", "bf_emma", "bf_isabella", "bf_lily"] },
+  { label: "British male", voices: ["bm_daniel", "bm_fable", "bm_george", "bm_lewis"] },
+];
+
 const ttsSchema = z.object({
   voice: z.string().min(1).default("af_heart"),
   speed: bound(SETTING_BOUNDS.tts.speed).default(1),

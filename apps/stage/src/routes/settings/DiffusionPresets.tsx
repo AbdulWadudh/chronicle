@@ -1,6 +1,7 @@
 import { DIFFUSION_PRESETS, type DiffusionPreset, type RuntimeSettings } from "@chronicle/shared";
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Button } from "~/components/ui/button";
 
 export interface DiffusionPresetsProps {
   image: RuntimeSettings["image"];
@@ -38,15 +39,13 @@ export function DiffusionPresets({ image, onApply }: DiffusionPresetsProps) {
         {DIFFUSION_PRESETS.map((preset) => {
           const selected = active?.id === preset.id;
           return (
-            <button
-              type="button"
+            <Button
+              variant="outline"
               key={preset.id}
               aria-pressed={selected}
               onClick={() => onApply(preset.values)}
-              className={`flex flex-col gap-1 rounded-xl border px-3.5 py-3 text-left transition-all duration-200 motion-reduce:transition-none ${
-                selected
-                  ? "border-primary/40 bg-primary/[0.07]"
-                  : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]"
+              className={`h-auto flex-col items-start gap-1 rounded-xl px-3.5 py-3 text-left font-normal whitespace-normal ${
+                selected ? "border-primary/40 bg-primary/[0.07] hover:border-primary/40" : ""
               }`}
             >
               <span className="flex items-center gap-1.5 text-[13px] font-semibold text-text-primary">
@@ -64,7 +63,7 @@ export function DiffusionPresets({ image, onApply }: DiffusionPresetsProps) {
               <span className="mt-0.5 text-[10px] tabular-nums text-text-muted/60">
                 {preset.values.steps} steps · cfg {preset.values.cfg} · {preset.values.sampler}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>

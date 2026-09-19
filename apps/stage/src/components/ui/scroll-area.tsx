@@ -1,55 +1,39 @@
-import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
+import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 import type { ComponentProps } from "react";
 import { cn } from "~/lib/utils";
-
-function ScrollBar({
-  className,
-  orientation = "vertical",
-  ...props
-}: ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
-  return (
-    <ScrollAreaPrimitive.ScrollAreaScrollbar
-      data-slot="scroll-area-scrollbar"
-      orientation={orientation}
-      className={cn(
-        "flex touch-none select-none p-px transition-colors duration-200",
-        orientation === "vertical" && "h-full w-2.5 border-l border-l-transparent",
-        orientation === "horizontal" && "h-2.5 flex-col border-t border-t-transparent",
-        className,
-      )}
-      {...props}
-    >
-      <ScrollAreaPrimitive.ScrollAreaThumb
-        data-slot="scroll-area-thumb"
-        className="relative flex-1 rounded-full bg-white/15 transition-colors hover:bg-white/25"
-      />
-    </ScrollAreaPrimitive.ScrollAreaScrollbar>
-  );
-}
 
 function ScrollArea({
   className,
   children,
-  type = "auto",
   ...props
 }: ComponentProps<typeof ScrollAreaPrimitive.Root>) {
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
-      type={type}
       className={cn("relative", className)}
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full rounded-[inherit] outline-none [&>div]:!block"
+        className="h-full w-full overscroll-contain rounded-[inherit] outline-none"
       >
-        {children}
+        <ScrollAreaPrimitive.Content>{children}</ScrollAreaPrimitive.Content>
       </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
+
+      <ScrollAreaPrimitive.Scrollbar
+        data-slot="scroll-area-scrollbar"
+        orientation="vertical"
+        className="flex w-2 justify-center rounded-full bg-white/[0.03] opacity-0 transition-opacity delay-200 duration-300 data-hovering:opacity-100 data-hovering:delay-0 data-scrolling:opacity-100 data-scrolling:delay-0 motion-reduce:transition-none"
+      >
+        <ScrollAreaPrimitive.Thumb
+          data-slot="scroll-area-thumb"
+          className="w-full rounded-full bg-white/20 transition-colors hover:bg-white/30"
+        />
+      </ScrollAreaPrimitive.Scrollbar>
+
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   );
 }
 
-export { ScrollArea, ScrollBar };
+export { ScrollArea };
