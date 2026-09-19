@@ -5,7 +5,7 @@ import {
   type StatBlock,
   type StatDefinition,
 } from "@chronicle/shared";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Users } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
@@ -121,7 +121,9 @@ export function CharacterSelect() {
         loadPage={loadPage}
         autoLoadMore={false}
         keyExtractor={(character) => character.id}
-        emptyLabel="No characters in this world yet."
+        emptyIcon={Users}
+        emptyLabel="No characters yet"
+        emptyBody="Create one to start a story in this world. You will pick their abilities with the point-buy budget."
         renderItem={(character) => (
           <motion.button
             type="button"

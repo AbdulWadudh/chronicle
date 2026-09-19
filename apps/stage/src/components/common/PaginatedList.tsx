@@ -1,4 +1,6 @@
+import { CircleAlert, Inbox, type LucideIcon } from "lucide-react";
 import { type ReactElement, useEffect, useRef } from "react";
+import { EmptyState } from "./EmptyState";
 import { Spinner } from "./Spinner";
 import { type PageLoader, usePaginatedData } from "./usePaginatedData";
 
@@ -9,6 +11,8 @@ export interface PaginatedListProps<T> {
   keyExtractor: (item: T) => string;
   renderItem: (item: T) => ReactElement;
   emptyLabel: string;
+  emptyBody?: string;
+  emptyIcon?: LucideIcon;
   autoLoadMore?: boolean;
   numColumns?: number;
   header?: ReactElement;
@@ -19,6 +23,8 @@ export function PaginatedList<T>({
   keyExtractor,
   renderItem,
   emptyLabel,
+  emptyBody,
+  emptyIcon = Inbox,
   autoLoadMore = true,
   numColumns,
   header,
@@ -45,20 +51,36 @@ export function PaginatedList<T>({
       ? { display: "grid", gridTemplateColumns: `repeat(${numColumns}, minmax(0, 1fr))` }
       : undefined;
 
+  const isEmpty = data.items.length === 0;
+
+  if (isEmpty && data.error !== null) {
+    return (
+      <div className="flex flex-1 flex-col">
+        {header}
+        <EmptyState icon={CircleAlert} title="That did not load" body={data.error} />
+      </div>
+    );
+  }
+
+  if (isEmpty && !data.loading) {
+    return (
+      <div className="flex flex-1 flex-col">
+        {header}
+        <EmptyState icon={emptyIcon} title={emptyLabel} body={emptyBody} />
+      </div>
+    );
+  }
+
   return (
     <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto">
       {header}
-      {data.items.length === 0 && !data.loading ? (
-        <p className="py-12 text-center text-text-muted">{data.error ?? emptyLabel}</p>
-      ) : (
-        <ul className="m-0 flex list-none flex-col gap-3 p-0" style={columns}>
-          {data.items.map((item) => (
-            <li key={keyExtractor(item)}>{renderItem(item)}</li>
-          ))}
-        </ul>
-      )}
+      <ul className="m-0 flex list-none flex-col gap-3 p-0" style={columns}>
+        {data.items.map((item) => (
+          <li key={keyExtractor(item)}>{renderItem(item)}</li>
+        ))}
+      </ul>
 
-      <div ref={sentinel} className="flex flex-col items-center gap-2 py-4">
+      <div ref={sentinel} className="flex shrink-0 flex-col items-center gap-2 py-4">
         {data.loading ? <Spinner /> : null}
         {!autoLoadMore && !data.exhausted && !data.loading ? (
           <button
@@ -69,9 +91,7 @@ export function PaginatedList<T>({
             Load more
           </button>
         ) : null}
-        {data.error !== null && data.items.length > 0 ? (
-          <p className="text-sm text-danger">{data.error}</p>
-        ) : null}
+        {data.error !== null ? <p className="text-sm text-danger">{data.error}</p> : null}
       </div>
     </div>
   );

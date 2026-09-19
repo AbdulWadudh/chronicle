@@ -14,7 +14,7 @@ Use Bun native APIs. Node builtins and npm packages only where Bun has no equiva
 - `process.platform` over `os.platform()`. `Bun.write` already creates parent directories.
 - Keep `ioredis`. BullMQ requires it as its connection type.
 
-`apps/stage` is exempt. It runs on Hermes, no `Bun.*` or `bun:` imports there.
+`apps/stage` is exempt. It is a browser bundle: no `Bun.*`, `bun:` or `node:` imports there.
 
 ## Import boundaries
 
@@ -31,7 +31,7 @@ apps/crew     ─┘    packages/config
 - `packages/db` may import `packages/config` and `packages/shared`.
 - `apps/stage` imports `packages/shared` only. It must never pull in `packages/db`,
   `packages/config`, `drizzle-orm`, `bullmq`, or `ioredis` — those carry Node built-ins
-  that break the Metro bundler.
+  that do not exist in a browser.
 
 ## Runtime split
 
@@ -70,29 +70,24 @@ provably breaks the build:
 
 | Package | Pin | Reason |
 | --- | --- | --- |
-| `nativewind` | `5.0.0-rc.0` | `^5.0.0` matches nothing; v5 is prerelease-only |
-| `expo` | `~57.0.24` | SDK boundary. Stay on stable, not the 58 beta |
-| `react`, `react-dom`, `react-native` | the versions Expo SDK 57 requires | Expo will not boot on a mismatched React Native |
-| `expo-*` modules | the versions Expo SDK 57 requires | Same |
-| `react-native-css` | `3.1.0-rc.0` | exact peer of `nativewind@5.0.0-rc.0`; `latest` is 3.0.7 |
-| `lightningcss` | `1.30.1` via root `overrides` | newer builds fail Metro with `failed to deserialize; expected an object-like struct named Specifier` |
-
-Client versions come from `node_modules/expo/bundledNativeModules.json`, never from
-`latest`. SDK 57 wants `react-native-gesture-handler@~2.32` while `latest` is 3.x, and
-`@react-native-async-storage/async-storage@2.2` while `latest` is 3.x — both whole majors.
-
-SDK 58 was evaluated on 2026-09-19 and rejected: it pins `react-native@0.88.0-rc.0`, but
-the `react-native-reanimated@4.6.0` it ships declares `react-native: 0.83 - 0.87`. Revisit
-once 58 and RN 0.88 are both stable.
+| `react`, `react-dom` | `19.2.8` | the only release satisfying both `react-router@8` (`>=19.2.7`) and `@react-three/fiber@9` (`<19.3`) |
+| `@types/react`, `@types/react-dom` | `~19.2.0` | track the runtime pin |
 
 `typescript` stays on `"latest"` (7.0.2, the Go-native compiler) deliberately. Fall back
 to `^5` only if the compiler itself, rather than our code, fails a typecheck.
 
-Everything else — `hono`, `drizzle-orm`, `better-auth`, `bullmq`, `ioredis`, `zod`,
-`@lancedb/lancedb`, `three`, `zustand` — is `"latest"`.
+Everything else — `vite`, `tailwindcss`, `react-router`, `motion`, `gsap`,
+`canvaskit-wasm`, `three`, `lucide-react`, `zustand`, `hono`, `drizzle-orm`,
+`better-auth`, `bullmq`, `ioredis`, `zod`, `@lancedb/lancedb` — is `"latest"`.
+
+Before bumping `react`, check the peer ranges of `react-router` and `@react-three/fiber`
+together. They are the constraint, and they move in opposite directions.
 
 `@aws-sdk/client-s3` is **not** a dependency. Object storage goes through `Bun.S3Client`,
 per the Bun-first rule above.
+
+Expo, React Native, NativeWind and Reanimated were removed on 2026-09-19. Do not
+reintroduce one to solve a styling or animation problem — see the client sections below.
 
 ## Validation
 
@@ -149,6 +144,9 @@ Path versioning rules are global, in `~/.claude/rules/api.md`. Chronicle mounts:
 - `/api/v1/*` — REST routes
 - `/api/v1/ws` — WebSocket upgrade
 - `/health` — unversioned liveness
+- everything else — the built client from `STAGE_DIST`, falling back to `index.html` so
+  a deep client route survives a reload. `/api/*` returns a JSON 404 before that
+  fallback, so a mistyped endpoint never answers with the app shell.
 
 ## External service contracts
 
@@ -175,7 +173,7 @@ Tier rules are global, in `~/.claude/rules/config.md`. Chronicle places them as:
 | Tier | Home | Examples |
 | --- | --- | --- |
 | Constants | `@chronicle/shared/rules` | `D20_SIDES`, `CRITICAL_SUCCESS`, rank bounds, cost curve |
-| Environment | `@chronicle/config` | ports, `DATABASE_PATH`, `AUTH_SECRET`, the four endpoints |
+| Environment | `@chronicle/config` | ports, `DATABASE_PATH`, `STAGE_DIST`, `AUTH_SECRET`, the four endpoints |
 | Runtime | `@chronicle/shared/settings` schema, stored by `@chronicle/db` | `image.*`, `tts.*`, `narrative.*`, `prompt.*`, `turn.*`, `dice.*` |
 
 - Constants live in `shared` because `apps/stage` needs them and may not import `config`.
@@ -226,7 +224,9 @@ Kokoro-FastAPI is not installed yet, so `TTS_ENDPOINT` will fail until it is.
 
 ## Import aliases
 
-`apps/*` use the `~/*` alias for their own `src`. `packages/*` use relative imports —
+`apps/*` use the `~/*` alias for their own `src`; in `apps/stage` it is declared twice,
+in `tsconfig.json` for the typechecker and in `vite.config.ts` for the bundler, and the
+two must agree. `packages/*` use relative imports —
 an alias defined in a package's tsconfig is not honoured when another workspace compiles
 it, so `~/client` inside `packages/db` resolves against the *consuming* app and fails.
 
@@ -329,10 +329,13 @@ Two scripts, two tabs in one Windows Terminal window named `Chronicle`.
 window leaves them running. `bun app` runs the apps *in* the panes because they are
 watch-mode dev processes you interrupt with Ctrl+C.
 
-Metro runs on **8082**, not its default 8081, because the embeddings server owns 8081.
-The stage pane runs `expo start --android --web`: one Metro serves both targets, never a
-separate run per platform. `bun app:clear` is the same launch with `--clear` for a Metro
-cache reset.
+Vite runs on **8082**, not its default 5173, because the embeddings server owns 8081 and
+8082 is what the scripts already probe. It proxies `/api` (with `ws: true`) and `/health`
+to the director, so the client is same origin in dev exactly as it is in production.
+`bun app:clear` adds `--force` to re-optimise dependencies.
+
+Vite binds `localhost`. Probing `127.0.0.1:8082` with curl fails while the browser
+succeeds — use `localhost` or you will chase a proxy bug that is not there.
 
 Neither script touches Dragonfly or RustFS. Docker owns those.
 
@@ -348,38 +351,51 @@ launcher never duplicates an `--env-file` or a port.
 so readiness is a `TcpClient` connect and process cleanup goes through `netstat -ano`
 plus `Get-Process`. Crew binds no port, so its status cannot be probed.
 
-## Web platform notes
+## Client platform notes
 
-Skia on web needs CanvasKit loaded before the first render. `apps/stage/index.web.ts`
-calls `LoadSkiaWeb` then `renderRootComponent`; `locateFile` must be absolute (`/${file}`)
-or a nested route resolves the wasm against its own path and gets the SPA fallback HTML.
-The root `postinstall` copies `canvaskit.wasm` into `apps/stage/public`; it is gitignored.
+`apps/stage` is a Vite + React 19 single-page app, served by the director in production
+and by the Vite dev server behind a proxy in development. Distribution is a browser tab
+or an installed PWA. There is no native build.
 
-`expo-secure-store` has no web backend. `lib/session.ts` uses AsyncStorage on web, which
-is localStorage — an XSS-readable bearer token, accepted because web is a dev surface.
+PWA install and service workers need a secure context. Over plain LAN HTTP to the
+director there is neither, which is why `public/manifest.webmanifest` ships but no
+service worker does. Add one when there is HTTPS, not before.
 
-## Hermes and store gotchas
+`lib/session.ts` keeps the bearer token in `localStorage` — XSS-readable, accepted
+because this is a local-first single-user surface. Never move a secret there.
 
-`three` is pinned to `0.180.0`. From `0.186.0` the CJS build is a deprecation shim that
-calls `process.emitWarning`, which Hermes does not implement, so
-`require("three")` throws `undefined is not a function` the moment
-`@react-three/fiber/native` loads. Do not bump `three` without checking
-`node_modules/three/build/three.cjs` for `emitWarning`.
+CanvasKit is loaded lazily, only by the story map, through
+`canvaskit-wasm/bin/canvaskit.wasm?url`. Nothing else may import it: the wasm is 7 MB and
+blocking the first paint on it is the bug that broke every screen under the old client.
+The glow backdrop is a CSS `radial-gradient`, not Skia, for the same reason.
 
-NativeWind 5 RC on Tailwind v4 emits CSS *shorthand and logical* properties that React
-Native drops on native while `react-native-web` honours them. So a class can look right
-on web and do nothing on a device. Two confirmed casualties:
+The story map draws its nodes and edges with CanvasKit but renders **labels as DOM**, in
+an overlay that carries the same `translate`/`scale` transform. Canvas text needs a
+bundled TTF that no dependency ships, and it is invisible to a screen reader. Keep labels
+in the overlay.
 
-- `px-*` / `py-*` / `min-h-*` on **`TextInput`** — inputs fell back to Android's ~5 px
-  EditText inset.
-- `inset-0` / `inset-x-0` — an absolute overlay collapsed to its content instead of
-  filling its parent, which is what tore the seam across `GlowBackdrop`.
+## Client gotchas
 
-Padding, sizing and absolute offsets on a `TextInput` or an overlay go through `style`
-with React Native's own keys (`paddingHorizontal`, `StyleSheet.absoluteFill`). Colour,
-radius and border classes are fine. Verify any layout class on a device, not on web.
+Each of these cost a debugging session. They are live, not historical.
+
+`StrictMode` double-invokes every effect in development. Any hook that creates a
+connection, a request or a timer must guard its callbacks on *still being the current
+one*, not merely on a boolean:
+
+- `useGameSocket` — a superseded socket's late `onclose` used to null `socketRef`, so the
+  UI showed "Live" while every send silently dropped. Compare against `socketRef.current`
+  in `onopen`, `onmessage`, `onerror` and `onclose`.
+- `usePaginatedData` — an `inFlight` boolean made the second mount return early while the
+  first was already aborted, so lists loaded nothing and reported no error. Compare
+  against `controllerRef.current`.
+
+A failed `send` must surface. `useGameSocket.send` sets `lastError` when the socket is
+not open, for everything except `PING`.
 
 A Zustand selector must never build a new object. `useThemeStore(selectResolvedTokens)`
 returned a freshly merged token object on every call, so React saw a new snapshot each
 render and looped until `Maximum update depth exceeded`. Select stored values
 individually and combine them in `useMemo`.
+
+Changing a component's hook count while the dev server is live leaves HMR in a broken
+state that reports a phantom hook-order error. Hard reload before believing it.

@@ -35,6 +35,7 @@ export function createApp(): Hono<AuthEnv> {
   app.route(API.turns, turnRoutes);
   app.route(API.settings, settingsRoutes);
 
+  app.all("/api/*", (context) => context.json({ error: "Not found." }, 404));
   app.get("*", serveStage);
   app.notFound((context) => context.json({ error: "Not found." }, 404));
   return app;

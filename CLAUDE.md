@@ -9,7 +9,7 @@ gate, before the commit.
 
 | Workspace | Package | Role |
 | --- | --- | --- |
-| `apps/stage` | `@chronicle/stage` | Universal Expo client (iOS / Android / Web) |
+| `apps/stage` | `@chronicle/stage` | Vite + React 19 PWA client (browser) |
 | `apps/director` | `@chronicle/director` | Bun + Hono HTTP/WSS gateway, auth, turn DAG, dice adjudicator |
 | `apps/crew` | `@chronicle/crew` | BullMQ worker: diffusion, TTS, vector memory |
 | `packages/config` | `@chronicle/config` | Zod-validated env + OS user-directory path resolution |
@@ -20,7 +20,9 @@ gate, before the commit.
 
 ```
 bun install
-bun run --filter @chronicle/stage dev
+bun app              # director + crew + stage in one Windows Terminal tab
+bun run --filter @chronicle/stage dev     # vite on 8082, proxies /api to the director
+bun run --filter @chronicle/stage build   # dist/, which the director serves in prod
 bun run --filter @chronicle/director dev
 bun run --filter @chronicle/crew dev
 bun run check        # audit + lint + typecheck across the graph
@@ -37,7 +39,7 @@ General code style is global, in `~/.claude/rules/code.md`. Chronicle rules live
 
 - `architecture.md` — Bun first, import boundaries, runtime split, storage, model access,
   dependencies, validation, where to split, audit enforcement
-- `ui-animations.md` — Reanimated worklets, Skia, R3F, expo-audio, reduced motion
+- `ui-animations.md` — Motion, CSS, CanvasKit, R3F, HTML audio, reduced motion
 
 `bun run audit` enforces the 300-line ceiling and the zero-comment rule, and fails the build.
 
@@ -49,5 +51,5 @@ General code style is global, in `~/.claude/rules/code.md`. Chronicle rules live
 | `db-agent` | Drizzle schema, Better Auth tables, migrations, LanceDB connections |
 | `director-agent` | Hono routes, WebSocket engine, turn DAG state machine |
 | `crew-agent` | BullMQ workers, diffusion client, ONNX TTS streamer, Pub/Sub |
-| `stage-ui-agent` | Expo Router, theme engine, Zustand store, `AppModal`, `PaginatedList` |
-| `stage-graphics-agent` | Skia flowchart canvas, R3F D20 dice roller |
+| `stage-ui-agent` | React Router routes, theme engine, Zustand store, `AppModal`, `PaginatedList` |
+| `stage-graphics-agent` | CanvasKit flowchart canvas, R3F D20 dice roller |

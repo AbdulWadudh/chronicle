@@ -2,8 +2,9 @@
 
 Build progress tracker. Read this first. Update it at every wave gate, before the commit.
 
-**Status:** All waves complete. Play screen verified in a real browser at mobile and
-desktop, empty through filled, with live LLM and diffusion.
+**Status:** All waves complete. Wave 5 replaced the Expo client with a Vite + React PWA,
+verified in a real browser at mobile and desktop across empty, loading, error and filled,
+with a live LLM streaming a turn end to end.
 **Updated:** 2026-09-19
 
 ## Waves
@@ -15,6 +16,7 @@ desktop, empty through filled, with live LLM and diffusion.
 | 3 | `@chronicle/director`, `@chronicle/crew` | done |
 | 4a | `@chronicle/stage` foundation: theme, hooks, DRY components, screens | done |
 | 4b | Skia flowchart, R3F dice, NarrativeStream, ChoicePills, Director console, settings UI | done |
+| 5 | `@chronicle/stage` rewritten as a Vite + React 19 PWA; director serves the build | done |
 
 ## Built
 
@@ -30,11 +32,14 @@ desktop, empty through filled, with live LLM and diffusion.
 - `apps/crew` — `redis.ts`, `storage.ts` (Bun.S3Client),
   `processors/{diffusion/{client,workflow,index},tts,memory}`
 - `packages/shared/api.ts` — single home for `/api/v1`, WS path, default director port
-- `apps/stage` — Expo SDK 57, NativeWind v5 rc, `theme/{store,tokens,ThemeEngine}`,
-  `hooks/{useGameSocket,useAudioQueue,useTurnStream,useResponsiveLayout}`,
-  `lib/{api,auth,session}`, `components/common/{AppModal,PaginatedList,usePaginatedData}`,
-  `components/character/PointBuyStepper`, routes `_layout`, `(auth)/sign-in`, `index`,
-  `character-select`, `play/[id]`, `settings`
+- `apps/stage` — Vite 8 + React 19 + Tailwind v4, `index.html`, `vite.config.ts`,
+  `src/main.tsx`, `theme/{store,tokens,ThemeEngine}`,
+  `hooks/{useGameSocket,useAudioQueue,useTurnStream,useResponsiveLayout,useReducedMotion,useCharacterSheet}`,
+  `lib/{api,auth,session}`,
+  `components/common/{Screen,Bezel,Button,Field,NumberField,AppModal,EmptyState,Spinner,PageHeader,GlowBackdrop,PaginatedList,usePaginatedData}`,
+  `components/story/*`, `components/canvas/{flowchart,dice}`,
+  `components/character/PointBuyStepper`, routes `index`, `SignIn`, `Worlds`,
+  `CharacterSelect`, `Play`, `Settings`
 
 ## Verified
 
@@ -82,30 +87,32 @@ parsing checked against expected values.
 
 ## Open
 
-- Story map tab renders unlabelled, unconnected nodes: no turn text, no edges, no
-  success/failure treatment, clipped at the bottom. The Skia canvas draws, the design does
-  not. Needs `stage-graphics-agent`.
-- The D20 roller has not been seen rendering. Dice checks resolve and persist
-  (`dice_check_json` is populated), but the roller clears on settle and was never caught
-  on screen.
-- `choices_json` is `[]` on every turn, so the composer never shows choice pills.
+- The D20 roller still has not been seen rendering. It is lazy-loaded and the code path
+  runs, but no dice check has been caught on screen.
+- `choices_json` is `[]` on every turn, so the composer never shows choice pills. This is
+  director-side, not client-side.
 - TTS produces nothing — `audio_urls_json` is `[]`. Kokoro-FastAPI is not installed.
-- `index.tsx`, `character-select.tsx`, `settings.tsx` still use the pre-redesign flat
-  treatment. Only `(auth)/sign-in` and `play/[id]` have the new primitives.
-- `DirectorConsoleModal` is wired with empty `statDefinitions`, `stats`, `affinities`.
+- `DirectorConsoleModal` now receives real `statDefinitions` and `stats`. `affinities` is
+  still `{}` — the world state that holds them is not exposed by any GET route. Closing it
+  needs a director change, not a client one.
+- No screen can create a world. `POST /api/v1/worlds` works, but nothing in the client
+  calls it, so a new account can only reach the Community tab.
+- Booleans in runtime settings render as a free-text input (`thinking` shows `true`).
+  They should be a switch.
 - Placeholder embedding in `crew/processors/memory.ts` — a character-frequency hash, not a
-  real model. Storage and recall work; retrieval quality will be poor until replaced.
-- Nothing has been run on an Android device or emulator. Web is verified; native is not.
-- Revisit Expo SDK 58 once it and React Native 0.88 are both stable.
+  real model. Note the dimension mismatch: the table is 384-wide and nomic-embed serves
+  768, so the swap is a table rebuild, not a function swap.
 - A world with few stats and a large `pointBudget` lets every stat be maxed. World
   authors must size the budget to the stat count.
+- No service worker, so no offline cache and no install prompt over plain LAN HTTP. Both
+  need a secure context.
 
 ## Verify
 
 ```
 bun run check                                  # audit + lint + typecheck
 cd apps/director && bun run dev                # needs .env at repo root and Dragonfly up
-cd apps/stage && bunx expo export --platform web --output-dir /tmp/x   # proves the bundle
+bun run --filter @chronicle/stage build        # proves the bundle, writes apps/stage/dist
 ```
 
 Apps load env with `bun --env-file=../../.env` — Bun only auto-loads `.env` from the cwd,
@@ -115,5 +122,30 @@ Verified live on 2026-09-19: sign-up and sign-in return a bearer token, protecte
 401 without it and 200 with it, world creation persists, point-buy rejects undeclared and
 missing stats, the community filter returns only public worlds, settings PATCH applies per
 field and rejects out-of-range and traversal values, reset restores defaults, and the WS
-upgrade rejects missing and bogus tokens. The stage web bundle emits 11KB of generated
-Tailwind CSS with the theme variables wired.
+upgrade rejects missing and bogus tokens.
+
+## Wave 5 — the Vite client
+
+Verified in a real browser on 2026-09-19 at 390x844 and 1440x900: sign-in empty, filled
+and error; the worlds list empty and filled; character creation through the native
+`<dialog>` with point-buy; the play screen empty, then a full turn streamed from the live
+LLM with the transcript following the stream; the story map with labelled, connected
+nodes; the director console with real stats; runtime settings loaded and editable.
+
+Three real bugs were found by rendering it, all fixed:
+
+- `useGameSocket` — a superseded socket's late `onclose` nulled `socketRef`, so the header
+  read "Live" while every action was silently dropped. Nothing streamed and nothing
+  errored. Handlers now guard on still being the current socket, and a failed send sets
+  `lastError`.
+- `usePaginatedData` — an `inFlight` boolean deadlocked under StrictMode's double mount, so
+  every list rendered its empty state forever. The guard is now controller identity.
+- `PaginatedList` rendered a bare line of text for empty and for error, which is the
+  "empty screen with a void below it" failure. Both now use `EmptyState`, and an error
+  reads as an error rather than as emptiness.
+
+Bundle: 126 kB gzipped entry. CanvasKit (7.3 MB wasm) and `three` are separate lazy
+chunks, fetched only by the story map and the dice roller.
+
+The director serves `STAGE_DIST` after the API routes, with an `index.html` fallback for
+client routes, a JSON 404 for `/api/*`, and a path-traversal guard on the static handler.

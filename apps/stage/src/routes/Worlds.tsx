@@ -1,5 +1,5 @@
 import { API } from "@chronicle/shared";
-import { Settings2 } from "lucide-react";
+import { Globe2, Settings2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
@@ -88,7 +88,13 @@ export function Worlds() {
         key={scope}
         loadPage={loadPage}
         keyExtractor={(world) => world.id}
-        emptyLabel={scope === "mine" ? "No worlds yet." : "Nothing shared yet."}
+        emptyIcon={Globe2}
+        emptyLabel={scope === "mine" ? "No worlds yet" : "Nothing shared yet"}
+        emptyBody={
+          scope === "mine"
+            ? "Worlds you create appear here. Browse Community to play something someone else has published."
+            : "Nobody has published a public world yet. Anything you mark public will show up here."
+        }
         renderItem={(world) => (
           <motion.button
             type="button"

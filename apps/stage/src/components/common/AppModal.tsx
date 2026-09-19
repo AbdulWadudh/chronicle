@@ -54,7 +54,7 @@ export function AppModal({ visible, title, icon, onClose, children, actions }: A
       ref={ref}
       aria-label={title}
       onClose={onClose}
-      className="app-modal mt-auto mb-0 max-h-[88%] w-full max-w-none overflow-hidden rounded-t-3xl border-t border-card-border bg-card p-0 text-text-primary backdrop:bg-black/60"
+      className="app-modal mx-auto mt-auto mb-0 max-h-[88%] w-full max-w-[640px] overflow-hidden rounded-t-3xl border border-card-border bg-card p-0 text-text-primary backdrop:bg-black/60 sm:mb-6 sm:rounded-3xl"
     >
       <div className="flex max-h-[inherit] flex-col pb-[var(--safe-bottom)]">
         <div className="flex items-center gap-3 border-b border-card-border px-5 py-4">
@@ -80,7 +80,11 @@ export function AppModal({ visible, title, icon, onClose, children, actions }: A
                 key={action.label}
                 onClick={action.onPress}
                 disabled={action.disabled}
-                className={`rounded-xl px-4 py-2.5 font-medium disabled:opacity-40 ${TONE_CLASS[action.tone ?? "secondary"]} ${TONE_TEXT[action.tone ?? "secondary"]}`}
+                className={`rounded-xl px-4 py-2.5 font-medium ${
+                  action.disabled === true
+                    ? "bg-white/[0.06] text-text-muted"
+                    : `${TONE_CLASS[action.tone ?? "secondary"]} ${TONE_TEXT[action.tone ?? "secondary"]}`
+                }`}
               >
                 {action.label}
               </button>

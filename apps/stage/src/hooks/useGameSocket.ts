@@ -41,7 +41,10 @@ export function useGameSocket(
 
   const send = useCallback((message: Outbound): string | null => {
     const socket = socketRef.current;
-    if (socket === null || socket.readyState !== WebSocket.OPEN) return null;
+    if (socket === null || socket.readyState !== WebSocket.OPEN) {
+      if (message.type !== "PING") setLastError("Not connected. That did not reach the director.");
+      return null;
+    }
     const msgId = nextMessageId();
     socket.send(JSON.stringify({ ...message, v: PROTOCOL_VERSION, msgId }));
     return msgId;
@@ -53,15 +56,17 @@ export function useGameSocket(
     let heartbeat: ReturnType<typeof setInterval> | null = null;
     let retry: ReturnType<typeof setTimeout> | null = null;
 
-    async function connect(): Promise<void> {
+    function connect(): void {
       const token = readToken();
       if (token === null || disposed) return;
 
       setStatus("connecting");
       const socket = new WebSocket(websocketUrl(token, characterId));
       socketRef.current = socket;
+      const superseded = (): boolean => socketRef.current !== socket;
 
       socket.onopen = () => {
+        if (superseded()) return;
         attemptRef.current = 0;
         setStatus("open");
         setLastError(null);
@@ -69,32 +74,37 @@ export function useGameSocket(
       };
 
       socket.onmessage = (event) => {
+        if (superseded()) return;
         const parsed = parseServerMessage(String(event.data));
         if (parsed.ok) handlerRef.current(parsed.message);
         else setLastError(parsed.reason);
       };
 
-      socket.onerror = () => setLastError("WebSocket error");
+      socket.onerror = () => {
+        if (!superseded()) setLastError("WebSocket error");
+      };
 
       socket.onclose = () => {
         if (heartbeat !== null) clearInterval(heartbeat);
+        if (superseded()) return;
         socketRef.current = null;
         setStatus("closed");
         if (disposed) return;
         attemptRef.current += 1;
         const delay = Math.min(RECONNECT_BASE_MS * 2 ** attemptRef.current, RECONNECT_MAX_MS);
-        retry = setTimeout(() => void connect(), delay);
+        retry = setTimeout(connect, delay);
       };
     }
 
-    void connect();
+    connect();
 
     return () => {
       disposed = true;
       if (heartbeat !== null) clearInterval(heartbeat);
       if (retry !== null) clearTimeout(retry);
-      socketRef.current?.close();
+      const socket = socketRef.current;
       socketRef.current = null;
+      socket?.close();
     };
   }, [characterId, send]);
 

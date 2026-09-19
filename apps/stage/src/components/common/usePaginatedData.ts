@@ -25,34 +25,31 @@ export function usePaginatedData<T>(loadPage: PageLoader<T>): PaginatedData<T> {
   const [error, setError] = useState<string | null>(null);
 
   const cursorRef = useRef<string | null>(null);
-  const inFlight = useRef(false);
   const controllerRef = useRef<AbortController | null>(null);
 
   const fetchPage = useCallback(
     async (from: string | null, replace: boolean): Promise<void> => {
-      if (inFlight.current) return;
-      inFlight.current = true;
-
       controllerRef.current?.abort();
       const controller = new AbortController();
       controllerRef.current = controller;
+      const superseded = (): boolean => controllerRef.current !== controller;
 
       setLoading(true);
       setError(null);
       try {
         const page = await loadPage(from, controller.signal);
-        if (controller.signal.aborted) return;
+        if (superseded()) return;
         setItems((previous) => (replace ? page.items : [...previous, ...page.items]));
         cursorRef.current = page.nextCursor;
         setExhausted(page.nextCursor === null);
       } catch (cause) {
-        if (!controller.signal.aborted) {
-          setError(cause instanceof Error ? cause.message : "Failed to load.");
-        }
+        if (superseded() || controller.signal.aborted) return;
+        setError(cause instanceof Error ? cause.message : "Failed to load.");
       } finally {
-        inFlight.current = false;
-        setLoading(false);
-        setRefreshing(false);
+        if (!superseded()) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [loadPage],
@@ -67,9 +64,9 @@ export function usePaginatedData<T>(loadPage: PageLoader<T>): PaginatedData<T> {
   }, [fetchPage]);
 
   const loadMore = useCallback(() => {
-    if (exhausted) return;
+    if (exhausted || loading) return;
     void fetchPage(cursorRef.current, false);
-  }, [exhausted, fetchPage]);
+  }, [exhausted, fetchPage, loading]);
 
   const refresh = useCallback(() => {
     setRefreshing(true);
