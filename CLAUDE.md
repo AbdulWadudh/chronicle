@@ -2,6 +2,9 @@
 
 Local-first interactive visual RPG. Turborepo + Bun workspaces, scope `@chronicle`.
 
+Read `LLM_STATE.md` first — it holds current progress and locked decisions.
+Update it at every wave gate, before the commit.
+
 ## Taxonomy
 
 | Workspace | Package | Role |
