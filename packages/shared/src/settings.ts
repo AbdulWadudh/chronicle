@@ -24,9 +24,13 @@ const turnSchema = z.object({
 });
 
 const imageSchema = z.object({
+  checkpoint: z.string().min(1).default("epicrealismXL_pureFix.safetensors"),
   width: z.number().int().min(256).max(2048).default(1024),
   height: z.number().int().min(256).max(2048).default(1024),
-  steps: z.number().int().min(1).max(50).default(4),
+  steps: z.number().int().min(1).max(60).default(26),
+  cfg: z.number().min(1).max(20).default(7),
+  sampler: z.string().min(1).default("dpmpp_2m"),
+  scheduler: z.string().min(1).default("karras"),
   negativePrompt: z.string().default("text, watermark, blurry"),
 });
 

@@ -183,3 +183,21 @@ Tier rules are global, in `~/.claude/rules/config.md`. Chronicle places them as:
   The director then publishes `SETTINGS_CHANNEL` so crew invalidates too.
 - The admin surface is `GET/PATCH /api/v1/settings` and `POST /api/v1/settings/reset`.
 - Job payloads carry resolved values. A processor never re-reads a default.
+
+## Local AI services
+
+Everything AI-related lives under `G:\AI`. Chronicle never reads these paths directly —
+it only talks to the HTTP endpoints — but this is where the services are run from.
+
+| Path | What |
+| --- | --- |
+| `G:\AI\MODELS` | Model weights. `Qwen3.5_9B\*.gguf` is the narrative LLM |
+| `G:\AI\STABILITY_MATRIX\Data\Packages\ComfyUI` | ComfyUI, serves `DIFFUSION_ENDPOINT` |
+| `G:\AI\STABILITY_MATRIX\Data\Models\StableDiffusion` | ComfyUI checkpoints |
+
+The installed checkpoint is `epicrealismXL_pureFix.safetensors` — full SDXL, not
+Lightning. It needs roughly 26 steps at CFG 7, which is the runtime default. A Lightning
+checkpoint would want 4 steps at CFG 1. Checkpoint, steps, cfg, sampler and scheduler are
+all runtime settings (`image.*`), so switching models needs no code change.
+
+Kokoro-FastAPI is not installed yet, so `TTS_ENDPOINT` will fail until it is.

@@ -154,9 +154,13 @@ async function dispatchMedia(
     prompt: buildScenePrompt(context.world, narrative, settings.prompt.sceneChars),
     negativePrompt: settings.image.negativePrompt,
     seed: Math.floor(Math.random() * MAX_SEED),
+    checkpoint: settings.image.checkpoint,
     width: settings.image.width,
     height: settings.image.height,
     steps: settings.image.steps,
+    cfg: settings.image.cfg,
+    sampler: settings.image.sampler,
+    scheduler: settings.image.scheduler,
   });
   await Promise.all(
     sentences.map((text, sentenceIndex) =>

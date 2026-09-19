@@ -1,14 +1,12 @@
 import type { DiffusionJob } from "@chronicle/shared";
 
-export const CHECKPOINT_NAME = "sdxl_lightning_4step.safetensors";
-
 export const NODE_SAVE = "9";
 
 export function buildWorkflow(job: DiffusionJob): Record<string, unknown> {
   return {
     "1": {
       class_type: "CheckpointLoaderSimple",
-      inputs: { ckpt_name: CHECKPOINT_NAME },
+      inputs: { ckpt_name: job.checkpoint },
     },
     "2": {
       class_type: "CLIPTextEncode",
@@ -27,9 +25,9 @@ export function buildWorkflow(job: DiffusionJob): Record<string, unknown> {
       inputs: {
         seed: job.seed,
         steps: job.steps,
-        cfg: 1,
-        sampler_name: "euler",
-        scheduler: "sgm_uniform",
+        cfg: job.cfg,
+        sampler_name: job.sampler,
+        scheduler: job.scheduler,
         denoise: 1,
         model: ["1", 0],
         positive: ["2", 0],

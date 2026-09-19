@@ -17,9 +17,13 @@ export const diffusionJobSchema = z.object({
   prompt: z.string().min(1),
   negativePrompt: z.string(),
   seed: z.number().int().nonnegative(),
+  checkpoint: z.string().min(1),
   width: z.number().int().positive(),
   height: z.number().int().positive(),
   steps: z.number().int().positive(),
+  cfg: z.number().positive(),
+  sampler: z.string().min(1),
+  scheduler: z.string().min(1),
 });
 
 export const ttsJobSchema = z.object({
