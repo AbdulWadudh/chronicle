@@ -108,8 +108,11 @@ function Open-LogWindow {
   $paneArgs += @(';', 'split-pane', '-V', '-s', '0.5') + (& $pane $tailers[$stack[0]])
   for ($i = 1; $i -lt $stack.Count; $i += 1) {
     $size = [math]::Round(1 - 1 / ($stack.Count - $i + 1), 3)
+    $paneArgs += @(';', 'focus-pane', '-t', "$i")
     $paneArgs += @(';', 'split-pane', '-H', '-s', "$size") + (& $pane $tailers[$stack[$i]])
   }
+  $paneArgs += @(';', 'focus-pane', '-t', '0')
+
   Start-Process wt -ArgumentList $paneArgs
 }
 
