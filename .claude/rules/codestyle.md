@@ -25,6 +25,24 @@ responsibility, never by line count:
 - A worker grows, one file per processor under `processors/`.
 - A store grows, one slice per concern, composed in the root store.
 
+## File layout
+
+When a file splits, create a folder named for the feature and put its parts inside.
+Never dump the pieces into a shared flat directory.
+
+```
+components/story/
+  NarrativeStream.tsx
+  ChoicePills.tsx
+  useSentenceGate.ts
+  index.ts
+```
+
+- One folder per feature or section. Its files live only there.
+- Re-export through `index.ts`. Outside code imports the folder, never its internals.
+- Code used by two features moves up a level into a shared folder. Never copied.
+- A directory of unrelated files is a smell. Group it or move it.
+
 ## Bun first
 
 Use Bun native APIs. Node builtins and npm packages only where Bun has no equivalent.

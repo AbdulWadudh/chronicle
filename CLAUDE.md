@@ -36,6 +36,8 @@ turbo run typecheck
    `.js`, `.jsx`, `.mjs`, `.cjs`. Names, types, and control flow carry the meaning.
    `bun run audit` enforces this and fails the build.
 3. **Apps never import apps.** All cross-cutting code lives in `packages/*`.
+   When a file splits, make a folder for the feature and keep its parts together —
+   never a flat directory of loose files.
 4. **Bun first.** Use Bun native APIs on the server and in scripts; Node or npm only
    where Bun has no equivalent. `apps/stage` is exempt (Hermes).
 5. **`expo-av` is banned.** Audio is `expo-audio` only.
