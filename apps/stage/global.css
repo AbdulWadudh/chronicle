@@ -5,23 +5,25 @@
 @import "nativewind/theme";
 
 @theme {
-  --color-canvas: #07070b;
-  --color-card: #111117;
-  --color-card-border: #23232e;
-  --color-input-surface: #16161d;
-  --color-audio-pill: #1c1c26;
-  --color-text-primary: #f4f4f7;
-  --color-text-secondary: #b7b7c4;
-  --color-text-muted: #72727f;
-  --color-text-accent: #a78bfa;
-  --color-primary: #7c5cff;
-  --color-primary-foreground: #0b0b10;
-  --color-secondary: #1f1f2a;
-  --color-secondary-foreground: #e6e6ee;
-  --color-accent: #22d3ee;
-  --color-accent-foreground: #04141a;
-  --color-success: #34d399;
+  --color-canvas: #050505;
+  --color-card: #0c0c0e;
+  --color-card-border: #1c1c20;
+  --color-card-glow: #d8a23a;
+  --color-input-surface: #121215;
+  --color-audio-pill: #17171b;
+  --color-text-primary: #f5f3ee;
+  --color-text-secondary: #a8a49c;
+  --color-text-muted: #6b6862;
+  --color-text-accent: #d8a23a;
+  --color-primary: #d8a23a;
+  --color-primary-foreground: #120d02;
+  --color-secondary: #17171b;
+  --color-secondary-foreground: #e8e5de;
+  --color-accent: #7c5cff;
+  --color-accent-foreground: #0b0b10;
+  --color-success: #4ade80;
   --color-warning: #fbbf24;
-  --color-danger: #dc2626;
-  --radius-card: 16px;
+  --color-danger: #f05252;
+  --radius-card: 20px;
+  --radius-shell: 28px;
 }

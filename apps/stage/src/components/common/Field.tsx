@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, Text, TextInput, type TextInputProps, View } from "react-native";
 import { useThemeTokens } from "~/theme/ThemeEngine";
@@ -16,7 +17,9 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
 
   return (
     <View className="gap-1.5">
-      <Text className="text-sm font-medium text-text-secondary">{label}</Text>
+      <Text className="text-[11px] font-medium uppercase tracking-[0.14em] text-text-muted">
+        {label}
+      </Text>
 
       <View className="relative justify-center">
         <TextInput
@@ -24,7 +27,7 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
           accessibilityLabel={label}
           secureTextEntry={secure && !revealed}
           placeholderTextColor={tokens.textMuted}
-          className={`min-h-12 rounded-xl border bg-input-surface px-4 py-3 text-base text-text-primary ${
+          className={`min-h-[52px] rounded-2xl border bg-input-surface px-4 py-3.5 text-base text-text-primary ${
             invalid ? "border-danger" : "border-card-border"
           } ${secure ? "pr-16" : ""}`}
         />
@@ -36,9 +39,11 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
             accessibilityLabel={revealed ? "Hide password" : "Show password"}
             className="absolute right-3 h-11 justify-center px-2"
           >
-            <Text className="text-xs font-medium text-text-accent">
-              {revealed ? "Hide" : "Show"}
-            </Text>
+            {revealed ? (
+              <EyeOff size={18} strokeWidth={1.25} color={tokens.textMuted} />
+            ) : (
+              <Eye size={18} strokeWidth={1.25} color={tokens.textMuted} />
+            )}
           </Pressable>
         ) : null}
       </View>

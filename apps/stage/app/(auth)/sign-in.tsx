@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import { Bezel } from "~/components/common/Bezel";
 import { Button } from "~/components/common/Button";
 import { Field } from "~/components/common/Field";
+import { GlowBackdrop } from "~/components/common/GlowBackdrop";
 import { Screen } from "~/components/common/Screen";
 import { useAuth } from "~/lib/auth";
 
@@ -47,23 +49,29 @@ export default function SignInScreen() {
 
   return (
     <Screen scroll center>
+      <GlowBackdrop />
       <Animated.View
-        entering={reduceMotion ? undefined : FadeInDown.duration(320)}
-        className="gap-7"
+        entering={reduceMotion ? undefined : FadeInDown.duration(600)}
+        className="gap-8"
       >
-        <View className="items-center gap-3">
+        <View className="items-center gap-4">
           <Image
             source={require("../../assets/logo.png")}
-            style={{ width: 88, height: 88 }}
+            style={{ width: 76, height: 76 }}
             resizeMode="contain"
             accessibilityIgnoresInvertColors
             alt=""
           />
-          <View className="items-center gap-1">
-            <Text className="text-3xl font-semibold tracking-tight text-text-primary">
+          <View className="items-center gap-2.5">
+            <View className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">
+              <Text className="text-[10px] font-medium uppercase tracking-[0.2em] text-text-accent">
+                Interactive Worlds
+              </Text>
+            </View>
+            <Text className="text-[34px] font-semibold leading-tight tracking-[-0.03em] text-text-primary">
               Chronicle
             </Text>
-            <Text className="text-center text-sm text-text-muted">
+            <Text className="text-center text-sm leading-relaxed text-text-muted">
               {isSignUp
                 ? "Create an account to begin your first world."
                 : "Sign in to continue your story."}
@@ -71,64 +79,67 @@ export default function SignInScreen() {
           </View>
         </View>
 
-        <View className="gap-4 rounded-2xl border border-card-border bg-card p-5">
-          {isSignUp ? (
+        <Bezel tone="raised">
+          <View className="gap-5 p-6">
+            {isSignUp ? (
+              <Field
+                label="Name"
+                value={name}
+                onChangeText={setName}
+                placeholder="Vell"
+                autoCapitalize="words"
+                autoComplete="name"
+                textContentType="name"
+                returnKeyType="next"
+              />
+            ) : null}
+
             <Field
-              label="Name"
-              value={name}
-              onChangeText={setName}
-              placeholder="Vell"
-              autoCapitalize="words"
-              autoComplete="name"
-              textContentType="name"
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
               returnKeyType="next"
             />
-          ) : null}
 
-          <Field
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="you@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="email"
-            textContentType="emailAddress"
-            returnKeyType="next"
-          />
+            <Field
+              label="Password"
+              secure
+              value={password}
+              onChangeText={setPassword}
+              placeholder="At least 8 characters"
+              hint={isSignUp ? `Use ${MIN_PASSWORD} characters or more.` : undefined}
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+              textContentType={isSignUp ? "newPassword" : "password"}
+              returnKeyType="go"
+              onSubmitEditing={() => {
+                if (canSubmit) void submit();
+              }}
+            />
 
-          <Field
-            label="Password"
-            secure
-            value={password}
-            onChangeText={setPassword}
-            placeholder="At least 8 characters"
-            hint={isSignUp ? `Use ${MIN_PASSWORD} characters or more.` : undefined}
-            autoComplete={isSignUp ? "new-password" : "current-password"}
-            textContentType={isSignUp ? "newPassword" : "password"}
-            returnKeyType="go"
-            onSubmitEditing={() => {
-              if (canSubmit) void submit();
-            }}
-          />
+            {error !== null ? (
+              <View
+                accessibilityLiveRegion="assertive"
+                className="rounded-xl border border-danger/40 bg-danger/10 px-3 py-2"
+              >
+                <Text className="text-sm text-danger">{error}</Text>
+              </View>
+            ) : null}
 
-          {error !== null ? (
-            <View
-              accessibilityLiveRegion="assertive"
-              className="rounded-xl border border-danger/40 bg-danger/10 px-3 py-2"
-            >
-              <Text className="text-sm text-danger">{error}</Text>
-            </View>
-          ) : null}
-
-          <Button
-            label={isSignUp ? "Create account" : "Sign in"}
-            onPress={() => void submit()}
-            busy={busy}
-            disabled={!canSubmit}
-          />
-        </View>
+            <Button
+              label={isSignUp ? "Create account" : "Sign in"}
+              onPress={() => void submit()}
+              busy={busy}
+              disabled={!canSubmit}
+              trailing
+            />
+          </View>
+        </Bezel>
 
         <Pressable onPress={switchMode} hitSlop={12} accessibilityRole="button" className="py-1">
           <Text className="text-center text-sm text-text-muted">
