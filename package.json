@@ -13,7 +13,11 @@
     "audit": "bun run scripts/audit.ts",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "check": "bun run audit && bun run lint && turbo run typecheck"
+    "check": "bun run audit && bun run lint && turbo run typecheck",
+    "ai": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action start -WithEmbeddings",
+    "ai:stop": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action stop",
+    "ai:status": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action status",
+    "ai:logs": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action logs"
   },
   "devDependencies": {
     "@biomejs/biome": "latest",

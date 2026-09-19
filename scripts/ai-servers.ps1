@@ -11,7 +11,8 @@ param(
   [ValidateSet('f16', 'q8_0', 'q5_1', 'q4_0')]
   [string]$CacheKey = 'q8_0',
   [ValidateSet('f16', 'q8_0', 'q5_1', 'q4_0')]
-  [string]$CacheValue = 'q8_0'
+  [string]$CacheValue = 'q8_0',
+  [switch]$NoWindow
 )
 
 $ErrorActionPreference = 'Stop'
@@ -72,10 +73,15 @@ function Stop-Port([int]$Port) {
 
 function Stop-Servers {
   Get-Process llama-server -ErrorAction SilentlyContinue | Stop-Process -Force
-  foreach ($service in $Services | Where-Object { $_.Managed }) { Stop-Port $service.Port }
-  foreach ($attempt in 1..12) {
-    if (-not ($Services | Where-Object { $_.Managed -and (Test-Port $_.Port) })) { return }
-    Start-Sleep -Milliseconds 500
+
+  foreach ($round in 1..3) {
+    $held = $Services | Where-Object { $_.Managed -and (Test-Port $_.Port) }
+    if (-not $held) { return }
+    foreach ($service in $held) { Stop-Port $service.Port }
+    foreach ($attempt in 1..20) {
+      if (-not ($Services | Where-Object { $_.Managed -and (Test-Port $_.Port) })) { return }
+      Start-Sleep -Milliseconds 500
+    }
   }
 }
 
@@ -128,16 +134,46 @@ function Start-Servers {
   $launchers = Build-Launchers
   foreach ($service in Get-Wanted) {
     $log = Join-Path $LogDir "$($service.Name).log"
-    Remove-Item $log, "$log.err" -ErrorAction SilentlyContinue
+    Set-Content -Path $log -Value '' -NoNewline
+    Set-Content -Path "$log.err" -Value '' -NoNewline
     Start-Process cmd -ArgumentList '/c', $launchers[$service.Name] `
       -RedirectStandardOutput $log -RedirectStandardError "$log.err" `
       -WindowStyle Hidden | Out-Null
   }
 
+  if (-not $NoWindow) {
+    Start-Sleep -Milliseconds 800
+    Open-LogWindow
+  }
+
   "Started headless: $((Get-Wanted).Name -join ', ')"
   "Model: $(Split-Path $Model -Leaf)  ctx=$Context kv=$CacheKey/$CacheValue"
   "Logs:  $LogDir"
-  'Poll with -Action status, read output with -Action logs.'
+  if ($NoWindow) { 'Poll with -Action status, read output with -Action logs.' }
+  else { 'A log window is open. Closing it does not stop the services.' }
+}
+
+function Open-LogWindow {
+  $names = @(Get-Wanted | ForEach-Object { $_.Name })
+  $tailers = @{}
+  foreach ($name in $names) {
+    $tailer = Join-Path $RunDir "tail-$name.ps1"
+    Set-Content -Path $tailer -Encoding utf8 -Value @(
+      "`$Host.UI.RawUI.WindowTitle = '$name'"
+      "Get-Content -Path '$LogDir\$name.log', '$LogDir\$name.log.err' -Wait -Tail 40"
+    )
+    $tailers[$name] = $tailer
+  }
+
+  $paneArgs = @('-w', 'new', 'new-tab', '--title', 'Chronicle AI',
+    'pwsh', '-NoExit', '-NoProfile', '-File', $tailers[$names[0]])
+  for ($i = 1; $i -lt $names.Count; $i += 1) {
+    $split = if ($i -eq 1) { '-V' } else { '-H' }
+    $paneArgs += @(';', 'split-pane', $split,
+      'pwsh', '-NoExit', '-NoProfile', '-File', $tailers[$names[$i]])
+  }
+  $paneArgs += @(';', 'focus-pane', '-t', '0')
+  Start-Process wt -ArgumentList $paneArgs
 }
 
 switch ($Action) {
