@@ -195,9 +195,16 @@ it only talks to the HTTP endpoints — but this is where the services are run f
 | `G:\AI\STABILITY_MATRIX\Data\Packages\ComfyUI` | ComfyUI, serves `DIFFUSION_ENDPOINT` |
 | `G:\AI\STABILITY_MATRIX\Data\Models\StableDiffusion` | ComfyUI checkpoints |
 
-The installed checkpoint is `epicrealismXL_pureFix.safetensors` — full SDXL, not
-Lightning. It needs roughly 26 steps at CFG 7, which is the runtime default. A Lightning
-checkpoint would want 4 steps at CFG 1. Checkpoint, steps, cfg, sampler and scheduler are
-all runtime settings (`image.*`), so switching models needs no code change.
+Installed checkpoints:
+
+| File | Kind | Steps | CFG | Sampler |
+| --- | --- | --- | --- | --- |
+| `DreamShaperXL_Lightning.safetensors` | Lightning, the default | 6 | 2 | `dpmpp_sde` / karras |
+| `epicrealismXL_pureFix.safetensors` | full SDXL, photoreal | 26 | 7 | `dpmpp_2m` / karras |
+
+Lightning settings on a full model produce mush, and full-model settings on Lightning
+produce burnt output — the two rows are not interchangeable. Checkpoint, steps, cfg,
+sampler and scheduler are all runtime settings (`image.*`), so switching models is a
+settings change, never a code change.
 
 Kokoro-FastAPI is not installed yet, so `TTS_ENDPOINT` will fail until it is.
