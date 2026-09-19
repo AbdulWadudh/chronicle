@@ -18,7 +18,7 @@ export interface ButtonProps {
 const SURFACE: Record<ButtonTone, string> = {
   primary: "bg-primary",
   secondary: "bg-secondary",
-  ghost: "border border-white/10 bg-white/[0.03]",
+  ghost: "border border-hairline bg-raised-hover",
   danger: "bg-danger",
 };
 
@@ -53,7 +53,7 @@ export function Button({
       disabled={inert}
       aria-busy={busy}
       className={`flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full px-5 transition active:scale-[0.98] active:opacity-90 disabled:cursor-not-allowed ${
-        inert ? "bg-white/[0.06]" : SURFACE[tone]
+        inert ? "bg-sunken" : SURFACE[tone]
       }`}
     >
       {busy ? <Spinner size={14} label={`${label} in progress`} /> : null}
@@ -63,7 +63,7 @@ export function Button({
         {label}
       </span>
       {trailing && !busy ? (
-        <span className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/10">
+        <span className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-scrim">
           <HugeiconsIcon icon={ArrowUpRight01Icon} size={14} strokeWidth={1.5} color={foreground} />
         </span>
       ) : null}

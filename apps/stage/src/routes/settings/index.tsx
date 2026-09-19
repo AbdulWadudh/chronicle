@@ -9,6 +9,7 @@ import { Screen } from "~/components/common/Screen";
 import { Spinner } from "~/components/common/Spinner";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { Appearance } from "./appearance";
 import { DiffusionPresets } from "./DiffusionPresets";
 import { fieldMeta, GROUP_META } from "./fields";
 import { SettingRow } from "./SettingRow";
@@ -117,6 +118,7 @@ export function Settings() {
               ))}
             </SettingsGroup>
           ))}
+          <Appearance index={RUNTIME_SETTING_GROUPS.length} />
         </div>
       </ScrollArea>
     </Screen>

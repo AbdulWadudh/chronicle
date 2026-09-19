@@ -24,7 +24,7 @@ export function DiffusionPresets({ image, onApply }: DiffusionPresetsProps) {
   const mismatched = FAST_CHECKPOINT.test(image.checkpoint) && image.steps > 12;
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-white/[0.05] bg-white/[0.015] px-4 py-3.5">
+    <div className="flex flex-col gap-2 rounded-2xl border border-hairline bg-raised px-4 py-3.5">
       <div>
         <p className="text-[14px] font-medium tracking-[-0.01em] text-text-primary">
           Step and guidance preset

@@ -51,7 +51,7 @@ export function Worlds() {
               type="button"
               onClick={() => void navigate("/settings")}
               aria-label="Runtime settings"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.02] text-text-accent"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-raised text-text-accent"
             >
               <HugeiconsIcon icon={Settings02Icon} size={16} strokeWidth={1.5} />
             </button>

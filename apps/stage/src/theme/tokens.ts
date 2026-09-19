@@ -10,6 +10,12 @@ const COLOR_TOKENS = [
   "inputSurface",
   "audioPillBg",
   "overlayVignette",
+  "hairline",
+  "hairlineStrong",
+  "raised",
+  "raisedHover",
+  "sunken",
+  "scrim",
   "textPrimary",
   "textSecondary",
   "textMuted",
@@ -35,7 +41,10 @@ export function toCssVariables(tokens: ThemeTokens): CssVariables {
     variables[`--color-${kebab(key)}`] = String(tokens[key]);
   }
   variables["--radius-card"] = `${tokens.radius}px`;
+  variables["--radius-control"] = `${Math.max(6, Math.round(tokens.radius * 0.6))}px`;
   variables["--border-width-card"] = `${tokens.borderWidth}px`;
+  variables["--blur-card"] = `${tokens.blurIntensity}px`;
+  variables["--font-scale"] = String(tokens.fontScale);
   variables["--font-narrative"] = tokens.fontNarrative;
   variables["--font-ui"] = tokens.fontUI;
   variables["--font-mono"] = tokens.fontMono;

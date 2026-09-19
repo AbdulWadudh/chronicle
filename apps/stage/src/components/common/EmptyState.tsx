@@ -15,7 +15,7 @@ export function EmptyState({ icon, title, body, compact = false }: EmptyStatePro
     <div
       className={`flex flex-col items-center justify-center gap-3 ${compact ? "px-6 py-10" : "flex-1 px-8"}`}
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.03]">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-hairline bg-raised-hover">
         <HugeiconsIcon icon={icon} size={22} strokeWidth={1.25} color={tokens.textMuted} />
       </div>
       <p className="text-center text-[15px] font-medium text-text-secondary">{title}</p>

@@ -15,7 +15,7 @@ const OPTIONS: Record<string, readonly SelectOptionGroup[]> = {
 };
 
 const ROW =
-  "flex flex-col gap-2.5 rounded-2xl border border-white/[0.05] bg-white/[0.015] px-4 py-3.5 transition-colors duration-200 hover:border-white/[0.09] hover:bg-white/[0.028] motion-reduce:transition-none";
+  "flex flex-col gap-2.5 rounded-2xl border border-hairline bg-raised px-4 py-3.5 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover motion-reduce:transition-none";
 
 const SPLIT = "sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8";
 

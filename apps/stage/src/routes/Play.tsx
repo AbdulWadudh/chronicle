@@ -85,7 +85,7 @@ export function Play() {
 
   return (
     <div className="flex h-full flex-col bg-canvas pt-[var(--safe-top)] pb-[var(--safe-bottom)]">
-      <header className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-3 py-2.5">
+      <header className="flex shrink-0 items-center justify-between border-b border-hairline px-3 py-2.5">
         <BackButton onPress={() => void navigate(-1)} label="Back" />
 
         <p className="flex items-center gap-2 text-[12px] text-text-muted">
@@ -97,7 +97,7 @@ export function Play() {
           type="button"
           onClick={() => setConsoleOpen(true)}
           aria-label="Open director console"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.02] text-text-accent"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-raised text-text-accent"
         >
           <HugeiconsIcon icon={PreferenceHorizontalIcon} size={16} strokeWidth={1.5} />
         </button>
@@ -191,7 +191,7 @@ export function Play() {
         </div>
 
         {layout.isSplit ? (
-          <div className="flex min-h-0 flex-[45] flex-col overflow-hidden border-l border-white/[0.06] p-4">
+          <div className="flex min-h-0 flex-[45] flex-col overflow-hidden border-l border-hairline p-4">
             {scenePanel}
           </div>
         ) : null}

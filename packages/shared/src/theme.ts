@@ -7,6 +7,12 @@ export interface ThemeTokens {
   inputSurface: string;
   audioPillBg: string;
   overlayVignette: string;
+  hairline: string;
+  hairlineStrong: string;
+  raised: string;
+  raisedHover: string;
+  sunken: string;
+  scrim: string;
   textPrimary: string;
   textSecondary: string;
   textMuted: string;
@@ -52,6 +58,12 @@ export const DEFAULT_THEME_TOKENS: ThemeTokens = {
   inputSurface: "#121215",
   audioPillBg: "#17171B",
   overlayVignette: "#000000B8",
+  hairline: "rgb(255 255 255 / 0.06)",
+  hairlineStrong: "rgb(255 255 255 / 0.14)",
+  raised: "rgb(255 255 255 / 0.02)",
+  raisedHover: "rgb(255 255 255 / 0.045)",
+  sunken: "rgb(255 255 255 / 0.09)",
+  scrim: "rgb(0 0 0 / 0.6)",
   textPrimary: "#F5F3EE",
   textSecondary: "#A8A49C",
   textMuted: "#6B6862",
@@ -81,6 +93,12 @@ export const DEFAULT_LIGHT_THEME_TOKENS: ThemeTokens = {
   inputSurface: "#F2EFE9",
   audioPillBg: "#EDE9E1",
   overlayVignette: "#0000001A",
+  hairline: "rgb(22 21 15 / 0.10)",
+  hairlineStrong: "rgb(22 21 15 / 0.22)",
+  raised: "rgb(22 21 15 / 0.025)",
+  raisedHover: "rgb(22 21 15 / 0.05)",
+  sunken: "rgb(22 21 15 / 0.10)",
+  scrim: "rgb(22 21 15 / 0.45)",
   textPrimary: "#16150F",
   textSecondary: "#57534A",
   textMuted: "#8A857B",

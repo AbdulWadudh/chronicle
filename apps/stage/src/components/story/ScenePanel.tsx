@@ -49,7 +49,7 @@ export function ScenePanel({
             className={`flex h-8 items-center justify-center rounded-full px-3.5 text-[12px] font-medium ${
               tab === option.key
                 ? "bg-primary text-primary-foreground"
-                : "border border-white/[0.06] bg-white/[0.02] text-text-muted"
+                : "border border-hairline bg-raised text-text-muted"
             }`}
           >
             {option.label}
@@ -57,7 +57,7 @@ export function ScenePanel({
         ))}
       </div>
 
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-white/[0.06] bg-card">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-hairline bg-card">
         {tab === "map" ? (
           turns.length === 0 ? (
             <EmptyState

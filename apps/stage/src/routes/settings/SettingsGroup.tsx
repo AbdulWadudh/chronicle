@@ -18,9 +18,9 @@ export function SettingsGroup({ meta, index, children }: SettingsGroupProps) {
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.32, delay: index * 0.05, ease: "easeOut" }}
-      className="overflow-hidden rounded-[20px] border border-white/[0.06] bg-card/50"
+      className="overflow-hidden rounded-[20px] border border-hairline bg-card/50"
     >
-      <header className="flex items-start gap-3 border-b border-white/[0.05] bg-white/[0.012] px-4 py-3.5">
+      <header className="flex items-start gap-3 border-b border-hairline bg-raised px-4 py-3.5">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-primary/15 bg-primary/[0.06] text-text-accent/80">
           <HugeiconsIcon icon={meta.icon} size={17} strokeWidth={1.5} />
         </span>

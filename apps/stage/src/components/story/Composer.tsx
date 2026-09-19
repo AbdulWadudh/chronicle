@@ -42,7 +42,7 @@ export function Composer({
   }
 
   return (
-    <div className="flex w-full max-w-[680px] flex-col gap-3 self-center border-t border-white/[0.06] bg-canvas/95 px-4 pt-3 pb-4">
+    <div className="flex w-full max-w-[680px] flex-col gap-3 self-center border-t border-hairline bg-canvas/95 px-4 pt-3 pb-4">
       {choices.length > 0 && !busy ? (
         <div className="flex flex-col gap-2">
           {choices.slice(0, 3).map((choice, index) => (
@@ -50,7 +50,7 @@ export function Composer({
               type="button"
               key={choice.label}
               onClick={() => onSelectChoice(index as 0 | 1 | 2)}
-              className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-left"
+              className="flex items-center gap-3 rounded-2xl border border-hairline bg-raised px-4 py-3 text-left"
             >
               <span className="text-[11px] font-semibold text-text-muted">{index + 1}</span>
               <span className="flex-1 text-[14px] leading-snug text-text-secondary">
@@ -109,7 +109,7 @@ export function Composer({
             disabled={!ready}
             aria-label="Send action"
             className={`flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full transition active:scale-95 ${
-              ready ? "bg-primary" : "bg-white/[0.06]"
+              ready ? "bg-primary" : "bg-sunken"
             }`}
           >
             <HugeiconsIcon
@@ -137,7 +137,7 @@ function ModeChip({ label, icon, active, onSelect }: ModeChipProps) {
   return (
     <label
       className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 focus-within:outline focus-within:outline-2 focus-within:outline-primary ${
-        active ? "bg-primary" : "border border-white/[0.06] bg-white/[0.02]"
+        active ? "bg-primary" : "border border-hairline bg-raised"
       }`}
     >
       <input

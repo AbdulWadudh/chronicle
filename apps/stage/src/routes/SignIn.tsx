@@ -54,7 +54,7 @@ export function SignIn() {
     <div className={`flex flex-col gap-3 ${isSplit ? "items-start gap-4" : "items-center"}`}>
       <img src="/logo.png" alt="" width={52} height={52} className="object-contain" />
       <div className={`flex flex-col gap-2 ${isSplit ? "" : "items-center"}`}>
-        <span className="self-start rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-text-accent">
+        <span className="self-start rounded-full border border-hairline bg-raised-hover px-2.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-text-accent">
           Interactive Worlds
         </span>
         <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.03em] text-text-primary">
