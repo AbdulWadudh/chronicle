@@ -75,6 +75,7 @@ provably breaks the build:
 | `react`, `react-dom`, `react-native` | the versions Expo SDK 57 requires | Expo will not boot on a mismatched React Native |
 | `expo-*` modules | the versions Expo SDK 57 requires | Same |
 | `react-native-css` | `3.1.0-rc.0` | exact peer of `nativewind@5.0.0-rc.0`; `latest` is 3.0.7 |
+| `lightningcss` | `1.30.1` via root `overrides` | newer builds fail Metro with `failed to deserialize; expected an object-like struct named Specifier` |
 
 Client versions come from `node_modules/expo/bundledNativeModules.json`, never from
 `latest`. SDK 57 wants `react-native-gesture-handler@~2.32` while `latest` is 3.x, and

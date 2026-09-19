@@ -8,6 +8,9 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
+    "dev:director": "bun --env-file=.env --watch run apps/director/src/index.ts",
+    "dev:crew": "bun --env-file=.env --watch run apps/crew/src/index.ts",
+    "dev:stage": "bun run --filter @chronicle/stage dev",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "audit": "bun run scripts/audit.ts",
@@ -27,5 +30,8 @@
     "@types/bun": "^1.4.2",
     "turbo": "latest",
     "typescript": "latest"
+  },
+  "overrides": {
+    "lightningcss": "1.30.1"
   }
 }

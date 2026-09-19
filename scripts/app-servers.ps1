@@ -12,8 +12,8 @@ $EnvFile = Join-Path $Root '.env'
 $RunDir = Join-Path $env:LOCALAPPDATA 'chronicle\app'
 
 $Apps = [ordered]@{
-  director = @{ Port = 3000; Dir = (Join-Path $Root 'apps\director'); Command = 'bun run dev' }
-  crew     = @{ Port = 0; Dir = (Join-Path $Root 'apps\crew'); Command = 'bun run dev' }
+  director = @{ Port = 3000; Dir = $Root; Command = 'bun run dev:director' }
+  crew     = @{ Port = 0; Dir = $Root; Command = 'bun run dev:crew' }
   stage    = @{ Port = 8082; Dir = (Join-Path $Root 'apps\stage'); Command = 'bun run dev' }
 }
 
