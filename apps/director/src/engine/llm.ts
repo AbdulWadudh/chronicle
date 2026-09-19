@@ -21,12 +21,8 @@ interface ChatChunk {
   choices?: { delta?: { content?: string }; message?: { content?: string } }[];
 }
 
-function endpoint(path: string): string {
-  return `${env().LLM_ENDPOINT.replace(/\/+$/u, "")}${path}`;
-}
-
 async function post(body: unknown, signal: AbortSignal | undefined): Promise<Response> {
-  const response = await fetch(endpoint("/chat/completions"), {
+  const response = await fetch(`${env().LLM_ENDPOINT}/chat/completions`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),

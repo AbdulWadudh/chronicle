@@ -222,3 +222,9 @@ traversal, and non-model extensions are rejected. It becomes a file path in anot
 process, so it is a trust boundary.
 
 Kokoro-FastAPI is not installed yet, so `TTS_ENDPOINT` will fail until it is.
+
+## Import aliases
+
+`apps/*` use the `~/*` alias for their own `src`. `packages/*` use relative imports —
+an alias defined in a package's tsconfig is not honoured when another workspace compiles
+it, so `~/client` inside `packages/db` resolves against the *consuming* app and fails.

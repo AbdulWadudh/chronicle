@@ -2,6 +2,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { env } from "@chronicle/config";
 import { API } from "@chronicle/shared";
 import { betterAuth } from "better-auth";
+import { bearer } from "better-auth/plugins";
 import type { ChronicleDatabase } from "./client";
 import * as schema from "./schema";
 
@@ -19,6 +20,7 @@ export function createAuth(db: ChronicleDatabase) {
     baseURL: configuration.AUTH_BASE_URL,
     secret: configuration.AUTH_SECRET,
     emailAndPassword: { enabled: true },
+    plugins: [bearer()],
     advanced: {
       database: { generateId: () => Bun.randomUUIDv7() },
     },

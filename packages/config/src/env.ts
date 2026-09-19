@@ -2,10 +2,12 @@ import { BASE_URL, DIRECTOR } from "@chronicle/shared";
 import { z } from "zod";
 import { defaultDatabasePath, defaultVectorDatabasePath } from "./paths";
 
+const endpoint = z.url().transform((value) => value.replace(/\/+$/u, ""));
+
 export const environmentSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   DIRECTOR_PORT: z.coerce.number().int().positive().default(DIRECTOR.defaultPort),
-  STORAGE_ENDPOINT: z.url(),
+  STORAGE_ENDPOINT: endpoint,
   STORAGE_ACCESS_KEY: z.string().min(1),
   STORAGE_SECRET_KEY: z.string().min(1),
   STORAGE_BUCKET_ASSETS: z.string().min(1),
@@ -13,12 +15,12 @@ export const environmentSchema = z.object({
   DATABASE_PATH: z.string().min(1).default(defaultDatabasePath()),
   VECTOR_DB_PATH: z.string().min(1).default(defaultVectorDatabasePath()),
   REDIS_URL: z.url(),
-  LLM_ENDPOINT: z.url(),
+  LLM_ENDPOINT: endpoint,
   LLM_MODEL: z.string().min(1).default("local"),
-  DIFFUSION_ENDPOINT: z.url(),
-  TTS_ENDPOINT: z.url(),
+  DIFFUSION_ENDPOINT: endpoint,
+  TTS_ENDPOINT: endpoint,
   AUTH_SECRET: z.string().min(32),
-  AUTH_BASE_URL: z.url().default(BASE_URL),
+  AUTH_BASE_URL: endpoint.default(BASE_URL),
 
   WS_IDLE_TIMEOUT_SECONDS: z.coerce.number().int().positive().default(120),
 });

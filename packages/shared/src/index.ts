@@ -1,4 +1,5 @@
 export * from "./api";
+export * from "./http";
 export * from "./jobs";
 export * from "./pointbuy";
 export * from "./protocol";
