@@ -104,7 +104,7 @@ function Open-LogWindow {
   $stack = @('llm', 'embed', 'tts') | Where-Object { $names -contains $_ }
   $pane = { param($file) @('pwsh', '-NoExit', '-NoProfile', '-File', $file) }
 
-  $paneArgs = @('-w', 'new', 'new-tab', '--title', 'Chronicle-AI') + (& $pane $tailers['comfy'])
+  $paneArgs = @('-w', 'Chronicle', 'new-tab', '--title', 'AI') + (& $pane $tailers['comfy'])
   $paneArgs += @(';', 'split-pane', '-V', '-s', '0.5') + (& $pane $tailers[$stack[0]])
   for ($i = 1; $i -lt $stack.Count; $i += 1) {
     $size = [math]::Round(1 - 1 / ($stack.Count - $i + 1), 3)

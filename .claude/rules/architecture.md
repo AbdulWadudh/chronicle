@@ -314,3 +314,24 @@ nomic-embed, ComfyUI holding SDXL Lightning, and Kokoro: **11.9 GB of 16.3 GB**.
 `-ctk q8_0`. Dropping the K cache to q4_0 saves little and measurably hurts long-context
 coherence, which is exactly what a story accumulating turn history depends on. If VRAM
 ever gets tight, lower `-ctv` first — the value cache quantizes far more gracefully.
+
+## Dev stack
+
+Two scripts, two tabs in one Windows Terminal window named `Chronicle`.
+
+| Command | Tab | Panes |
+| --- | --- | --- |
+| `bun ai` | `AI` | comfy full-height left; llm, embed, tts stacked right |
+| `bun app` | `App` | director full-height left; crew, stage stacked right |
+
+`bun ai` daemonises the model servers and the panes only tail their logs, so closing the
+window leaves them running. `bun app` runs the apps *in* the panes because they are
+watch-mode dev processes you interrupt with Ctrl+C.
+
+Metro runs on **8082**, not its default 8081, because the embeddings server owns 8081.
+
+Neither script touches Dragonfly or RustFS. Docker owns those.
+
+`Get-CimInstance` and `Get-NetTCPConnection` both fail without privileges in this shell,
+so readiness is a `TcpClient` connect and process cleanup goes through `netstat -ano`
+plus `Get-Process`. Crew binds no port, so its status cannot be probed.

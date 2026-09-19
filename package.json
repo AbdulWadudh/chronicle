@@ -17,7 +17,10 @@
     "ai": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action start -WithEmbeddings",
     "ai:stop": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action stop",
     "ai:status": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action status",
-    "ai:logs": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action logs"
+    "ai:logs": "pwsh -NoProfile -File scripts/ai-servers.ps1 -Action logs",
+    "app": "pwsh -NoProfile -File scripts/app-servers.ps1 -Action start",
+    "app:stop": "pwsh -NoProfile -File scripts/app-servers.ps1 -Action stop",
+    "app:status": "pwsh -NoProfile -File scripts/app-servers.ps1 -Action status"
   },
   "devDependencies": {
     "@biomejs/biome": "latest",
