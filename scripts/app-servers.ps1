@@ -9,11 +9,11 @@ $ErrorActionPreference = 'Stop'
 
 $Root = Split-Path $PSScriptRoot -Parent
 $EnvFile = Join-Path $Root '.env'
-$Watch = "bun --env-file `"$EnvFile`" --watch run src/index.ts"
+$RunDir = Join-Path $env:LOCALAPPDATA 'chronicle\app'
 
 $Apps = [ordered]@{
-  director = @{ Port = 3000; Dir = (Join-Path $Root 'apps\director'); Command = $Watch }
-  crew     = @{ Port = 0; Dir = (Join-Path $Root 'apps\crew'); Command = $Watch }
+  director = @{ Port = 3000; Dir = (Join-Path $Root 'apps\director'); Command = 'bun run dev' }
+  crew     = @{ Port = 0; Dir = (Join-Path $Root 'apps\crew'); Command = 'bun run dev' }
   stage    = @{ Port = 8082; Dir = (Join-Path $Root 'apps\stage'); Command = 'bun run dev' }
 }
 
@@ -56,21 +56,29 @@ function Start-Apps {
   if (-not (Test-Path $EnvFile)) { throw "Missing .env at $EnvFile" }
   Stop-Apps
   Start-Sleep -Milliseconds 800
+  New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
 
   $names = @($Apps.Keys)
-  $pane = {
-    param($name)
+  $runners = @{}
+  foreach ($name in $names) {
     $app = $Apps[$name]
-    @('pwsh', '-NoExit', '-NoProfile', '-Command',
-      "`$Host.UI.RawUI.WindowTitle='$name'; Set-Location '$($app.Dir)'; $($app.Command)")
+    $runner = Join-Path $RunDir "run-$name.ps1"
+    Set-Content -Path $runner -Encoding utf8 -Value @(
+      "`$Host.UI.RawUI.WindowTitle = '$name'"
+      "Set-Location -LiteralPath '$($app.Dir)'"
+      $app.Command
+    )
+    $runners[$name] = $runner
   }
 
-  $paneArgs = @('-w', 'Chronicle', 'new-tab', '--title', 'App') + (& $pane $names[0])
-  $paneArgs += @(';', 'split-pane', '-V', '-s', '0.5') + (& $pane $names[1])
+  $pane = { param($file) @('pwsh', '-NoExit', '-NoProfile', '-File', $file) }
+
+  $paneArgs = @('-w', 'Chronicle', 'new-tab', '--title', 'App') + (& $pane $runners[$names[0]])
+  $paneArgs += @(';', 'split-pane', '-V', '-s', '0.5') + (& $pane $runners[$names[1]])
   for ($i = 2; $i -lt $names.Count; $i += 1) {
     $size = [math]::Round(1 - 1 / ($names.Count - $i + 1), 3)
     $paneArgs += @(';', 'focus-pane', '-t', "$($i - 1)")
-    $paneArgs += @(';', 'split-pane', '-H', '-s', "$size") + (& $pane $names[$i])
+    $paneArgs += @(';', 'split-pane', '-H', '-s', "$size") + (& $pane $runners[$names[$i]])
   }
   $paneArgs += @(';', 'focus-pane', '-t', '0')
 

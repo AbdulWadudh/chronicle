@@ -332,6 +332,14 @@ Metro runs on **8082**, not its default 8081, because the embeddings server owns
 
 Neither script touches Dragonfly or RustFS. Docker owns those.
 
+Both scripts write a `.ps1` per pane and launch it with `pwsh -File`. Never pass a
+command string to `wt` directly: `;` is Terminal's own command separator, so a
+`Set-Location 'x'; bun run dev` argument splits into extra tabs. A space splits arguments
+too, which is why window and tab titles are single tokens.
+
+Each pane runs `bun run dev` and lets the app's own `package.json` own its flags, so the
+launcher never duplicates an `--env-file` or a port.
+
 `Get-CimInstance` and `Get-NetTCPConnection` both fail without privileges in this shell,
 so readiness is a `TcpClient` connect and process cleanup goes through `netstat -ano`
 plus `Get-Process`. Crew binds no port, so its status cannot be probed.
