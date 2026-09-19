@@ -2,7 +2,7 @@
 
 Build progress tracker. Read this first. Update it at every wave gate, before the commit.
 
-**Status:** All waves complete. Nothing has been run at runtime yet.
+**Status:** All waves complete. Director verified running; stage web bundle verified.
 **Updated:** 2026-09-19
 
 ## Waves
@@ -65,5 +65,17 @@ parsing checked against expected values.
 ## Verify
 
 ```
-bun run check
+bun run check                                  # audit + lint + typecheck
+cd apps/director && bun run dev                # needs .env at repo root and Dragonfly up
+cd apps/stage && bunx expo export --platform web --output-dir /tmp/x   # proves the bundle
 ```
+
+Apps load env with `bun --env-file=../../.env` — Bun only auto-loads `.env` from the cwd,
+and `.env` lives at the repo root.
+
+Verified live on 2026-09-19: sign-up and sign-in return a bearer token, protected routes
+401 without it and 200 with it, world creation persists, point-buy rejects undeclared and
+missing stats, the community filter returns only public worlds, settings PATCH applies per
+field and rejects out-of-range and traversal values, reset restores defaults, and the WS
+upgrade rejects missing and bogus tokens. The stage web bundle emits 11KB of generated
+Tailwind CSS with the theme variables wired.
