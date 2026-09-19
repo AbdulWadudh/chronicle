@@ -1,4 +1,4 @@
-import { DIRECTOR, directorUrl } from "@chronicle/shared";
+import { BASE_URL, DIRECTOR } from "@chronicle/shared";
 import { z } from "zod";
 import { defaultDatabasePath, defaultVectorDatabasePath } from "./paths";
 
@@ -18,7 +18,7 @@ export const environmentSchema = z.object({
   DIFFUSION_ENDPOINT: z.url(),
   TTS_ENDPOINT: z.url(),
   AUTH_SECRET: z.string().min(32),
-  AUTH_BASE_URL: z.url().default(directorUrl(DIRECTOR.defaultHost, DIRECTOR.defaultPort)),
+  AUTH_BASE_URL: z.url().default(BASE_URL),
 
   WS_IDLE_TIMEOUT_SECONDS: z.coerce.number().int().positive().default(120),
 });

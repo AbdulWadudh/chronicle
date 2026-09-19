@@ -13,9 +13,7 @@ export const DIRECTOR = {
   defaultPort: 3000,
 } as const;
 
-export function directorUrl(host: string, port: number): string {
-  return `http://${host}:${port}`;
-}
+export const BASE_URL = `http://${DIRECTOR.defaultHost}:${DIRECTOR.defaultPort}`;
 
 export function websocketPath(token: string, characterId: string | null): string {
   const query = new URLSearchParams({ token });
