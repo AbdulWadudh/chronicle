@@ -1,8 +1,8 @@
 import { env } from "@chronicle/config";
 import { audioChannel, type TtsJob, ttsJobSchema } from "@chronicle/shared";
 import type { Job } from "bullmq";
-import { publisher } from "../redis";
-import { sentenceKey, upload } from "../storage";
+import { publisher } from "~/redis";
+import { sentenceKey, upload } from "~/storage";
 
 function endpoint(): string {
   return `${env().TTS_ENDPOINT.replace(/\/+$/u, "")}/v1/audio/speech`;

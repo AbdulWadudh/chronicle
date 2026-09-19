@@ -5,8 +5,8 @@ import {
   runtimeSettingsPatchSchema,
 } from "@chronicle/shared";
 import { Hono } from "hono";
-import { type AuthEnv, requireSession } from "../auth";
-import { publishSettingsChange } from "../queue";
+import { type AuthEnv, requireSession } from "~/auth";
+import { publishSettingsChange } from "~/queue";
 
 export const settingsRoutes = new Hono<AuthEnv>()
   .use("*", requireSession)

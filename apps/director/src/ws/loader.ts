@@ -9,7 +9,7 @@ import {
   worldSchema,
 } from "@chronicle/shared";
 import { eq } from "drizzle-orm";
-import type { TurnContext } from "./context";
+import type { TurnContext } from "~/ws/context";
 
 export async function loadTurnContext(
   characterId: string,

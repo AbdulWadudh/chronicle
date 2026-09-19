@@ -3,7 +3,7 @@ import { STATS, statDefinitionSchema, worldStateSchema } from "@chronicle/shared
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { type AuthEnv, requireSession } from "../auth";
+import { type AuthEnv, requireSession } from "~/auth";
 
 const createWorldSchema = z.object({
   title: z.string().min(1),

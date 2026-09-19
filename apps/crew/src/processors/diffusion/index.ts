@@ -2,10 +2,10 @@ import { database, schema } from "@chronicle/db";
 import { type DiffusionJob, diffusionJobSchema, imageChannel } from "@chronicle/shared";
 import type { Job } from "bullmq";
 import { eq } from "drizzle-orm";
-import { publisher } from "../../redis";
-import { sceneKey, upload } from "../../storage";
-import { fetchImage, submit, waitForImages } from "./client";
-import { buildWorkflow } from "./workflow";
+import { fetchImage, submit, waitForImages } from "~/processors/diffusion/client";
+import { buildWorkflow } from "~/processors/diffusion/workflow";
+import { publisher } from "~/redis";
+import { sceneKey, upload } from "~/storage";
 
 const CLIENT_ID = "chronicle-crew";
 
@@ -33,4 +33,4 @@ export async function renderScene(job: Job<DiffusionJob>): Promise<string> {
   return imageUrl;
 }
 
-export { buildWorkflow } from "./workflow";
+export { buildWorkflow } from "~/processors/diffusion/workflow";

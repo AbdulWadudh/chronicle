@@ -2,7 +2,7 @@
 
 Build progress tracker. Read this first. Update it at every wave gate, before the commit.
 
-**Status:** Wave 4a complete. Awaiting go-ahead for Wave 4b.
+**Status:** All waves complete. Nothing has been run at runtime yet.
 **Updated:** 2026-09-19
 
 ## Waves
@@ -13,7 +13,7 @@ Build progress tracker. Read this first. Update it at every wave gate, before th
 | 2 | `@chronicle/config`, `@chronicle/shared`, `@chronicle/db` | done |
 | 3 | `@chronicle/director`, `@chronicle/crew` | done |
 | 4a | `@chronicle/stage` foundation: theme, hooks, DRY components, screens | done |
-| 4b | Skia flowchart, R3F dice, NarrativeStream, ChoicePills, Director console, settings UI | next |
+| 4b | Skia flowchart, R3F dice, NarrativeStream, ChoicePills, Director console, settings UI | done |
 
 ## Built
 
@@ -33,7 +33,7 @@ Build progress tracker. Read this first. Update it at every wave gate, before th
   `hooks/{useGameSocket,useAudioQueue,useTurnStream,useResponsiveLayout}`,
   `lib/{api,auth,session}`, `components/common/{AppModal,PaginatedList,usePaginatedData}`,
   `components/character/PointBuyStepper`, routes `_layout`, `(auth)/sign-in`, `index`,
-  `character-select`, `play/[id]`
+  `character-select`, `play/[id]`, `settings`
 
 ## Verified
 

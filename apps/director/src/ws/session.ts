@@ -1,6 +1,6 @@
 import { type ErrorCode, PROTOCOL_VERSION, type ServerMessage } from "@chronicle/shared";
 import type { ServerWebSocket } from "bun";
-import { record } from "./buffer";
+import { record } from "~/ws/buffer";
 
 export interface SocketData {
   userId: string;

@@ -1,6 +1,6 @@
 import { type ClientMessage, PROTOCOL_VERSION, parseClientMessage } from "@chronicle/shared";
-import { replayFrom } from "./buffer";
-import { loadTurnContext } from "./loader";
+import { replayFrom } from "~/ws/buffer";
+import { loadTurnContext } from "~/ws/loader";
 import {
   type ChronicleSocket,
   cancelTurn,
@@ -8,8 +8,8 @@ import {
   registerSocket,
   send,
   sendError,
-} from "./session";
-import { runTurn } from "./turnSession";
+} from "~/ws/session";
+import { runTurn } from "~/ws/turnSession";
 
 export function websocketHandlers(): {
   open: (socket: ChronicleSocket) => void;

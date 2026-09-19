@@ -1,10 +1,10 @@
 import { env } from "@chronicle/config";
 import { runMigrations } from "@chronicle/db";
 import { API } from "@chronicle/shared";
-import { createApp } from "./app";
-import { verifyToken } from "./auth";
-import { websocketHandlers } from "./ws/gateway";
-import type { SocketData } from "./ws/session";
+import { createApp } from "~/app";
+import { verifyToken } from "~/auth";
+import { websocketHandlers } from "~/ws/gateway";
+import type { SocketData } from "~/ws/session";
 
 await runMigrations();
 

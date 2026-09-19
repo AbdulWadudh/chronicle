@@ -1,10 +1,10 @@
 import { invalidateSettings } from "@chronicle/db";
 import { QUEUE_DIFFUSION, QUEUE_MEMORY, QUEUE_TTS, SETTINGS_CHANNEL } from "@chronicle/shared";
 import { Worker } from "bullmq";
-import { renderScene } from "./processors/diffusion";
-import { rememberEpisode } from "./processors/memory";
-import { synthesize } from "./processors/tts";
-import { connection, disconnectRedis, subscriber } from "./redis";
+import { renderScene } from "~/processors/diffusion";
+import { rememberEpisode } from "~/processors/memory";
+import { synthesize } from "~/processors/tts";
+import { connection, disconnectRedis, subscriber } from "~/redis";
 
 const DIFFUSION_CONCURRENCY = 1;
 const TTS_CONCURRENCY = 3;

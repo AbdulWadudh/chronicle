@@ -1,5 +1,5 @@
 import type { Character, TurnNode, World, WorldState } from "@chronicle/shared";
-import type { ChatMessage } from "./llm";
+import type { ChatMessage } from "~/engine/llm";
 
 const NARRATOR_SYSTEM = [
   "You are the narrator of an interactive story.",

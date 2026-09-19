@@ -3,7 +3,7 @@ import { inventorySchema, isValidBuild, statBlockSchema } from "@chronicle/share
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { type AuthEnv, requireSession } from "../auth";
+import { type AuthEnv, requireSession } from "~/auth";
 
 const createCharacterSchema = z.object({
   worldId: z.string().min(1),

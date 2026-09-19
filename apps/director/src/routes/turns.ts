@@ -2,7 +2,7 @@ import { database, newId, schema } from "@chronicle/db";
 import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { type AuthEnv, requireSession } from "../auth";
+import { type AuthEnv, requireSession } from "~/auth";
 
 const checkpointSchema = z.object({
   turnId: z.string().min(1),
