@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #050505;
+  --color-card: #0c0c0e;
+  --color-card-border: #1c1c20;
+  --color-card-glow: #d8a23a;
+  --color-input-surface: #121215;
+  --color-audio-pill: #17171b;
+  --color-text-primary: #f5f3ee;
+  --color-text-secondary: #a8a49c;
+  --color-text-muted: #6b6862;
+  --color-text-accent: #d8a23a;
+  --color-primary: #d8a23a;
+  --color-primary-foreground: #120d02;
+  --color-secondary: #17171b;
+  --color-secondary-foreground: #e8e5de;
+  --color-accent: #7c5cff;
+  --color-accent-foreground: #0b0b10;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f05252;
+  --radius-card: 20px;
+  --radius-shell: 28px;
+  --font-ui: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-narrative: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  input,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer components {
+  .app-modal {
+    opacity: 0;
+    translate: 0 1.5rem;
+    transition:
+      opacity 180ms ease-out,
+      translate 180ms ease-out,
+      overlay 180ms ease-out allow-discrete,
+      display 180ms ease-out allow-discrete;
+  }
+
+  .app-modal[open] {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .app-modal[open] {
+      opacity: 0;
+      translate: 0 1.5rem;
+    }
+  }
+
+  .app-modal::backdrop {
+    backdrop-filter: blur(6px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-modal {
+      translate: 0 0;
+      transition:
+        opacity 120ms ease-out,
+        overlay 120ms ease-out allow-discrete,
+        display 120ms ease-out allow-discrete;
+    }
+
+    @starting-style {
+      .app-modal[open] {
+        translate: 0 0;
+      }
+    }
+  }
+}

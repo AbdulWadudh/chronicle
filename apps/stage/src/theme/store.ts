@@ -4,10 +4,9 @@ import {
   mergeThemeTokens,
   type ThemeTokens,
 } from "@chronicle/shared";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMemo } from "react";
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 
 export const THEME_STORAGE_KEY = "@chronicle_theme_v2";
 
@@ -62,7 +61,6 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: THEME_STORAGE_KEY,
-      storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         preference: state.preference,
         globalOverrides: state.globalOverrides,
@@ -72,6 +70,12 @@ export const useThemeStore = create<ThemeState>()(
     },
   ),
 );
+
+export function useIsDark(): boolean {
+  const preference = useThemeStore((state) => state.preference);
+  const systemIsDark = useThemeStore((state) => state.systemIsDark);
+  return preference === "system" ? systemIsDark : preference === "dark";
+}
 
 export function useResolvedTheme(): ThemeTokens {
   const preference = useThemeStore((state) => state.preference);

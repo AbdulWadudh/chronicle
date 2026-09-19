@@ -1,27 +1,44 @@
-import { type RefObject, useCallback, useRef } from "react";
-import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from "react-native";
+import { type RefObject, useCallback, useEffect, useRef } from "react";
 
 const BOTTOM_THRESHOLD = 80;
 
 export interface FollowScroll {
-  ref: RefObject<ScrollView | null>;
-  onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  onContentSizeChange: () => void;
+  ref: RefObject<HTMLDivElement | null>;
+  onScroll: () => void;
 }
 
 export function useFollowScroll(): FollowScroll {
-  const ref = useRef<ScrollView>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const pinnedToBottom = useRef(true);
 
-  const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const distanceFromBottom = contentSize.height - contentOffset.y - layoutMeasurement.height;
+  const onScroll = useCallback(() => {
+    const element = ref.current;
+    if (element === null) return;
+    const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
     pinnedToBottom.current = distanceFromBottom <= BOTTOM_THRESHOLD;
   }, []);
 
-  const onContentSizeChange = useCallback(() => {
-    if (pinnedToBottom.current) ref.current?.scrollToEnd({ animated: false });
+  useEffect(() => {
+    const element = ref.current;
+    if (element === null) return;
+
+    let frame = 0;
+    const stick = (): void => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (pinnedToBottom.current) element.scrollTop = element.scrollHeight;
+      });
+    };
+
+    const observer = new MutationObserver(stick);
+    observer.observe(element, { childList: true, subtree: true, characterData: true });
+    stick();
+
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, []);
 
-  return { ref, onScroll, onContentSizeChange };
+  return { ref, onScroll };
 }

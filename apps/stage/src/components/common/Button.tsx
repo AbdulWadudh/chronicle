@@ -1,16 +1,17 @@
-import { ArrowUpRight } from "lucide-react-native";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ArrowUpRight } from "lucide-react";
 import { useThemeTokens } from "~/theme/ThemeEngine";
+import { Spinner } from "./Spinner";
 
 export type ButtonTone = "primary" | "secondary" | "ghost" | "danger";
 
 export interface ButtonProps {
   label: string;
-  onPress: () => void;
+  onPress?: () => void;
   tone?: ButtonTone;
   busy?: boolean;
   disabled?: boolean;
   trailing?: boolean;
+  type?: "button" | "submit";
 }
 
 const SURFACE: Record<ButtonTone, string> = {
@@ -34,6 +35,7 @@ export function Button({
   busy = false,
   disabled = false,
   trailing = false,
+  type = "button",
 }: ButtonProps) {
   const tokens = useThemeTokens();
   const inert = disabled || busy;
@@ -44,27 +46,26 @@ export function Button({
       : tokens.textSecondary;
 
   return (
-    <Pressable
-      onPress={onPress}
+    <button
+      type={type}
+      onClick={onPress}
       disabled={inert}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: inert, busy }}
-      className={`min-h-[44px] flex-row items-center justify-center gap-2 rounded-full px-5 active:scale-[0.98] active:opacity-90 ${
+      aria-busy={busy}
+      className={`flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full px-5 transition active:scale-[0.98] active:opacity-90 disabled:cursor-not-allowed ${
         inert ? "bg-white/[0.06]" : SURFACE[tone]
       }`}
     >
-      {busy ? <ActivityIndicator size="small" color={foreground} /> : null}
-      <Text
+      {busy ? <Spinner size={14} label={`${label} in progress`} /> : null}
+      <span
         className={`text-[14px] font-semibold tracking-[-0.01em] ${inert ? "text-text-muted" : LABEL[tone]}`}
       >
         {label}
-      </Text>
+      </span>
       {trailing && !busy ? (
-        <View className="ml-0.5 h-6 w-6 items-center justify-center rounded-full bg-black/10">
+        <span className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/10">
           <ArrowUpRight size={14} strokeWidth={1.5} color={foreground} />
-        </View>
+        </span>
       ) : null}
-    </Pressable>
+    </button>
   );
 }

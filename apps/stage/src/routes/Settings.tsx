@@ -4,11 +4,13 @@ import {
   type RuntimeSettingsPatch,
   runtimeSettingsSchema,
 } from "@chronicle/shared";
-import { useRouter } from "expo-router";
+import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigate } from "react-router";
 import { NumberField } from "~/components/common/NumberField";
+import { PageHeader } from "~/components/common/PageHeader";
+import { Screen } from "~/components/common/Screen";
+import { Spinner } from "~/components/common/Spinner";
 import { get, patch, post } from "~/lib/api";
 
 interface SettingsResponse {
@@ -17,8 +19,6 @@ interface SettingsResponse {
 }
 
 type Group = keyof RuntimeSettings;
-
-const SCROLL_STYLE = { gap: 20, padding: 16 } as const;
 
 const FIELD_BOUNDS: Record<string, { min: number; max: number; step?: number }> = {
   temperature: { min: 0, max: 2, step: 0.1 },
@@ -34,10 +34,8 @@ const FIELD_BOUNDS: Record<string, { min: number; max: number; step?: number }> 
   defaultDifficulty: { min: 5, max: 30 },
 };
 
-const FILL = { flex: 1 } as const;
-
-export default function SettingsScreen() {
-  const router = useRouter();
+export function Settings() {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<RuntimeSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,37 +71,68 @@ export default function SettingsScreen() {
     }
   }
 
+  const back = (
+    <button
+      type="button"
+      onClick={() => void navigate(-1)}
+      aria-label="Back"
+      className="flex h-9 w-9 items-center justify-center rounded-full text-text-muted"
+    >
+      <ChevronLeft size={18} strokeWidth={1.5} />
+    </button>
+  );
+
   if (settings === null) {
     return (
-      <SafeAreaView style={FILL} className="items-center justify-center bg-canvas">
-        {error === null ? <ActivityIndicator /> : <Text className="text-danger">{error}</Text>}
-      </SafeAreaView>
+      <Screen wide>
+        <PageHeader title="Runtime settings" leading={back} />
+        <div className="flex flex-1 items-center justify-center text-text-muted">
+          {error === null ? (
+            <Spinner size={22} label="Loading settings" />
+          ) : (
+            <p role="alert" className="text-danger">
+              {error}
+            </p>
+          )}
+        </div>
+      </Screen>
     );
   }
 
   const groups = Object.keys(runtimeSettingsSchema.shape) as Group[];
 
   return (
-    <SafeAreaView style={FILL} className="bg-canvas">
-      <View className="flex-row items-center justify-between px-4 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button">
-          <Text className="text-text-muted">← Back</Text>
-        </Pressable>
-        <Text className="text-lg font-semibold text-text-primary">Runtime settings</Text>
-        <Pressable onPress={() => void reset()} hitSlop={8} accessibilityRole="button">
-          <Text className="text-text-accent">Reset</Text>
-        </Pressable>
-      </View>
+    <Screen wide>
+      <PageHeader
+        title="Runtime settings"
+        leading={back}
+        trailing={
+          <button
+            type="button"
+            onClick={() => void reset()}
+            disabled={saving}
+            className="rounded-full px-3 py-2 text-[13px] text-text-accent disabled:opacity-40"
+          >
+            Reset
+          </button>
+        }
+      />
 
-      {error !== null ? <Text className="px-4 text-danger">{error}</Text> : null}
-      {saving ? <ActivityIndicator className="py-1" /> : null}
+      <div aria-live="polite" className="flex shrink-0 items-center gap-2 pb-2 text-text-muted">
+        {saving ? <Spinner label="Saving" /> : null}
+        {error !== null ? (
+          <p role="alert" className="text-danger">
+            {error}
+          </p>
+        ) : null}
+      </div>
 
-      <ScrollView contentContainerStyle={SCROLL_STYLE}>
+      <div className="scrollbar-none flex flex-1 flex-col gap-5 overflow-y-auto pb-6">
         {groups.map((group) => (
-          <View key={group} className="gap-2">
-            <Text className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+          <section key={group} className="flex flex-col gap-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
               {group}
-            </Text>
+            </h2>
             {Object.entries(settings[group]).map(([field, value]) =>
               typeof value === "number" ? (
                 <NumberField
@@ -116,21 +145,19 @@ export default function SettingsScreen() {
                   onChange={(next) => void save({ [group]: { [field]: next } })}
                 />
               ) : (
-                <View key={field} className="gap-1">
-                  <Text className="text-xs text-text-muted">{field}</Text>
-                  <TextInput
+                <label key={field} className="flex flex-col gap-1">
+                  <span className="text-xs text-text-muted">{field}</span>
+                  <input
                     defaultValue={String(value)}
-                    onEndEditing={(event) =>
-                      void save({ [group]: { [field]: event.nativeEvent.text } })
-                    }
-                    className="rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary"
+                    onBlur={(event) => void save({ [group]: { [field]: event.target.value } })}
+                    className="rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none"
                   />
-                </View>
+                </label>
               ),
             )}
-          </View>
+          </section>
         ))}
-      </ScrollView>
-    </SafeAreaView>
+      </div>
+    </Screen>
   );
 }

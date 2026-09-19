@@ -1,4 +1,4 @@
-import { useWindowDimensions } from "react-native";
+import { useEffect, useState } from "react";
 
 export const SPLIT_BREAKPOINT = 900;
 export const NARRATIVE_FLEX = 0.55;
@@ -15,8 +15,25 @@ export interface ResponsiveLayout {
   canvasWidth: number;
 }
 
+interface Viewport {
+  width: number;
+  height: number;
+}
+
+function readViewport(): Viewport {
+  return { width: window.innerWidth, height: window.innerHeight };
+}
+
 export function useResponsiveLayout(): ResponsiveLayout {
-  const { width, height } = useWindowDimensions();
+  const [viewport, setViewport] = useState<Viewport>(readViewport);
+
+  useEffect(() => {
+    const onResize = (): void => setViewport(readViewport());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const { width, height } = viewport;
   const isSplit = width >= SPLIT_BREAKPOINT && width > height;
   return {
     mode: isSplit ? "split" : "stacked",

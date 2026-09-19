@@ -1,9 +1,9 @@
 import type { TurnNode } from "@chronicle/shared";
-import { ImageOff, Network } from "lucide-react-native";
-import { Image, Pressable, Text, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { FlowchartCanvas } from "~/components/canvas/flowchart/FlowchartCanvas";
+import { ImageOff, Network } from "lucide-react";
+import { motion } from "motion/react";
+import { lazy, Suspense } from "react";
 import { EmptyState } from "~/components/common/EmptyState";
+import { Spinner } from "~/components/common/Spinner";
 
 export type ScenePanelTab = "scene" | "map";
 
@@ -16,6 +16,11 @@ export interface ScenePanelProps {
   width: number;
   height: number;
 }
+
+const FlowchartCanvas = lazy(async () => {
+  const module = await import("~/components/canvas/flowchart");
+  return { default: module.FlowchartCanvas };
+});
 
 const TABS: { key: ScenePanelTab; label: string }[] = [
   { key: "scene", label: "Scene" },
@@ -32,30 +37,27 @@ export function ScenePanel({
   height,
 }: ScenePanelProps) {
   return (
-    <View className="flex-1 gap-3">
-      <View className="flex-row gap-1.5">
+    <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+      <div className="flex gap-1.5" role="tablist" aria-label="Scene panel">
         {TABS.map((option) => (
-          <Pressable
+          <button
+            type="button"
             key={option.key}
-            onPress={() => onTabChange(option.key)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: tab === option.key }}
-            className={`h-8 justify-center rounded-full px-3.5 ${
-              tab === option.key ? "bg-primary" : "border border-white/[0.06] bg-white/[0.02]"
+            role="tab"
+            aria-selected={tab === option.key}
+            onClick={() => onTabChange(option.key)}
+            className={`flex h-8 items-center justify-center rounded-full px-3.5 text-[12px] font-medium ${
+              tab === option.key
+                ? "bg-primary text-primary-foreground"
+                : "border border-white/[0.06] bg-white/[0.02] text-text-muted"
             }`}
           >
-            <Text
-              className={`text-[12px] font-medium ${
-                tab === option.key ? "text-primary-foreground" : "text-text-muted"
-              }`}
-            >
-              {option.label}
-            </Text>
-          </Pressable>
+            {option.label}
+          </button>
         ))}
-      </View>
+      </div>
 
-      <View className="flex-1 overflow-hidden rounded-[22px] border border-white/[0.06] bg-card">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-[22px] border border-white/[0.06] bg-card">
         {tab === "map" ? (
           turns.length === 0 ? (
             <EmptyState
@@ -64,12 +66,20 @@ export function ScenePanel({
               body="Every choice you make adds a node here. Take your first action to begin the map."
             />
           ) : (
-            <FlowchartCanvas
-              turns={turns}
-              activeTurnId={activeTurnId}
-              width={width}
-              height={height}
-            />
+            <Suspense
+              fallback={
+                <div className="flex flex-1 items-center justify-center text-text-muted">
+                  <Spinner label="Loading the story map" />
+                </div>
+              }
+            >
+              <FlowchartCanvas
+                turns={turns}
+                activeTurnId={activeTurnId}
+                width={width}
+                height={height}
+              />
+            </Suspense>
           )
         ) : imageUrl === null ? (
           <EmptyState
@@ -78,16 +88,17 @@ export function ScenePanel({
             body="The first illustration appears once your opening turn finishes rendering."
           />
         ) : (
-          <Animated.View entering={FadeIn.duration(320)} className="flex-1">
-            <Image
-              source={{ uri: imageUrl }}
-              className="h-full w-full"
-              resizeMode="cover"
-              accessibilityLabel="Current scene illustration"
-            />
-          </Animated.View>
+          <motion.img
+            key={imageUrl}
+            src={imageUrl}
+            alt="Current scene illustration"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.32, ease: "easeOut" }}
+            className="h-full w-full object-cover"
+          />
         )}
-      </View>
-    </View>
+      </div>
+    </div>
   );
 }

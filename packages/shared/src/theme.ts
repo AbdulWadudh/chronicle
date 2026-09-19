@@ -35,9 +35,9 @@ export interface ThemeTokens {
 export type ThemeTokenKey = keyof ThemeTokens;
 
 const SHARED_TYPOGRAPHY = {
-  fontNarrative: "PlusJakartaSans_400Regular",
-  fontUI: "PlusJakartaSans_500Medium",
-  fontMono: "PlusJakartaSans_500Medium",
+  fontNarrative: '"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif',
+  fontUI: '"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif',
+  fontMono: "ui-monospace, SFMono-Regular, Menlo, monospace",
   fontScale: 1,
   lineHeightMultiplier: 1.6,
   letterSpacing: 0,

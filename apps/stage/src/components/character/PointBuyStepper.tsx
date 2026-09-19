@@ -8,7 +8,6 @@ import {
   type StatBlock,
   type StatDefinition,
 } from "@chronicle/shared";
-import { Pressable, Text, View } from "react-native";
 
 export interface PointBuyStepperProps {
   definitions: readonly StatDefinition[];
@@ -19,24 +18,25 @@ export interface PointBuyStepperProps {
 
 function Step({
   label,
+  statLabel,
   disabled,
   onPress,
 }: {
   label: string;
+  statLabel: string;
   disabled: boolean;
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
+    <button
+      type="button"
+      onClick={onPress}
       disabled={disabled}
-      hitSlop={8}
-      accessibilityRole="button"
-      accessibilityLabel={label === "−" ? "Decrease" : "Increase"}
-      className={`h-9 w-9 items-center justify-center rounded-full bg-secondary active:opacity-70 ${disabled ? "opacity-30" : ""}`}
+      aria-label={`${label === "−" ? "Decrease" : "Increase"} ${statLabel}`}
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-lg text-secondary-foreground disabled:opacity-30"
     >
-      <Text className="text-lg text-secondary-foreground">{label}</Text>
-    </Pressable>
+      {label}
+    </button>
   );
 }
 
@@ -48,47 +48,49 @@ export function PointBuyStepper({ definitions, stats, budget, onChange }: PointB
   }
 
   return (
-    <View className="gap-3">
-      <View className="flex-row items-baseline justify-between">
-        <Text className="text-base font-medium text-text-primary">Abilities</Text>
-        <Text className={remaining < 0 ? "text-danger" : "text-text-muted"}>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-base font-medium text-text-primary">Abilities</h2>
+        <p aria-live="polite" className={remaining < 0 ? "text-danger" : "text-text-muted"}>
           {remaining} / {budget} points left
-        </Text>
-      </View>
+        </p>
+      </div>
 
       {definitions.map((definition) => {
         const rank = stats[definition.id] ?? STATS.minRank;
         const nextCost = costOfNextRank(rank);
         return (
-          <View
+          <div
             key={definition.id}
-            className="flex-row items-center gap-3 rounded-xl border border-card-border bg-card p-3"
+            className="flex items-center gap-3 rounded-xl border border-card-border bg-card p-3"
           >
-            <View className="flex-1">
-              <Text className="font-medium text-text-primary">{definition.label}</Text>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-text-primary">{definition.label}</p>
               {definition.description.length > 0 ? (
-                <Text className="text-xs text-text-muted" numberOfLines={1}>
-                  {definition.description}
-                </Text>
+                <p className="truncate text-xs text-text-muted">{definition.description}</p>
               ) : null}
-            </View>
+            </div>
             <Step
               label="−"
+              statLabel={definition.label}
               disabled={!canLower(stats, definition.id)}
               onPress={() => setRank(definition.id, rank - 1)}
             />
-            <Text className="w-6 text-center text-lg font-semibold text-text-primary">{rank}</Text>
+            <output className="w-6 text-center text-lg font-semibold text-text-primary">
+              {rank}
+            </output>
             <Step
               label="+"
+              statLabel={definition.label}
               disabled={!canRaise(stats, definition.id, budget)}
               onPress={() => setRank(definition.id, rank + 1)}
             />
-            <Text className="w-8 text-right text-xs text-text-muted">
+            <span className="w-8 text-right text-xs text-text-muted">
               {nextCost === null ? "max" : `+${nextCost}`}
-            </Text>
-          </View>
+            </span>
+          </div>
         );
       })}
-    </View>
+    </div>
   );
 }

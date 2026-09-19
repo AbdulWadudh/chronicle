@@ -1,18 +1,16 @@
-import { API, BASE_URL, DIRECTOR, websocketPath } from "@chronicle/shared";
-import Constants from "expo-constants";
+import { API, websocketPath } from "@chronicle/shared";
 import { readToken } from "./session";
 
 export { API };
 
 export function directorOrigin(): string {
-  const configured = process.env.EXPO_PUBLIC_DIRECTOR_URL;
-  if (typeof configured === "string" && configured.length > 0) return configured;
-  const host = Constants.expoConfig?.hostUri?.split(":")[0];
-  return host === undefined ? BASE_URL : `http://${host}:${DIRECTOR.defaultPort}`;
+  return import.meta.env.VITE_DIRECTOR_URL ?? "";
 }
 
 export function websocketUrl(token: string, characterId: string | null): string {
-  return `${directorOrigin().replace(/^http/u, "ws")}${websocketPath(token, characterId)}`;
+  const origin = directorOrigin();
+  const base = origin === "" ? window.location.origin : origin;
+  return `${base.replace(/^http/u, "ws")}${websocketPath(token, characterId)}`;
 }
 
 export class ApiError extends Error {
@@ -26,7 +24,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {
-  const token = await readToken();
+  const token = readToken();
   const headers = new Headers(init.headers);
   headers.set("content-type", "application/json");
   if (token !== null) headers.set("authorization", `Bearer ${token}`);

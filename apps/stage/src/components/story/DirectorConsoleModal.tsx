@@ -1,7 +1,6 @@
 import type { StatBlock, StatDefinition, StatePatch } from "@chronicle/shared";
 import { clampStatRank } from "@chronicle/shared";
-import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { type ReactNode, useState } from "react";
 import { AppModal } from "~/components/common/AppModal";
 import { NumberField } from "~/components/common/NumberField";
 
@@ -15,12 +14,12 @@ export interface DirectorConsoleModalProps {
   onSaveCheckpoint: (name: string) => void;
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <View className="gap-2">
-      <Text className="text-sm font-semibold uppercase tracking-wide text-text-muted">{title}</Text>
+    <section className="flex flex-col gap-2">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-text-muted">{title}</h3>
       {children}
-    </View>
+    </section>
   );
 }
 
@@ -74,7 +73,7 @@ export function DirectorConsoleModal({
 
       <Section title="NPC affinities">
         {Object.keys(draftAffinities).length === 0 ? (
-          <Text className="text-sm text-text-muted">No relationships tracked yet.</Text>
+          <p className="text-sm text-text-muted">No relationships tracked yet.</p>
         ) : (
           Object.entries(draftAffinities).map(([name, value]) => (
             <NumberField
@@ -91,35 +90,36 @@ export function DirectorConsoleModal({
       </Section>
 
       <Section title="Director's whisper">
-        <TextInput
+        <textarea
           value={whisper}
-          onChangeText={setWhisper}
+          onChange={(event) => setWhisper(event.target.value)}
           placeholder="Hidden instruction for the next turn…"
-          multiline
-          className="min-h-20 rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary"
+          aria-label="Director's whisper"
+          className="min-h-20 resize-none rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
         />
       </Section>
 
       <Section title="Checkpoint">
-        <View className="flex-row gap-2">
-          <TextInput
+        <div className="flex gap-2">
+          <input
             value={checkpointName}
-            onChangeText={setCheckpointName}
+            onChange={(event) => setCheckpointName(event.target.value)}
             placeholder="Checkpoint name"
-            className="flex-1 rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary"
+            aria-label="Checkpoint name"
+            className="flex-1 rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
           />
-          <Pressable
-            onPress={() => {
-              if (checkpointName.trim().length === 0) return;
+          <button
+            type="button"
+            disabled={checkpointName.trim().length === 0}
+            onClick={() => {
               onSaveCheckpoint(checkpointName.trim());
               setCheckpointName("");
             }}
-            accessibilityRole="button"
-            className="rounded-xl bg-secondary px-4 py-3 active:opacity-80"
+            className="rounded-xl bg-secondary px-4 py-3 text-secondary-foreground disabled:opacity-40"
           >
-            <Text className="text-secondary-foreground">Save</Text>
-          </Pressable>
-        </View>
+            Save
+          </button>
+        </div>
       </Section>
     </AppModal>
   );

@@ -66,10 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const token = await readToken();
+      const token = readToken();
       const restored = token === null ? null : await fetchCurrentUser(token);
       if (cancelled) return;
-      if (restored === null) await clearToken();
+      if (restored === null) clearToken();
       setUser(restored);
       setReady(true);
     })();
@@ -78,30 +78,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const adopt = useCallback(async (payload: AuthResponse) => {
+  const adopt = useCallback((payload: AuthResponse) => {
     if (payload.token === undefined || payload.user === undefined) {
       throw new Error("Authentication response was incomplete.");
     }
-    await writeToken(payload.token);
+    writeToken(payload.token);
     setUser(payload.user);
   }, []);
 
   const signIn = useCallback(
     async (email: string, password: string) => {
-      await adopt(await authRequest("/sign-in/email", { email, password }));
+      adopt(await authRequest("/sign-in/email", { email, password }));
     },
     [adopt],
   );
 
   const signUp = useCallback(
     async (name: string, email: string, password: string) => {
-      await adopt(await authRequest("/sign-up/email", { name, email, password }));
+      adopt(await authRequest("/sign-up/email", { name, email, password }));
     },
     [adopt],
   );
 
   const signOut = useCallback(async () => {
-    await clearToken();
+    clearToken();
     setUser(null);
   }, []);
 

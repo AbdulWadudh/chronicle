@@ -1,23 +1,11 @@
 import type { TurnChoice } from "@chronicle/shared";
-import { ArrowUp, Sparkles, Square, Wand2 } from "lucide-react-native";
-import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { ArrowUp, type LucideIcon, Sparkles, Square, Wand2 } from "lucide-react";
+import { type KeyboardEvent, useState } from "react";
 import { useThemeTokens } from "~/theme/ThemeEngine";
 
 export type ActionMode = "scratch" | "enhanced";
 
-const COMPOSER_WIDTH = { width: "100%", maxWidth: 680 } as const;
-
-const DRAFT_STYLE = {
-  flex: 1,
-  minHeight: 56,
-  maxHeight: 128,
-  paddingHorizontal: 20,
-  paddingVertical: 14,
-  fontSize: 15,
-  lineHeight: 22,
-  textAlignVertical: "top",
-} as const;
+const DRAFT_STYLE = { fieldSizing: "content", minHeight: 56, maxHeight: 128 } as const;
 
 export interface ComposerProps {
   choices: readonly TurnChoice[];
@@ -46,67 +34,70 @@ export function Composer({
     setDraft("");
   }
 
+  function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>): void {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    submit();
+  }
+
   return (
-    <View
-      style={COMPOSER_WIDTH}
-      className="gap-3 self-center border-t border-white/[0.06] bg-canvas/95 px-4 pb-4 pt-3"
-    >
+    <div className="flex w-full max-w-[680px] flex-col gap-3 self-center border-t border-white/[0.06] bg-canvas/95 px-4 pt-3 pb-4">
       {choices.length > 0 && !busy ? (
-        <View className="gap-2">
+        <div className="flex flex-col gap-2">
           {choices.slice(0, 3).map((choice, index) => (
-            <Pressable
+            <button
+              type="button"
               key={choice.label}
-              onPress={() => onSelectChoice(index as 0 | 1 | 2)}
-              accessibilityRole="button"
-              className="flex-row items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 active:opacity-70"
+              onClick={() => onSelectChoice(index as 0 | 1 | 2)}
+              className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-left"
             >
-              <Text className="text-[11px] font-semibold text-text-muted">{index + 1}</Text>
-              <Text className="flex-1 text-[14px] leading-snug text-text-secondary">
+              <span className="text-[11px] font-semibold text-text-muted">{index + 1}</span>
+              <span className="flex-1 text-[14px] leading-snug text-text-secondary">
                 {choice.label}
-              </Text>
-            </Pressable>
+              </span>
+            </button>
           ))}
-        </View>
+        </div>
       ) : null}
 
-      <View className="flex-row items-center gap-1.5">
+      <fieldset className="flex items-center gap-1.5 border-0 p-0">
+        <legend className="sr-only">Action mode</legend>
         <ModeChip
           label="Scratch"
           icon={Wand2}
           active={mode === "scratch"}
-          onPress={() => setMode("scratch")}
+          onSelect={() => setMode("scratch")}
         />
         <ModeChip
           label="Enhance"
           icon={Sparkles}
           active={mode === "enhanced"}
-          onPress={() => setMode("enhanced")}
+          onSelect={() => setMode("enhanced")}
         />
-      </View>
+      </fieldset>
 
-      <View className="flex-row items-end gap-2">
-        <TextInput
+      <div className="flex items-end gap-2">
+        <textarea
           value={draft}
-          onChangeText={setDraft}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={onKeyDown}
           placeholder="What do you do?"
-          placeholderTextColor={tokens.textMuted}
-          multiline
-          numberOfLines={1}
-          editable={!busy}
-          accessibilityLabel="Your action"
+          rows={1}
+          disabled={busy}
+          aria-label="Your action"
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           style={DRAFT_STYLE}
-          className={`rounded-2xl border bg-input-surface text-text-primary ${
+          className={`flex-1 resize-none rounded-2xl border bg-input-surface px-5 py-3.5 text-[15px] leading-[22px] text-text-primary outline-none placeholder:text-text-muted ${
             focused ? "border-primary" : "border-card-border"
           }`}
         />
         {busy ? (
-          <Pressable
-            onPress={onAbort}
-            accessibilityRole="button"
-            accessibilityLabel="Stop generating"
-            className="h-[56px] w-[56px] items-center justify-center rounded-full bg-secondary active:opacity-80"
+          <button
+            type="button"
+            onClick={onAbort}
+            aria-label="Stop generating"
+            className="flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-secondary"
           >
             <Square
               size={16}
@@ -114,14 +105,14 @@ export function Composer({
               color={tokens.textSecondary}
               fill={tokens.textSecondary}
             />
-          </Pressable>
+          </button>
         ) : (
-          <Pressable
-            onPress={submit}
+          <button
+            type="button"
+            onClick={submit}
             disabled={!ready}
-            accessibilityRole="button"
-            accessibilityLabel="Send action"
-            className={`h-[56px] w-[56px] items-center justify-center rounded-full active:scale-95 ${
+            aria-label="Send action"
+            className={`flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full transition active:scale-95 ${
               ready ? "bg-primary" : "bg-white/[0.06]"
             }`}
           >
@@ -130,42 +121,45 @@ export function Composer({
               strokeWidth={2}
               color={ready ? tokens.primaryForeground : tokens.textMuted}
             />
-          </Pressable>
+          </button>
         )}
-      </View>
-    </View>
+      </div>
+    </div>
   );
 }
 
-function ModeChip({
-  label,
-  icon: Icon,
-  active,
-  onPress,
-}: {
+interface ModeChipProps {
   label: string;
-  icon: typeof Wand2;
+  icon: LucideIcon;
   active: boolean;
-  onPress: () => void;
-}) {
+  onSelect: () => void;
+}
+
+function ModeChip({ label, icon: Icon, active, onSelect }: ModeChipProps) {
   const tokens = useThemeTokens();
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ selected: active }}
-      className={`h-8 flex-row items-center gap-1.5 rounded-full px-3 ${active ? "bg-primary" : "border border-white/[0.06] bg-white/[0.02]"}`}
+    <label
+      className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 focus-within:outline focus-within:outline-2 focus-within:outline-primary ${
+        active ? "bg-primary" : "border border-white/[0.06] bg-white/[0.02]"
+      }`}
     >
+      <input
+        type="radio"
+        name="action-mode"
+        checked={active}
+        onChange={onSelect}
+        className="sr-only"
+      />
       <Icon
         size={13}
         strokeWidth={1.5}
         color={active ? tokens.primaryForeground : tokens.textMuted}
       />
-      <Text
+      <span
         className={`text-[12px] font-medium ${active ? "text-primary-foreground" : "text-text-muted"}`}
       >
         {label}
-      </Text>
-    </Pressable>
+      </span>
+    </label>
   );
 }

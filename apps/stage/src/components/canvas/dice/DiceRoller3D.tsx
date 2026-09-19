@@ -1,7 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { useCallback, useMemo, useRef } from "react";
-import { Text, View } from "react-native";
-import { useReducedMotion } from "react-native-reanimated";
+import { useReducedMotion } from "~/hooks/useReducedMotion";
 import { useThemeTokens } from "~/theme/ThemeEngine";
 import { createDieGeometry, faceNormals, landingQuaternion } from "./geometry";
 import { useDieAnimation } from "./useDieAnimation";
@@ -48,11 +47,16 @@ export function DiceRoller3D({ roll, size, onSettled }: DiceRoller3DProps) {
   }, [onSettled]);
 
   return (
-    <View style={{ width: size, height: size }} className="items-center justify-center">
+    <div
+      style={{ width: size, height: size }}
+      className="relative flex items-center justify-center"
+      role="img"
+      aria-label={`Twenty-sided die showing ${roll}`}
+    >
       <Canvas frameloop="demand" camera={{ position: [0, 0, 3.4], fov: 45 }}>
         <Die roll={roll} onSettled={handleSettled} />
       </Canvas>
-      <Text className="absolute bottom-1 text-2xl font-semibold text-text-primary">{roll}</Text>
-    </View>
+      <span className="absolute bottom-1 text-2xl font-semibold text-text-primary">{roll}</span>
+    </div>
   );
 }

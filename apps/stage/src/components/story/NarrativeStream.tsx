@@ -1,5 +1,5 @@
-import { Pressable, Text, View } from "react-native";
-import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
+import { motion } from "motion/react";
+import { useReducedMotion } from "~/hooks/useReducedMotion";
 import { useSentenceReveal } from "./useSentenceReveal";
 
 export interface NarrativeStreamProps {
@@ -24,35 +24,36 @@ export function NarrativeStream({
   }
 
   return (
-    <Pressable
-      onPress={skip}
-      disabled={reveal.isComplete}
-      accessibilityRole="button"
-      accessibilityLabel="Reveal the full passage"
-      accessibilityHint="Shows all remaining text immediately"
-    >
-      <View className="gap-2 rounded-2xl border border-card-border bg-card p-5">
-        {reveal.sentences.slice(0, reveal.revealedCount).map((sentence, index) => (
-          <Animated.View
-            key={sentence.key}
-            entering={reduceMotion ? undefined : FadeIn.duration(220)}
-          >
-            <Text
-              className={
-                cinemaMode && index === playingSentenceIndex
-                  ? "text-base leading-7 text-text-primary"
-                  : "text-base leading-7 text-text-secondary"
-              }
-            >
-              {sentence.text}
-            </Text>
-          </Animated.View>
-        ))}
+    <div className="relative flex flex-col gap-2 rounded-2xl border border-card-border bg-card p-5">
+      {reveal.sentences.slice(0, reveal.revealedCount).map((sentence, index) => (
+        <motion.p
+          key={sentence.key}
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          className={
+            cinemaMode && index === playingSentenceIndex
+              ? "text-base leading-7 text-text-primary"
+              : "text-base leading-7 text-text-secondary"
+          }
+        >
+          {sentence.text}
+        </motion.p>
+      ))}
 
-        {!reveal.isComplete ? (
-          <Text className="pt-1 text-xs text-text-muted">Tap to reveal the rest</Text>
-        ) : null}
-      </View>
-    </Pressable>
+      {reveal.isComplete ? null : (
+        <>
+          <p aria-hidden="true" className="pt-1 text-xs text-text-muted">
+            Tap to reveal the rest
+          </p>
+          <button
+            type="button"
+            onClick={skip}
+            aria-label="Reveal the full passage"
+            className="absolute inset-0 rounded-2xl"
+          />
+        </>
+      )}
+    </div>
   );
 }

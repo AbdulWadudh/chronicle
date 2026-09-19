@@ -1,6 +1,6 @@
 import { BASE_URL, DIRECTOR } from "@chronicle/shared";
 import { z } from "zod";
-import { defaultDatabasePath, defaultVectorDatabasePath } from "./paths";
+import { defaultDatabasePath, defaultStageDistPath, defaultVectorDatabasePath } from "./paths";
 
 const endpoint = z.url().transform((value) => value.replace(/\/+$/u, ""));
 
@@ -14,6 +14,7 @@ export const environmentSchema = z.object({
   STORAGE_REGION: z.string().min(1).default("auto"),
   DATABASE_PATH: z.string().min(1).default(defaultDatabasePath()),
   VECTOR_DB_PATH: z.string().min(1).default(defaultVectorDatabasePath()),
+  STAGE_DIST: z.string().min(1).default(defaultStageDistPath()),
   REDIS_URL: z.url(),
   LLM_ENDPOINT: endpoint,
   LLM_MODEL: z.string().min(1).default("local"),

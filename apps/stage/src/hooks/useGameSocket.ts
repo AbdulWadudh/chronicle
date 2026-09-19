@@ -54,7 +54,7 @@ export function useGameSocket(
     let retry: ReturnType<typeof setTimeout> | null = null;
 
     async function connect(): Promise<void> {
-      const token = await readToken();
+      const token = readToken();
       if (token === null || disposed) return;
 
       setStatus("connecting");

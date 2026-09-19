@@ -1,37 +1,25 @@
 import type { ReactNode } from "react";
-import { View } from "react-native";
 
 export interface BezelProps {
   children: ReactNode;
   tone?: "default" | "raised";
 }
 
+const RAISED_SHADOW = "0 18px 28px rgb(0 0 0 / 0.55)";
+const INNER_SHADOW = "0 1px 1px rgb(255 255 255 / 0.06)";
+
 export function Bezel({ children, tone = "default" }: BezelProps) {
   return (
-    <View
+    <div
       className="rounded-[22px] border border-white/[0.06] bg-white/[0.02] p-1"
-      style={
-        tone === "raised"
-          ? {
-              shadowColor: "#000",
-              shadowOpacity: 0.55,
-              shadowRadius: 28,
-              shadowOffset: { width: 0, height: 18 },
-            }
-          : undefined
-      }
+      style={tone === "raised" ? { boxShadow: RAISED_SHADOW } : undefined}
     >
-      <View
+      <div
         className="overflow-hidden rounded-[18px] border border-white/[0.05] bg-card"
-        style={{
-          shadowColor: "#FFFFFF",
-          shadowOpacity: 0.06,
-          shadowRadius: 1,
-          shadowOffset: { width: 0, height: 1 },
-        }}
+        style={{ boxShadow: INNER_SHADOW }}
       >
         {children}
-      </View>
-    </View>
+      </div>
+    </div>
   );
 }

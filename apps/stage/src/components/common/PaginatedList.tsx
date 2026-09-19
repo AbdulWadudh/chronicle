@@ -1,5 +1,5 @@
-import type { ReactElement } from "react";
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import { type ReactElement, useEffect, useRef } from "react";
+import { Spinner } from "./Spinner";
 import { type PageLoader, usePaginatedData } from "./usePaginatedData";
 
 export type { Page, PageLoader } from "./usePaginatedData";
@@ -14,9 +14,6 @@ export interface PaginatedListProps<T> {
   header?: ReactElement;
 }
 
-const LIST_CONTENT_STYLE = { gap: 12, padding: 16 } as const;
-const COLUMN_STYLE = { gap: 12 } as const;
-
 export function PaginatedList<T>({
   loadPage,
   keyExtractor,
@@ -27,42 +24,55 @@ export function PaginatedList<T>({
   header,
 }: PaginatedListProps<T>) {
   const data = usePaginatedData(loadPage);
-  const showLoadMoreButton = !autoLoadMore && !data.exhausted && !data.loading;
+  const sentinel = useRef<HTMLDivElement>(null);
+  const loadMore = data.loadMore;
+
+  useEffect(() => {
+    const target = sentinel.current;
+    if (!autoLoadMore || target === null) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMore();
+      },
+      { rootMargin: "240px" },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [autoLoadMore, loadMore]);
+
+  const columns =
+    numColumns !== undefined && numColumns > 1
+      ? { display: "grid", gridTemplateColumns: `repeat(${numColumns}, minmax(0, 1fr))` }
+      : undefined;
 
   return (
-    <FlatList
-      data={data.items}
-      keyExtractor={keyExtractor}
-      renderItem={({ item }) => renderItem(item)}
-      numColumns={numColumns}
-      ListHeaderComponent={header}
-      contentContainerStyle={LIST_CONTENT_STYLE}
-      columnWrapperStyle={numColumns !== undefined && numColumns > 1 ? COLUMN_STYLE : undefined}
-      refreshControl={<RefreshControl refreshing={data.refreshing} onRefresh={data.refresh} />}
-      onEndReached={autoLoadMore ? data.loadMore : undefined}
-      onEndReachedThreshold={0.4}
-      ListEmptyComponent={
-        data.loading ? null : (
-          <Text className="py-12 text-center text-text-muted">{data.error ?? emptyLabel}</Text>
-        )
-      }
-      ListFooterComponent={
-        <View className="items-center py-4">
-          {data.loading ? <ActivityIndicator /> : null}
-          {showLoadMoreButton ? (
-            <Pressable
-              onPress={data.loadMore}
-              accessibilityRole="button"
-              className="rounded-xl bg-secondary px-5 py-2.5 active:opacity-80"
-            >
-              <Text className="font-medium text-secondary-foreground">Load more</Text>
-            </Pressable>
-          ) : null}
-          {data.error !== null && data.items.length > 0 ? (
-            <Text className="text-sm text-danger">{data.error}</Text>
-          ) : null}
-        </View>
-      }
-    />
+    <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto">
+      {header}
+      {data.items.length === 0 && !data.loading ? (
+        <p className="py-12 text-center text-text-muted">{data.error ?? emptyLabel}</p>
+      ) : (
+        <ul className="m-0 flex list-none flex-col gap-3 p-0" style={columns}>
+          {data.items.map((item) => (
+            <li key={keyExtractor(item)}>{renderItem(item)}</li>
+          ))}
+        </ul>
+      )}
+
+      <div ref={sentinel} className="flex flex-col items-center gap-2 py-4">
+        {data.loading ? <Spinner /> : null}
+        {!autoLoadMore && !data.exhausted && !data.loading ? (
+          <button
+            type="button"
+            onClick={data.loadMore}
+            className="rounded-xl bg-secondary px-5 py-2.5 font-medium text-secondary-foreground"
+          >
+            Load more
+          </button>
+        ) : null}
+        {data.error !== null && data.items.length > 0 ? (
+          <p className="text-sm text-danger">{data.error}</p>
+        ) : null}
+      </div>
+    </div>
   );
 }

@@ -8,6 +8,7 @@ import { characterRoutes } from "~/routes/characters";
 import { settingsRoutes } from "~/routes/settings";
 import { turnRoutes } from "~/routes/turns";
 import { worldRoutes } from "~/routes/worlds";
+import { serveStage } from "~/static";
 import { activeTurnCount, connectionCount } from "~/ws/session";
 
 export function createApp(): Hono<AuthEnv> {
@@ -34,6 +35,7 @@ export function createApp(): Hono<AuthEnv> {
   app.route(API.turns, turnRoutes);
   app.route(API.settings, settingsRoutes);
 
+  app.get("*", serveStage);
   app.notFound((context) => context.json({ error: "Not found." }, 404));
   return app;
 }

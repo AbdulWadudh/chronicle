@@ -1,5 +1,4 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import * as Haptics from "expo-haptics";
 import { useEffect, useRef } from "react";
 import type { Mesh, Quaternion } from "three";
 
@@ -7,6 +6,13 @@ const TUMBLE_SECONDS = 1.1;
 const SETTLE_RATE = 6;
 const SETTLE_EPSILON = 0.002;
 const TUMBLE_SPEED = { x: 5.2, y: 7.4, z: 3.1 };
+const IMPACT_PATTERN = 18;
+const SETTLE_PATTERN = [12, 40, 12];
+
+function vibrate(pattern: number | number[]): void {
+  if (typeof navigator.vibrate !== "function") return;
+  navigator.vibrate(pattern);
+}
 
 export interface DieAnimationOptions {
   target: Quaternion;
@@ -30,7 +36,7 @@ export function useDieAnimation({ target, reduceMotion, onSettled }: DieAnimatio
       invalidate();
       return;
     }
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    vibrate(IMPACT_PATTERN);
     invalidate();
   }, [reduceMotion, target, onSettled, invalidate]);
 
@@ -52,7 +58,7 @@ export function useDieAnimation({ target, reduceMotion, onSettled }: DieAnimatio
     if (die.quaternion.angleTo(target) < SETTLE_EPSILON) {
       die.quaternion.copy(target);
       settled.current = true;
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      vibrate(SETTLE_PATTERN);
       onSettled();
       return;
     }

@@ -1,44 +1,38 @@
-import { Eye, EyeOff } from "lucide-react-native";
-import { useState } from "react";
-import { Pressable, Text, TextInput, type TextInputProps, View } from "react-native";
-import { useThemeTokens } from "~/theme/ThemeEngine";
+import { Eye, EyeOff } from "lucide-react";
+import { type InputHTMLAttributes, useId, useState } from "react";
 
-export interface FieldProps extends Omit<TextInputProps, "className"> {
+export interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "className"> {
   label: string;
   hint?: string;
   error?: string | null;
   secure?: boolean;
 }
 
-const INPUT_STYLE = {
-  minHeight: 44,
-  paddingHorizontal: 14,
-  paddingVertical: 10,
-  fontSize: 14,
-  lineHeight: 20,
-} as const;
-
-const SECURE_INPUT_STYLE = { ...INPUT_STYLE, paddingRight: 44 } as const;
-
 export function Field({ label, hint, error, secure = false, ...input }: FieldProps) {
-  const tokens = useThemeTokens();
+  const id = useId();
+  const messageId = `${id}-message`;
   const [revealed, setRevealed] = useState(false);
   const [focused, setFocused] = useState(false);
   const invalid = typeof error === "string" && error.length > 0;
   const border = invalid ? "border-danger" : focused ? "border-primary" : "border-card-border";
+  const hasMessage = invalid || hint !== undefined;
 
   return (
-    <View className="gap-1.5">
-      <Text className="px-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-text-muted">
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={id}
+        className="px-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-text-muted"
+      >
         {label}
-      </Text>
+      </label>
 
-      <View className="relative justify-center">
-        <TextInput
+      <div className="relative flex flex-col justify-center">
+        <input
           {...input}
-          accessibilityLabel={label}
-          secureTextEntry={secure && !revealed}
-          placeholderTextColor={tokens.textMuted}
+          id={id}
+          type={secure && !revealed ? "password" : "text"}
+          aria-invalid={invalid}
+          aria-describedby={hasMessage ? messageId : undefined}
           onFocus={(event) => {
             setFocused(true);
             input.onFocus?.(event);
@@ -47,33 +41,33 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
             setFocused(false);
             input.onBlur?.(event);
           }}
-          style={secure ? SECURE_INPUT_STYLE : INPUT_STYLE}
-          className={`rounded-2xl border bg-input-surface text-text-primary ${border}`}
+          className={`min-h-[44px] rounded-2xl border bg-input-surface px-3.5 py-2.5 text-[14px] leading-5 text-text-primary outline-none placeholder:text-text-muted ${border} ${secure ? "pr-11" : ""}`}
         />
         {secure ? (
-          <Pressable
-            onPress={() => setRevealed((value) => !value)}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel={revealed ? "Hide password" : "Show password"}
-            className="absolute right-2 h-9 justify-center px-2"
+          <button
+            type="button"
+            onClick={() => setRevealed((value) => !value)}
+            aria-label={revealed ? "Hide password" : "Show password"}
+            className="absolute right-2 flex h-9 items-center justify-center px-2 text-text-muted"
           >
             {revealed ? (
-              <EyeOff size={18} strokeWidth={1.25} color={tokens.textMuted} />
+              <EyeOff size={18} strokeWidth={1.25} />
             ) : (
-              <Eye size={18} strokeWidth={1.25} color={tokens.textMuted} />
+              <Eye size={18} strokeWidth={1.25} />
             )}
-          </Pressable>
+          </button>
         ) : null}
-      </View>
+      </div>
 
       {invalid ? (
-        <Text className="px-0.5 text-[11px] text-danger" accessibilityLiveRegion="polite">
+        <p id={messageId} role="alert" className="px-0.5 text-[11px] text-danger">
           {error}
-        </Text>
+        </p>
       ) : hint !== undefined ? (
-        <Text className="px-0.5 text-[11px] text-text-muted">{hint}</Text>
+        <p id={messageId} className="px-0.5 text-[11px] text-text-muted">
+          {hint}
+        </p>
       ) : null}
-    </View>
+    </div>
   );
 }

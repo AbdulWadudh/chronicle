@@ -5,14 +5,15 @@ import {
   type StatBlock,
   type StatDefinition,
 } from "@chronicle/shared";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { ChevronLeft } from "lucide-react";
+import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigate, useSearchParams } from "react-router";
 import { PointBuyStepper } from "~/components/character/PointBuyStepper";
 import { AppModal } from "~/components/common/AppModal";
+import { PageHeader } from "~/components/common/PageHeader";
 import { type Page, PaginatedList } from "~/components/common/PaginatedList";
+import { Screen } from "~/components/common/Screen";
 import { get, post } from "~/lib/api";
 
 interface CharacterRow {
@@ -29,10 +30,11 @@ interface WorldDetail {
   pointBudget: number;
 }
 
-const FILL = { flex: 1 } as const;
-export default function CharacterSelectScreen() {
-  const router = useRouter();
-  const { worldId } = useLocalSearchParams<{ worldId: string }>();
+export function CharacterSelect() {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const worldId = params.get("worldId");
+
   const [world, setWorld] = useState<WorldDetail | null>(null);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
@@ -40,7 +42,7 @@ export default function CharacterSelectScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (worldId === undefined) return;
+    if (worldId === null) return;
     void get<WorldDetail>(`${API.worlds}/${worldId}`)
       .then((detail) => {
         setWorld(detail);
@@ -72,7 +74,7 @@ export default function CharacterSelectScreen() {
       });
       setCreating(false);
       setName("");
-      router.push({ pathname: "/play/[id]", params: { id: created.id } });
+      void navigate(`/play/${created.id}`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not create character.");
     }
@@ -84,22 +86,36 @@ export default function CharacterSelectScreen() {
     isValidBuild(stats, world.statDefinitionsJson, world.pointBudget);
 
   return (
-    <SafeAreaView style={FILL} className="bg-canvas">
-      <View className="flex-row items-center justify-between px-4 pt-2">
-        <Text className="text-xl font-semibold text-text-primary">
-          {world?.title ?? "Choose a character"}
-        </Text>
-        <Pressable
-          onPress={() => setCreating(true)}
-          disabled={world === null}
-          accessibilityRole="button"
-          className="rounded-full bg-primary px-4 py-2 active:opacity-85"
-        >
-          <Text className="font-medium text-primary-foreground">New</Text>
-        </Pressable>
-      </View>
+    <Screen wide>
+      <PageHeader
+        title={world?.title ?? "Choose a character"}
+        leading={
+          <button
+            type="button"
+            onClick={() => void navigate(-1)}
+            aria-label="Back"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-text-muted"
+          >
+            <ChevronLeft size={18} strokeWidth={1.5} />
+          </button>
+        }
+        trailing={
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            disabled={world === null}
+            className="rounded-full bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-40"
+          >
+            New
+          </button>
+        }
+      />
 
-      {error !== null ? <Text className="px-4 pt-2 text-danger">{error}</Text> : null}
+      {error !== null ? (
+        <p role="alert" className="pb-2 text-danger">
+          {error}
+        </p>
+      ) : null}
 
       <PaginatedList
         loadPage={loadPage}
@@ -107,18 +123,17 @@ export default function CharacterSelectScreen() {
         keyExtractor={(character) => character.id}
         emptyLabel="No characters in this world yet."
         renderItem={(character) => (
-          <Animated.View entering={FadeIn.duration(200)}>
-            <Pressable
-              onPress={() => router.push({ pathname: "/play/[id]", params: { id: character.id } })}
-              accessibilityRole="button"
-              className="gap-1 rounded-2xl border border-card-border bg-card p-4 active:opacity-85"
-            >
-              <Text className="text-lg font-semibold text-text-primary">{character.name}</Text>
-              <Text className="text-sm text-text-secondary" numberOfLines={2}>
-                {character.bio}
-              </Text>
-            </Pressable>
-          </Animated.View>
+          <motion.button
+            type="button"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => void navigate(`/play/${character.id}`)}
+            className="flex w-full flex-col gap-1 rounded-2xl border border-card-border bg-card p-4 text-left"
+          >
+            <h2 className="text-lg font-semibold text-text-primary">{character.name}</h2>
+            <p className="line-clamp-2 text-sm text-text-secondary">{character.bio}</p>
+          </motion.button>
         )}
       />
 
@@ -136,11 +151,12 @@ export default function CharacterSelectScreen() {
           },
         ]}
       >
-        <TextInput
+        <input
           value={name}
-          onChangeText={setName}
+          onChange={(event) => setName(event.target.value)}
           placeholder="Name"
-          className="rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary"
+          aria-label="Character name"
+          className="rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
         />
         {world !== null ? (
           <PointBuyStepper
@@ -151,6 +167,6 @@ export default function CharacterSelectScreen() {
           />
         ) : null}
       </AppModal>
-    </SafeAreaView>
+    </Screen>
   );
 }

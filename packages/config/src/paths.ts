@@ -1,5 +1,5 @@
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 const APPLICATION_DIRECTORY = "chronicle";
 
@@ -18,6 +18,10 @@ export function defaultDatabasePath(): string {
 
 export function defaultVectorDatabasePath(): string {
   return join(resolveDataRoot(), "vectors");
+}
+
+export function defaultStageDistPath(): string {
+  return resolve(import.meta.dir, "..", "..", "..", "apps", "stage", "dist");
 }
 
 export async function ensureFile(target: string): Promise<string> {

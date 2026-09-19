@@ -1,6 +1,4 @@
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { GlowBackdrop } from "~/components/common/GlowBackdrop";
 
 export const CONTENT_MAX_WIDTH = 380;
@@ -13,40 +11,28 @@ export interface ScreenProps {
   wide?: boolean;
 }
 
-const FILL = { flex: 1 } as const;
-const SCROLL_CONTENT = { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 24 } as const;
-
 export function Screen({ children, scroll = false, center = false, wide = false }: ScreenProps) {
   const maxWidth = wide ? WIDE_MAX_WIDTH : CONTENT_MAX_WIDTH;
 
   const inner = (
-    <View
+    <div
       style={{ width: "100%", maxWidth }}
-      className={center ? "flex-1 justify-center self-center" : "flex-1 self-center"}
+      className={`flex flex-1 flex-col self-center ${center ? "justify-center" : ""}`}
     >
       {children}
-    </View>
+    </div>
   );
 
   return (
-    <SafeAreaView style={FILL} className="bg-canvas">
+    <div className="relative flex h-full flex-col overflow-hidden bg-canvas pt-[var(--safe-top)] pb-[var(--safe-bottom)] pl-[var(--safe-left)] pr-[var(--safe-right)]">
       <GlowBackdrop />
-      <KeyboardAvoidingView style={FILL} behavior="padding">
-        {scroll ? (
-          <ScrollView
-            style={FILL}
-            contentContainerStyle={SCROLL_CONTENT}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            automaticallyAdjustKeyboardInsets
-            showsVerticalScrollIndicator={false}
-          >
-            {inner}
-          </ScrollView>
-        ) : (
-          <View className="flex-1 px-5 py-6">{inner}</View>
-        )}
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      {scroll ? (
+        <div className="scrollbar-none relative flex flex-1 flex-col overflow-y-auto px-5 py-6">
+          {inner}
+        </div>
+      ) : (
+        <div className="relative flex flex-1 flex-col overflow-hidden px-5 py-6">{inner}</div>
+      )}
+    </div>
   );
 }
