@@ -1,5 +1,19 @@
 # Architecture rules
 
+General code style lives in `~/.claude/rules/code.md`. This file holds Chronicle only.
+
+## Bun first
+
+Use Bun native APIs. Node builtins and npm packages only where Bun has no equivalent.
+
+- `Bun.file` / `Bun.write` / `Bun.Glob` / `Bun.serve` / `Bun.spawn` / `Bun.$`
+- `bun:sqlite` via `drizzle-orm/bun-sqlite`, `Bun.S3Client`, `Bun.password`, `bun:test`
+- `fetch` and `.env` are built in. No `axios`, no `dotenv`.
+- Fine to keep: `node:path`, `node:os`, `node:url`, `node:stream`, `node:buffer`.
+- Keep `ioredis` (BullMQ needs it) and `onnxruntime-node` (no Bun ONNX runtime).
+
+`apps/stage` is exempt. It runs on Hermes, no `Bun.*` or `bun:` imports there.
+
 ## Import boundaries
 
 ```
@@ -66,4 +80,24 @@ Everything else — `hono`, `drizzle-orm`, `better-auth`, `bullmq`, `ioredis`, `
 `@lancedb/lancedb`, `onnxruntime-node`, `three`, `zustand` — is `"latest"`.
 
 `@aws-sdk/client-s3` is **not** a dependency. Object storage goes through `Bun.S3Client`,
-per the Bun-first rule in `.claude/rules/codestyle.md`.
+per the Bun-first rule above.
+
+## Validation
+
+- Every network and storage boundary parses through Zod. Inbound data is `unknown` until
+  a schema has validated it. Derive types with `z.infer`, never declare them twice.
+- The WS protocol is one discriminated union keyed on `type`.
+- Domain abbreviations are fine: `dc`, `d20`, `dag`, `ws`. Nothing else.
+
+## Where to split
+
+- A screen grows, extract the data hook first, then the presentational subcomponents.
+- A schema grows, one file per table group, re-exported from `schema.ts`.
+- A worker grows, one file per processor under `processors/`.
+- A store grows, one slice per concern, composed in the root store.
+
+## Enforcement
+
+`bun run audit` fails the build on any comment in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`,
+`.cjs`, or any measured file over 300 lines. It warns at 250. Markdown, JSON, and TOML
+may contain comments — they are documentation and configuration.

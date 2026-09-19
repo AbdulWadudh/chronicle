@@ -32,11 +32,11 @@ turbo run typecheck
 
 ## Rules
 
-Every rule lives in exactly one file under `.claude/rules/`, auto-loaded each session.
-Never restate one elsewhere — a second copy is a copy that will go stale.
+General code style is global, in `~/.claude/rules/code.md`. Chronicle rules live in
+`.claude/rules/`, one source of truth each. Never restate a rule — a second copy goes stale.
 
-- `architecture.md` — import boundaries, runtime split, storage paths, model access, dependencies
-- `codestyle.md` — zero comments, 300-line ceiling, file layout, Bun first, types, errors
+- `architecture.md` — Bun first, import boundaries, runtime split, storage, model access,
+  dependencies, validation, where to split, audit enforcement
 - `ui-animations.md` — Reanimated worklets, Skia, R3F, expo-audio, reduced motion
 
 `bun run audit` enforces the 300-line ceiling and the zero-comment rule, and fails the build.

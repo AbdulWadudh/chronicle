@@ -18,7 +18,7 @@ Build progress tracker. Read this first. Update it at every wave gate, before th
 
 - Root: `package.json`, `turbo.json`, `bunfig.toml`, `tsconfig.base.json`, `biome.json`,
   `.gitattributes`, `.env.example`
-- Governance: `CLAUDE.md`, `.claude/rules/{architecture,codestyle,ui-animations}.md`
+- Governance: `CLAUDE.md`, `.claude/rules/{architecture,ui-animations}.md`
 - `scripts/audit.ts` — 300-line ceiling + zero-comment scan, exit 1 on violation
 
 ## Process
