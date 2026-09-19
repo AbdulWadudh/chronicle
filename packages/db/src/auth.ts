@@ -20,6 +20,7 @@ export function createAuth(db: ChronicleDatabase) {
     baseURL: configuration.AUTH_BASE_URL,
     secret: configuration.AUTH_SECRET,
     emailAndPassword: { enabled: true },
+    trustedOrigins: configuration.AUTH_TRUSTED_ORIGINS,
     plugins: [bearer()],
     advanced: {
       database: { generateId: () => Bun.randomUUIDv7() },

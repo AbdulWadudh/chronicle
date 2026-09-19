@@ -21,6 +21,15 @@ export const environmentSchema = z.object({
   TTS_ENDPOINT: endpoint,
   AUTH_SECRET: z.string().min(32),
   AUTH_BASE_URL: endpoint.default(BASE_URL),
+  AUTH_TRUSTED_ORIGINS: z
+    .string()
+    .default("*")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ),
 
   WS_IDLE_TIMEOUT_SECONDS: z.coerce.number().int().positive().default(120),
 });
