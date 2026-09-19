@@ -1,0 +1,35 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalDependencies": [
+    "tsconfig.base.json",
+    ".env"
+  ],
+  "globalEnv": [
+    "NODE_ENV",
+    "STORAGE_ENDPOINT",
+    "STORAGE_ACCESS_KEY",
+    "STORAGE_SECRET_KEY",
+    "STORAGE_BUCKET_ASSETS",
+    "DATABASE_PATH",
+    "VECTOR_DB_PATH",
+    "REDIS_URL",
+    "LLM_ENDPOINT",
+    "DIFFUSION_ENDPOINT",
+    "TTS_ENDPOINT"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "lint": {},
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
