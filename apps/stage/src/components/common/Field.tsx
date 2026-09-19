@@ -16,8 +16,8 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
   const invalid = typeof error === "string" && error.length > 0;
 
   return (
-    <View className="gap-1.5">
-      <Text className="text-[11px] font-medium uppercase tracking-[0.14em] text-text-muted">
+    <View className="gap-2">
+      <Text className="px-1 text-[11px] font-medium uppercase tracking-[0.14em] text-text-muted">
         {label}
       </Text>
 
@@ -27,9 +27,9 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
           accessibilityLabel={label}
           secureTextEntry={secure && !revealed}
           placeholderTextColor={tokens.textMuted}
-          className={`min-h-[52px] rounded-2xl border bg-input-surface px-4 py-3.5 text-base text-text-primary ${
+          className={`min-h-[56px] rounded-2xl border bg-input-surface px-5 py-4 text-base text-text-primary ${
             invalid ? "border-danger" : "border-card-border"
-          } ${secure ? "pr-16" : ""}`}
+          } ${secure ? "pr-[60px]" : ""}`}
         />
         {secure ? (
           <Pressable
@@ -37,7 +37,7 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
             hitSlop={12}
             accessibilityRole="button"
             accessibilityLabel={revealed ? "Hide password" : "Show password"}
-            className="absolute right-3 h-11 justify-center px-2"
+            className="absolute right-4 h-11 justify-center px-2"
           >
             {revealed ? (
               <EyeOff size={18} strokeWidth={1.25} color={tokens.textMuted} />
@@ -49,11 +49,11 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
       </View>
 
       {invalid ? (
-        <Text className="text-xs text-danger" accessibilityLiveRegion="polite">
+        <Text className="px-1 text-xs text-danger" accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : hint !== undefined ? (
-        <Text className="text-xs text-text-muted">{hint}</Text>
+        <Text className="px-1 text-xs text-text-muted">{hint}</Text>
       ) : null}
     </View>
   );

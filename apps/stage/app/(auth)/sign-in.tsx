@@ -80,7 +80,7 @@ export default function SignInScreen() {
         </View>
 
         <Bezel tone="raised">
-          <View className="gap-5 p-6">
+          <View className="gap-5 px-7 py-8">
             {isSignUp ? (
               <Field
                 label="Name"
