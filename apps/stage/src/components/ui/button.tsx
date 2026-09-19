@@ -10,14 +10,14 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground active:scale-[0.98]",
         secondary: "bg-secondary text-secondary-foreground active:scale-[0.98]",
         outline:
-          "border border-hairline bg-raised text-text-muted hover:border-hairline-strong hover:text-text-secondary",
+          "border-[length:var(--border-width-card)] border-hairline bg-raised text-text-muted hover:border-hairline-strong hover:text-text-secondary",
         ghost: "text-text-muted hover:bg-raised-hover hover:text-text-secondary",
         destructive: "bg-danger text-text-primary active:scale-[0.98]",
       },
       size: {
-        default: "h-11 px-5 text-[14px]",
-        sm: "h-9 px-3 text-[12px]",
-        lg: "h-12 px-6 text-[15px]",
+        default: "h-11 px-5 text-[0.875rem]",
+        sm: "h-9 px-3 text-[0.75rem]",
+        lg: "h-12 px-6 text-[0.9375rem]",
         icon: "size-9",
       },
     },

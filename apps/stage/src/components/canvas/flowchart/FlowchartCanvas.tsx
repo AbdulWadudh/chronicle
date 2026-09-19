@@ -81,7 +81,7 @@ export function FlowchartCanvas({ turns, activeTurnId, width, height }: Flowchar
   if (failure !== null) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
-        <p className="text-center text-[13px] text-danger">{failure}</p>
+        <p className="text-center text-[0.8125rem] text-danger">{failure}</p>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export function FlowchartCanvas({ turns, activeTurnId, width, height }: Flowchar
     <div
       {...gestures}
       style={{ width, height, touchAction: "none" }}
-      className="relative cursor-grab overflow-hidden rounded-2xl bg-canvas active:cursor-grabbing"
+      className="relative cursor-grab overflow-hidden rounded-[var(--radius-card)] bg-canvas active:cursor-grabbing"
     >
       <canvas ref={canvasRef} style={{ width, height }} className="block" />
 
@@ -112,7 +112,7 @@ export function FlowchartCanvas({ turns, activeTurnId, width, height }: Flowchar
             className="absolute flex flex-col justify-center gap-1 overflow-hidden px-3"
             style={{ left: node.x, top: node.y, width: NODE_WIDTH, height: NODE_HEIGHT }}
           >
-            <span className="text-[10px] uppercase tracking-[0.12em] text-text-muted">
+            <span className="text-[0.625rem] uppercase tracking-[0.12em] text-text-muted">
               {node.state === "failure"
                 ? "Failed"
                 : node.state === "success"
@@ -121,7 +121,7 @@ export function FlowchartCanvas({ turns, activeTurnId, width, height }: Flowchar
                     ? "In progress"
                     : "Turn"}
             </span>
-            <span className="line-clamp-3 text-[12px] leading-tight text-text-primary">
+            <span className="line-clamp-3 text-[0.75rem] leading-tight text-text-primary">
               {node.label.slice(0, LABEL_LIMIT)}
             </span>
           </li>

@@ -111,7 +111,19 @@
   }
 
   .app-modal::backdrop {
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(var(--blur-card, 6px));
+    background-color: var(--color-scrim);
+  }
+
+  .app-modal,
+  [data-slot="popover-content"],
+  [data-slot="select-content"] {
+    background-color: color-mix(
+      in srgb,
+      var(--color-card) calc(var(--glass-opacity, 1) * 100%),
+      transparent
+    );
+    backdrop-filter: blur(calc(var(--blur-card, 0px) * 0.5));
   }
 
   @media (prefers-reduced-motion: reduce) {

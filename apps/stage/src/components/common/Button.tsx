@@ -18,7 +18,7 @@ export interface ButtonProps {
 const SURFACE: Record<ButtonTone, string> = {
   primary: "bg-primary",
   secondary: "bg-secondary",
-  ghost: "border border-hairline bg-raised-hover",
+  ghost: "border-[length:var(--border-width-card)] border-hairline bg-raised-hover",
   danger: "bg-danger",
 };
 
@@ -58,7 +58,7 @@ export function Button({
     >
       {busy ? <Spinner size={14} label={`${label} in progress`} /> : null}
       <span
-        className={`text-[14px] font-semibold tracking-[-0.01em] ${inert ? "text-text-muted" : LABEL[tone]}`}
+        className={`text-[0.875rem] font-semibold tracking-[-0.01em] ${inert ? "text-text-muted" : LABEL[tone]}`}
       >
         {label}
       </span>

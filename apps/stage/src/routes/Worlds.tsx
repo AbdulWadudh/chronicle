@@ -51,14 +51,14 @@ export function Worlds() {
               type="button"
               onClick={() => void navigate("/settings")}
               aria-label="Runtime settings"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-raised text-text-accent"
+              className="flex h-9 w-9 items-center justify-center rounded-full border-[length:var(--border-width-card)] border-hairline bg-raised text-text-accent"
             >
               <HugeiconsIcon icon={Settings02Icon} size={16} strokeWidth={1.5} />
             </button>
             <button
               type="button"
               onClick={() => void signOut()}
-              className="rounded-full px-3 py-2 text-[13px] text-text-muted"
+              className="rounded-full px-3 py-2 text-[0.8125rem] text-text-muted"
             >
               Sign out
             </button>
@@ -74,7 +74,7 @@ export function Worlds() {
             role="tab"
             aria-selected={scope === option.key}
             onClick={() => setScope(option.key)}
-            className={`rounded-full px-4 py-2 text-[13px] ${
+            className={`rounded-full px-4 py-2 text-[0.8125rem] ${
               scope === option.key
                 ? "bg-primary font-medium text-primary-foreground"
                 : "bg-secondary text-secondary-foreground"
@@ -103,7 +103,7 @@ export function Worlds() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
             onClick={() => void navigate(`/character-select?worldId=${world.id}`)}
-            className="w-full overflow-hidden rounded-2xl border border-card-border bg-card text-left"
+            className="w-full overflow-hidden rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-card-border bg-card text-left"
           >
             {world.coverImageUrl !== null ? (
               <img

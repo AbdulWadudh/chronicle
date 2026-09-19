@@ -95,7 +95,7 @@ export function DirectorConsoleModal({
           onChange={(event) => setWhisper(event.target.value)}
           placeholder="Hidden instruction for the next turn…"
           aria-label="Director's whisper"
-          className="min-h-20 resize-none rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
+          className="min-h-20 resize-none rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
         />
       </Section>
 
@@ -106,7 +106,7 @@ export function DirectorConsoleModal({
             onChange={(event) => setCheckpointName(event.target.value)}
             placeholder="Checkpoint name"
             aria-label="Checkpoint name"
-            className="flex-1 rounded-xl border border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
+            className="flex-1 rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
           />
           <button
             type="button"
@@ -115,7 +115,7 @@ export function DirectorConsoleModal({
               onSaveCheckpoint(checkpointName.trim());
               setCheckpointName("");
             }}
-            className="rounded-xl bg-secondary px-4 py-3 text-secondary-foreground disabled:opacity-40"
+            className="rounded-[var(--radius-control)] bg-secondary px-4 py-3 text-secondary-foreground disabled:opacity-40"
           >
             Save
           </button>

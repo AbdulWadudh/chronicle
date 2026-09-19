@@ -50,10 +50,10 @@ export function Composer({
               type="button"
               key={choice.label}
               onClick={() => onSelectChoice(index as 0 | 1 | 2)}
-              className="flex items-center gap-3 rounded-2xl border border-hairline bg-raised px-4 py-3 text-left"
+              className="flex items-center gap-3 rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-hairline bg-raised px-4 py-3 text-left"
             >
-              <span className="text-[11px] font-semibold text-text-muted">{index + 1}</span>
-              <span className="flex-1 text-[14px] leading-snug text-text-secondary">
+              <span className="text-[0.6875rem] font-semibold text-text-muted">{index + 1}</span>
+              <span className="flex-1 text-[0.875rem] leading-snug text-text-secondary">
                 {choice.label}
               </span>
             </button>
@@ -89,7 +89,7 @@ export function Composer({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           style={DRAFT_STYLE}
-          className={`flex-1 resize-none rounded-2xl border bg-input-surface px-5 py-3.5 text-[15px] leading-[22px] text-text-primary outline-none placeholder:text-text-muted ${
+          className={`flex-1 resize-none rounded-[var(--radius-card)] border bg-input-surface px-5 py-3.5 text-[0.9375rem] leading-[22px] text-text-primary outline-none placeholder:text-text-muted ${
             focused ? "border-primary" : "border-card-border"
           }`}
         />
@@ -137,7 +137,7 @@ function ModeChip({ label, icon, active, onSelect }: ModeChipProps) {
   return (
     <label
       className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 focus-within:outline focus-within:outline-2 focus-within:outline-primary ${
-        active ? "bg-primary" : "border border-hairline bg-raised"
+        active ? "bg-primary" : "border-[length:var(--border-width-card)] border-hairline bg-raised"
       }`}
     >
       <input
@@ -154,7 +154,7 @@ function ModeChip({ label, icon, active, onSelect }: ModeChipProps) {
         color={active ? tokens.primaryForeground : tokens.textMuted}
       />
       <span
-        className={`text-[12px] font-medium ${active ? "text-primary-foreground" : "text-text-muted"}`}
+        className={`text-[0.75rem] font-medium ${active ? "text-primary-foreground" : "text-text-muted"}`}
       >
         {label}
       </span>

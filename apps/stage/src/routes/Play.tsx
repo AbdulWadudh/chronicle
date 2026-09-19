@@ -88,7 +88,7 @@ export function Play() {
       <header className="flex shrink-0 items-center justify-between border-b border-hairline px-3 py-2.5">
         <BackButton onPress={() => void navigate(-1)} label="Back" />
 
-        <p className="flex items-center gap-2 text-[12px] text-text-muted">
+        <p className="flex items-center gap-2 text-[0.75rem] text-text-muted">
           <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
           {status.label}
         </p>
@@ -97,7 +97,7 @@ export function Play() {
           type="button"
           onClick={() => setConsoleOpen(true)}
           aria-label="Open director console"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline bg-raised text-text-accent"
+          className="flex h-9 w-9 items-center justify-center rounded-full border-[length:var(--border-width-card)] border-hairline bg-raised text-text-accent"
         >
           <HugeiconsIcon icon={PreferenceHorizontalIcon} size={16} strokeWidth={1.5} />
         </button>
@@ -106,7 +106,7 @@ export function Play() {
       {stream.error !== null ? (
         <p
           role="alert"
-          className="shrink-0 border-b border-danger/20 bg-danger/10 px-4 py-2 text-[13px] text-danger"
+          className="shrink-0 border-b border-danger/20 bg-danger/10 px-4 py-2 text-[0.8125rem] text-danger"
         >
           {stream.error}
         </p>
@@ -140,11 +140,11 @@ export function Play() {
                   <article key={turn.id} className="flex flex-col gap-3">
                     <div className="flex items-start gap-2.5">
                       <span className="mt-1.5 h-4 w-[2px] shrink-0 rounded-full bg-primary/70" />
-                      <p className="flex-1 text-[14px] italic leading-snug text-text-muted">
+                      <p className="flex-1 text-[0.875rem] italic leading-snug text-text-muted">
                         {turn.playerAction}
                       </p>
                     </div>
-                    <p className="text-[16px] leading-7 text-text-secondary">
+                    <p className="text-[1rem] leading-[var(--leading-narrative)] text-text-secondary">
                       {turn.narrativeText}
                     </p>
                   </article>
@@ -167,7 +167,7 @@ export function Play() {
                 transition={{ duration: 0.22 }}
                 className="flex flex-col items-center gap-2 py-2"
               >
-                <p className="text-[12px] uppercase tracking-[0.14em] text-text-muted">
+                <p className="text-[0.75rem] uppercase tracking-[0.14em] text-text-muted">
                   {stream.pendingCheck.stat} · DC {stream.pendingCheck.dc}
                 </p>
                 <Suspense fallback={<Spinner size={28} label="Rolling" />}>

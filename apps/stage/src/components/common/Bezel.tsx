@@ -11,11 +11,11 @@ const INNER_SHADOW = "0 1px 1px rgb(255 255 255 / 0.06)";
 export function Bezel({ children, tone = "default" }: BezelProps) {
   return (
     <div
-      className="rounded-[22px] border border-hairline bg-raised p-1"
+      className="rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-hairline bg-raised p-1"
       style={tone === "raised" ? { boxShadow: RAISED_SHADOW } : undefined}
     >
       <div
-        className="overflow-hidden rounded-[18px] border border-hairline bg-card"
+        className="overflow-hidden rounded-[18px] border-[length:var(--border-width-card)] border-hairline bg-card"
         style={{ boxShadow: INNER_SHADOW }}
       >
         {children}

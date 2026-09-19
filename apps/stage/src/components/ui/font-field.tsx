@@ -1,6 +1,6 @@
 import { ArrowDown01Icon, Search01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Spinner } from "~/components/common/Spinner";
 import { Input } from "~/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
@@ -13,7 +13,7 @@ import {
   searchFontCatalogue,
 } from "~/lib/googleFonts";
 
-const PREVIEW_LIMIT = 24;
+const PAGE_SIZE = 24;
 
 export interface FontFieldProps {
   value: string;
@@ -26,6 +26,8 @@ export function FontField({ value, onChange, ariaLabel }: FontFieldProps) {
   const [catalogue, setCatalogue] = useState<GoogleFontFamily[] | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  const sentinel = useRef<HTMLDivElement>(null);
 
   const current = familyFromStack(value) ?? "System default";
 
@@ -38,10 +40,32 @@ export function FontField({ value, onChange, ariaLabel }: FontFieldProps) {
       );
   }, [open, catalogue]);
 
-  const results = useMemo(
-    () => (catalogue === null ? [] : searchFontCatalogue(catalogue, query, PREVIEW_LIMIT)),
+  const matches = useMemo(
+    () =>
+      catalogue === null ? [] : searchFontCatalogue(catalogue, query, Number.POSITIVE_INFINITY),
     [catalogue, query],
   );
+
+  const results = useMemo(() => matches.slice(0, visible), [matches, visible]);
+
+  useEffect(() => {
+    setVisible(PAGE_SIZE);
+  }, []);
+
+  useEffect(() => {
+    const target = sentinel.current;
+    if (target === null || results.length >= matches.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVisible((current) => current + PAGE_SIZE);
+        }
+      },
+      { rootMargin: "120px" },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [results.length, matches.length]);
 
   useEffect(() => {
     for (const entry of results) loadFontFamily(entry.family);
@@ -51,7 +75,7 @@ export function FontField({ value, onChange, ariaLabel }: FontFieldProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label={ariaLabel}
-        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-[var(--radius-control)] border border-card-border bg-input-surface px-3.5 py-2.5 text-[13px] text-text-primary outline-none transition-colors hover:border-hairline-strong focus-visible:border-primary/60 motion-reduce:transition-none"
+        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-input-surface px-3.5 py-2.5 text-[0.8125rem] text-text-primary outline-none transition-colors hover:border-hairline-strong focus-visible:border-primary/60 motion-reduce:transition-none"
       >
         <span className="truncate" style={{ fontFamily: value }}>
           {current}
@@ -74,7 +98,10 @@ export function FontField({ value, onChange, ariaLabel }: FontFieldProps) {
           />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setVisible(PAGE_SIZE);
+            }}
             placeholder="Search Google Fonts"
             aria-label="Search Google Fonts"
             className="pl-8"
@@ -83,16 +110,16 @@ export function FontField({ value, onChange, ariaLabel }: FontFieldProps) {
 
         <div className="mt-2 max-h-64 overflow-y-auto">
           {failure !== null ? (
-            <p role="alert" className="px-2 py-3 text-[12px] leading-relaxed text-danger">
+            <p role="alert" className="px-2 py-3 text-[0.75rem] leading-relaxed text-danger">
               {failure}
             </p>
           ) : catalogue === null ? (
             <div className="flex items-center justify-center gap-2 py-6 text-text-muted">
               <Spinner size={14} label="Loading fonts" />
-              <span className="text-[12px]">Loading the catalogue</span>
+              <span className="text-[0.75rem]">Loading the catalogue</span>
             </div>
           ) : results.length === 0 ? (
-            <p className="px-2 py-3 text-[12px] text-text-muted">No family matches that.</p>
+            <p className="px-2 py-3 text-[0.75rem] text-text-muted">No family matches that.</p>
           ) : (
             results.map((entry) => {
               const stack = fontStack(entry.family, entry.category);
@@ -110,11 +137,11 @@ export function FontField({ value, onChange, ariaLabel }: FontFieldProps) {
                     selected ? "text-text-accent" : "text-text-primary"
                   }`}
                 >
-                  <span className="truncate text-[14px]" style={{ fontFamily: stack }}>
+                  <span className="truncate text-[0.875rem]" style={{ fontFamily: stack }}>
                     {entry.family}
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <span className="text-[10px] text-text-muted">{entry.category}</span>
+                    <span className="text-[0.625rem] text-text-muted">{entry.category}</span>
                     {selected ? (
                       <HugeiconsIcon icon={Tick02Icon} size={13} strokeWidth={2} />
                     ) : null}
@@ -123,6 +150,11 @@ export function FontField({ value, onChange, ariaLabel }: FontFieldProps) {
               );
             })
           )}
+          {results.length < matches.length ? (
+            <div ref={sentinel} className="flex justify-center py-3 text-text-muted">
+              <Spinner size={13} label="Loading more fonts" />
+            </div>
+          ) : null}
         </div>
       </PopoverContent>
     </Popover>

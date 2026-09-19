@@ -4,8 +4,8 @@ import { useIsDark } from "~/theme/store";
 const CLASS_NAMES = {
   toast:
     "!rounded-[var(--radius-control)] !border !border-hairline !bg-card !text-text-primary !shadow-[0_18px_40px_-12px_rgb(0_0_0/0.7)]",
-  title: "!text-[13px] !font-medium",
-  description: "!text-[12px] !text-text-muted",
+  title: "!text-[0.8125rem] !font-medium",
+  description: "!text-[0.75rem] !text-text-muted",
   actionButton: "!rounded-lg !bg-primary !text-primary-foreground",
   cancelButton: "!rounded-lg !bg-secondary !text-secondary-foreground",
   success:

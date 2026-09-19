@@ -44,6 +44,7 @@ export function toCssVariables(tokens: ThemeTokens): CssVariables {
   variables["--radius-control"] = `${Math.max(6, Math.round(tokens.radius * 0.6))}px`;
   variables["--border-width-card"] = `${tokens.borderWidth}px`;
   variables["--blur-card"] = `${tokens.blurIntensity}px`;
+  variables["--glass-opacity"] = String(tokens.glassOpacity);
   variables["--font-scale"] = String(tokens.fontScale);
   variables["--font-narrative"] = tokens.fontNarrative;
   variables["--font-ui"] = tokens.fontUI;

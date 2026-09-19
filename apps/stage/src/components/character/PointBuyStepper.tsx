@@ -62,7 +62,7 @@ export function PointBuyStepper({ definitions, stats, budget, onChange }: PointB
         return (
           <div
             key={definition.id}
-            className="flex items-center gap-3 rounded-xl border border-card-border bg-card p-3"
+            className="flex items-center gap-3 rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-card p-3"
           >
             <div className="min-w-0 flex-1">
               <p className="font-medium text-text-primary">{definition.label}</p>

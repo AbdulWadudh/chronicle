@@ -11,7 +11,8 @@ import { Switch } from "~/components/ui/switch";
 import { useThemeStore } from "~/theme/store";
 import { ThemeColors, ThemeShape, ThemeTypography } from "./appearance";
 
-const PANEL = "flex flex-col gap-2.5 rounded-2xl border border-hairline bg-raised px-4 py-3.5";
+const PANEL =
+  "flex flex-col gap-2.5 rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-hairline bg-raised px-4 py-3.5";
 const SPLIT = "sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8";
 
 export function Settings() {
@@ -36,7 +37,7 @@ export function Settings() {
             <div className={`${PANEL} ${SPLIT}`}>
               <div className="min-w-0">
                 <Label htmlFor="cinema-mode">Cinema Mode</Label>
-                <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">
+                <p className="mt-0.5 text-[0.75rem] leading-relaxed text-text-muted">
                   Reveal the narration one sentence at a time, paced by its audio instead of a
                   timer. Tap the passage to show all of it at once.
                 </p>
@@ -61,14 +62,14 @@ export function Settings() {
             onClick={() => void navigate("/admin")}
             className={`${PANEL} flex-row items-center gap-3 text-left transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover motion-reduce:transition-none`}
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-hairline bg-sunken text-text-muted">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border-[length:var(--border-width-card)] border-hairline bg-sunken text-text-muted">
               <HugeiconsIcon icon={SlidersHorizontalIcon} size={17} strokeWidth={1.5} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[14px] font-medium text-text-primary">
+              <span className="block text-[0.875rem] font-medium text-text-primary">
                 Runtime settings
               </span>
-              <span className="mt-0.5 block text-[12px] leading-relaxed text-text-muted">
+              <span className="mt-0.5 block text-[0.75rem] leading-relaxed text-text-muted">
                 Model, prompt, illustration and dice tuning. These live on the server and change the
                 behaviour for every session, not just this device.
               </span>

@@ -87,7 +87,7 @@ export function PaginatedList<T>({
           <button
             type="button"
             onClick={data.loadMore}
-            className="rounded-xl bg-secondary px-5 py-2.5 font-medium text-secondary-foreground"
+            className="rounded-[var(--radius-control)] bg-secondary px-5 py-2.5 font-medium text-secondary-foreground"
           >
             Load more
           </button>

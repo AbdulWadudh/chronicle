@@ -27,21 +27,21 @@ export function ColorField({
   return (
     <div
       className={cn(
-        "flex items-center gap-2.5 rounded-[var(--radius-control)] border border-hairline bg-raised px-2.5 py-2 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover motion-reduce:transition-none",
+        "flex items-center gap-2.5 rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-hairline bg-raised px-2.5 py-2 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover motion-reduce:transition-none",
         className,
       )}
     >
       <Popover>
         <PopoverTrigger
           aria-label={`Pick ${label}`}
-          className="chronicle-swatch size-7 shrink-0 cursor-pointer rounded-full border border-hairline-strong outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
+          className="chronicle-swatch size-7 shrink-0 cursor-pointer rounded-full border-[length:var(--border-width-card)] border-hairline-strong outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
           style={{ "--swatch": value } as React.CSSProperties}
         />
         <PopoverContent className="w-[228px]">
           <HexAlphaColorPicker color={value} onChange={onChange} />
           <div className="mt-3 flex items-center gap-2">
             <span
-              className="chronicle-swatch size-6 shrink-0 rounded-full border border-hairline-strong"
+              className="chronicle-swatch size-6 shrink-0 rounded-full border-[length:var(--border-width-card)] border-hairline-strong"
               style={{ "--swatch": value } as React.CSSProperties}
             />
             <HexColorInput
@@ -50,14 +50,14 @@ export function ColorField({
               alpha
               prefixed
               aria-label={`${label} hex`}
-              className="w-full rounded-[var(--radius-control)] border border-card-border bg-input-surface px-2.5 py-1.5 font-mono text-[12px] text-text-primary uppercase outline-none focus:border-primary/60"
+              className="w-full rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-input-surface px-2.5 py-1.5 font-mono text-[0.75rem] text-text-primary uppercase outline-none focus:border-primary/60"
             />
           </div>
         </PopoverContent>
       </Popover>
 
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 truncate text-[12px] font-medium text-text-primary">
+        <p className="flex items-center gap-1.5 truncate text-[0.75rem] font-medium text-text-primary">
           {label}
         </p>
         <input
@@ -66,7 +66,7 @@ export function ColorField({
           onChange={(event) => onChange(event.target.value)}
           aria-label={`${label} value`}
           spellCheck={false}
-          className="w-full bg-transparent font-mono text-[10px] tracking-tight text-text-muted outline-none focus:text-text-secondary"
+          className="w-full bg-transparent font-mono text-[0.625rem] tracking-tight text-text-muted outline-none focus:text-text-secondary"
         />
       </div>
 

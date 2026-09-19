@@ -107,7 +107,7 @@ export async function fetchFontCatalogue(forceRefresh = false): Promise<GoogleFo
 export function searchFontCatalogue(
   catalogue: readonly GoogleFontFamily[],
   query: string,
-  limit = 40,
+  limit = Number.POSITIVE_INFINITY,
 ): GoogleFontFamily[] {
   const trimmed = query.trim().toLowerCase();
   const results: GoogleFontFamily[] = [];

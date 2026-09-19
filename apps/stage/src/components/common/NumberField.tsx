@@ -14,7 +14,7 @@ export function NumberField({ label, value, min, max, step = 1, onChange }: Numb
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-3 py-2">
+    <div className="flex items-center gap-3 rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-card px-3 py-2">
       <span className="flex-1 truncate text-text-primary">{label}</span>
       <button
         type="button"

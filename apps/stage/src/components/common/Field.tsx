@@ -22,7 +22,7 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={id}
-        className="px-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-text-muted"
+        className="px-0.5 text-[0.625rem] font-medium uppercase tracking-[0.12em] text-text-muted"
       >
         {label}
       </label>
@@ -42,7 +42,7 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
             setFocused(false);
             input.onBlur?.(event);
           }}
-          className={`min-h-[44px] rounded-2xl border bg-input-surface px-3.5 py-2.5 text-[14px] leading-5 text-text-primary outline-none placeholder:text-text-muted ${border} ${secure ? "pr-11" : ""}`}
+          className={`min-h-[44px] rounded-[var(--radius-card)] border bg-input-surface px-3.5 py-2.5 text-[0.875rem] leading-5 text-text-primary outline-none placeholder:text-text-muted ${border} ${secure ? "pr-11" : ""}`}
         />
         {secure ? (
           <button
@@ -57,11 +57,11 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
       </div>
 
       {invalid ? (
-        <p id={messageId} role="alert" className="px-0.5 text-[11px] text-danger">
+        <p id={messageId} role="alert" className="px-0.5 text-[0.6875rem] text-danger">
           {error}
         </p>
       ) : hint !== undefined ? (
-        <p id={messageId} className="px-0.5 text-[11px] text-text-muted">
+        <p id={messageId} className="px-0.5 text-[0.6875rem] text-text-muted">
           {hint}
         </p>
       ) : null}

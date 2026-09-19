@@ -15,7 +15,7 @@ const OPTIONS: Record<string, readonly SelectOptionGroup[]> = {
 };
 
 const ROW =
-  "flex flex-col gap-2.5 rounded-2xl border border-hairline bg-raised px-4 py-3.5 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover motion-reduce:transition-none";
+  "flex flex-col gap-2.5 rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-hairline bg-raised px-4 py-3.5 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover motion-reduce:transition-none";
 
 const SPLIT = "sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8";
 
@@ -41,7 +41,7 @@ export function SettingRow({ field, meta, value, bound, onChange }: SettingRowPr
   const description = (
     <div className="min-w-0">
       <Label htmlFor={id}>{meta.label}</Label>
-      <p id={hintId} className="mt-0.5 text-[12px] leading-relaxed text-text-muted">
+      <p id={hintId} className="mt-0.5 text-[0.75rem] leading-relaxed text-text-muted">
         {meta.hint}
       </p>
     </div>
@@ -82,15 +82,15 @@ export function SettingRow({ field, meta, value, bound, onChange }: SettingRowPr
               aria-describedby={hintId}
             />
             <div className="flex w-[84px] shrink-0 items-baseline justify-end gap-1">
-              <span className="text-[15px] font-semibold tabular-nums text-text-primary">
+              <span className="text-[0.9375rem] font-semibold tabular-nums text-text-primary">
                 {formatted(value, bound.step)}
               </span>
               {meta.unit === undefined ? null : (
-                <span className="text-[11px] text-text-muted">{meta.unit}</span>
+                <span className="text-[0.6875rem] text-text-muted">{meta.unit}</span>
               )}
             </div>
           </div>
-          <span className="text-right text-[10px] tabular-nums text-text-muted/50">
+          <span className="text-right text-[0.625rem] tabular-nums text-text-muted/50">
             {bound.min}–{bound.max}
           </span>
         </div>
@@ -126,7 +126,7 @@ export function SettingRow({ field, meta, value, bound, onChange }: SettingRowPr
             value={String(value)}
             aria-describedby={hintId}
             onChange={(event) => onChange(event.target.value)}
-            className={meta.mono === true ? "font-mono text-[12px]" : undefined}
+            className={meta.mono === true ? "font-mono text-[0.75rem]" : undefined}
           />
         )}
       </div>

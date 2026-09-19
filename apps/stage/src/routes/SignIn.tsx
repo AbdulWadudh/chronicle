@@ -54,14 +54,14 @@ export function SignIn() {
     <div className={`flex flex-col gap-3 ${isSplit ? "items-start gap-4" : "items-center"}`}>
       <img src="/logo.png" alt="" width={52} height={52} className="object-contain" />
       <div className={`flex flex-col gap-2 ${isSplit ? "" : "items-center"}`}>
-        <span className="self-start rounded-full border border-hairline bg-raised-hover px-2.5 py-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-text-accent">
+        <span className="self-start rounded-full border-[length:var(--border-width-card)] border-hairline bg-raised-hover px-2.5 py-0.5 text-[0.5625rem] font-medium uppercase tracking-[0.18em] text-text-accent">
           Interactive Worlds
         </span>
-        <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.03em] text-text-primary">
+        <h1 className="text-[1.625rem] font-semibold leading-tight tracking-[-0.03em] text-text-primary">
           Chronicle
         </h1>
         <p
-          className={`text-[13px] leading-relaxed text-text-muted ${isSplit ? "" : "text-center"}`}
+          className={`text-[0.8125rem] leading-relaxed text-text-muted ${isSplit ? "" : "text-center"}`}
         >
           {isSignUp
             ? "Create an account to begin your first world."
@@ -119,7 +119,7 @@ export function SignIn() {
               {error !== null ? (
                 <p
                   role="alert"
-                  className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-1.5 text-[13px] text-danger"
+                  className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-1.5 text-[0.8125rem] text-danger"
                 >
                   {error}
                 </p>
@@ -138,7 +138,7 @@ export function SignIn() {
           <button
             type="button"
             onClick={switchMode}
-            className="py-1 text-center text-[13px] text-text-muted"
+            className="py-1 text-center text-[0.8125rem] text-text-muted"
           >
             {isSignUp ? "Already have an account? " : "New here? "}
             <span className="font-medium text-text-accent">

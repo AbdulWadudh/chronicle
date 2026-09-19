@@ -21,7 +21,8 @@ import {
 
 const PREFERENCES = [{ values: ["system", "dark", "light"] }];
 
-const PANEL = "flex flex-col gap-2.5 rounded-2xl border border-hairline bg-raised px-4 py-3.5";
+const PANEL =
+  "flex flex-col gap-2.5 rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-hairline bg-raised px-4 py-3.5";
 const SPLIT = "sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8";
 
 export function ThemeColors({ index }: { index: number }) {
@@ -45,7 +46,7 @@ export function ThemeColors({ index }: { index: number }) {
       <div className={`${PANEL} ${SPLIT}`}>
         <div className="min-w-0">
           <Label htmlFor="theme-preference">Colour scheme</Label>
-          <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">
+          <p className="mt-0.5 text-[0.75rem] leading-relaxed text-text-muted">
             Follow the system, or pin the interface to one. Dark and light remember their own
             colours, so editing one never disturbs the other.
           </p>
@@ -64,10 +65,10 @@ export function ThemeColors({ index }: { index: number }) {
       {COLOR_SECTIONS.map((section) => (
         <div key={section.title} className={PANEL}>
           <div>
-            <p className="text-[14px] font-medium tracking-[-0.01em] text-text-primary">
+            <p className="text-[0.875rem] font-medium tracking-[-0.01em] text-text-primary">
               {section.title}
             </p>
-            <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">{section.hint}</p>
+            <p className="mt-0.5 text-[0.75rem] leading-relaxed text-text-muted">{section.hint}</p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {section.keys.map((key) => (
@@ -105,7 +106,7 @@ export function ThemeTypography({ index }: { index: number }) {
       {FONT_ORDER.map((key) => (
         <div key={key} className={`${PANEL} ${SPLIT}`}>
           <div className="min-w-0">
-            <p className="flex items-center gap-1.5 text-[14px] font-medium tracking-[-0.01em] text-text-primary">
+            <p className="flex items-center gap-1.5 text-[0.875rem] font-medium tracking-[-0.01em] text-text-primary">
               {FONT_TOKENS[key].label}
               {overrides[key] !== undefined ? (
                 <>
@@ -114,7 +115,7 @@ export function ThemeTypography({ index }: { index: number }) {
                 </>
               ) : null}
             </p>
-            <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">
+            <p className="mt-0.5 text-[0.75rem] leading-relaxed text-text-muted">
               {FONT_TOKENS[key].hint}
             </p>
           </div>
@@ -172,10 +173,10 @@ export function ThemeShape({ index }: { index: number }) {
 
       <div className={`${PANEL} flex-row items-center justify-between gap-4`}>
         <div className="min-w-0">
-          <p className="text-[14px] font-medium tracking-[-0.01em] text-text-primary">
+          <p className="text-[0.875rem] font-medium tracking-[-0.01em] text-text-primary">
             Restore the designed theme
           </p>
-          <p className="mt-0.5 text-[12px] leading-relaxed text-text-muted">
+          <p className="mt-0.5 text-[0.75rem] leading-relaxed text-text-muted">
             Drops every appearance change in both schemes on this device. Runtime settings are
             untouched.
           </p>

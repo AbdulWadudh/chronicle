@@ -7,7 +7,7 @@ function Label({ className, htmlFor, ...props }: ComponentProps<"label">) {
       htmlFor={htmlFor}
       data-slot="label"
       className={cn(
-        "text-[14px] font-medium tracking-[-0.01em] text-text-primary select-none",
+        "text-[0.875rem] font-medium tracking-[-0.01em] text-text-primary select-none",
         className,
       )}
       {...props}

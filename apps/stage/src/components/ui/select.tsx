@@ -23,12 +23,12 @@ function Option({ value, mono }: { value: string; mono: boolean }) {
   return (
     <SelectPrimitive.Item
       value={value}
-      className="relative flex cursor-pointer items-center gap-2 rounded-lg py-2 pr-2 pl-8 text-[13px] outline-none select-none data-highlighted:bg-sunken data-selected:text-text-accent"
+      className="relative flex cursor-pointer items-center gap-2 rounded-lg py-2 pr-2 pl-8 text-[0.8125rem] outline-none select-none data-highlighted:bg-sunken data-selected:text-text-accent"
     >
       <SelectPrimitive.ItemIndicator className="absolute left-2 flex size-4 items-center justify-center">
         <HugeiconsIcon icon={Tick02Icon} size={13} strokeWidth={2} />
       </SelectPrimitive.ItemIndicator>
-      <SelectPrimitive.ItemText className={mono ? "font-mono text-[12px]" : undefined}>
+      <SelectPrimitive.ItemText className={mono ? "font-mono text-[0.75rem]" : undefined}>
         {value}
       </SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
@@ -58,8 +58,8 @@ function Select({
         aria-describedby={describedBy}
         data-slot="select-trigger"
         className={cn(
-          "flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-card-border bg-input-surface px-3.5 py-2.5 text-[13px] text-text-primary outline-none transition-colors hover:border-hairline-strong focus-visible:border-primary/60 data-popup-open:border-primary/60 motion-reduce:transition-none",
-          mono && "font-mono text-[12px]",
+          "flex w-full cursor-pointer items-center justify-between gap-2 rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-input-surface px-3.5 py-2.5 text-[0.8125rem] text-text-primary outline-none transition-colors hover:border-hairline-strong focus-visible:border-primary/60 data-popup-open:border-primary/60 motion-reduce:transition-none",
+          mono && "font-mono text-[0.75rem]",
         )}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
@@ -70,7 +70,7 @@ function Select({
 
       <SelectPrimitive.Portal>
         <SelectPrimitive.Positioner sideOffset={6} className="z-50 outline-none">
-          <SelectPrimitive.Popup className="max-h-[min(22rem,var(--available-height))] w-[var(--anchor-width)] origin-[var(--transform-origin)] overflow-hidden rounded-xl border border-hairline bg-card text-text-primary shadow-[0_18px_40px_-12px_rgb(0_0_0/0.7)] transition-[opacity,transform] duration-150 data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 motion-reduce:transition-none">
+          <SelectPrimitive.Popup className="max-h-[min(22rem,var(--available-height))] w-[var(--anchor-width)] origin-[var(--transform-origin)] overflow-hidden rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-hairline bg-card text-text-primary shadow-[0_18px_40px_-12px_rgb(0_0_0/0.7)] transition-[opacity,transform] duration-150 data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 motion-reduce:transition-none">
             <SelectPrimitive.List className="max-h-[inherit] overflow-y-auto overscroll-contain p-1">
               {groups.map((group, index) =>
                 group.label === undefined ? (
@@ -79,7 +79,7 @@ function Select({
                   <SelectPrimitive.Group key={group.label}>
                     <SelectPrimitive.GroupLabel
                       className={cn(
-                        "px-2 py-1.5 text-[10px] font-medium tracking-[0.12em] text-text-muted uppercase",
+                        "px-2 py-1.5 text-[0.625rem] font-medium tracking-[0.12em] text-text-muted uppercase",
                         index > 0 && "mt-1 border-t border-hairline pt-2.5",
                       )}
                     >
