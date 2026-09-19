@@ -91,21 +91,24 @@ function Stop-Servers {
 
 function Open-LogWindow {
   $names = @(Get-Names)
-  $panes = @()
+  $tailers = @{}
   foreach ($name in $names) {
     $tailer = Join-Path $RunDir "tail-$name.ps1"
     Set-Content -Path $tailer -Encoding utf8 -Value @(
       "`$Host.UI.RawUI.WindowTitle = '$name'"
       "Get-Content -LiteralPath '$LogDir\$name.log' -Wait -Tail $Tail"
     )
-    $panes += $tailer
+    $tailers[$name] = $tailer
   }
 
-  $paneArgs = @('-w', 'new', 'new-tab', '--title', 'Chronicle-AI',
-    'pwsh', '-NoExit', '-NoProfile', '-File', $panes[0])
-  for ($i = 1; $i -lt $panes.Count; $i += 1) {
-    $split = if ($i -eq 1) { '-V' } else { '-H' }
-    $paneArgs += @(';', 'split-pane', $split, 'pwsh', '-NoExit', '-NoProfile', '-File', $panes[$i])
+  $stack = @('llm', 'embed', 'tts') | Where-Object { $names -contains $_ }
+  $pane = { param($file) @('pwsh', '-NoExit', '-NoProfile', '-File', $file) }
+
+  $paneArgs = @('-w', 'new', 'new-tab', '--title', 'Chronicle-AI') + (& $pane $tailers['comfy'])
+  $paneArgs += @(';', 'split-pane', '-V', '-s', '0.5') + (& $pane $tailers[$stack[0]])
+  for ($i = 1; $i -lt $stack.Count; $i += 1) {
+    $size = [math]::Round(1 - 1 / ($stack.Count - $i + 1), 3)
+    $paneArgs += @(';', 'split-pane', '-H', '-s', "$size") + (& $pane $tailers[$stack[$i]])
   }
   Start-Process wt -ArgumentList $paneArgs
 }
