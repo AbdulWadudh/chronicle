@@ -48,10 +48,16 @@ turbo run typecheck
    surface, which is pinned to the versions Expo SDK 57 requires, and `nativewind`,
    pinned to the published v5 release candidate. See `.claude/rules/architecture.md`.
 
-## Protocol before each task wave
+## Skills
 
-Inventory available skills, MCP servers, and tools first. If one covers the task,
-use it. If nothing covers it, prefer an established idiom over a bespoke solution.
+Analyse the task before starting it, then:
+
+1. Check the available skills list. If one covers the task, invoke it and follow it.
+2. If nothing fits, run `find-skills` to search for one, and use what it returns.
+3. Only when no skill exists, do it manually with an established idiom.
+
+Say which skill you are using before you use it. A skill that applies is not optional.
+Same check for MCP servers and tools — use what exists before building it.
 
 ## Sub-agent delegation
 
