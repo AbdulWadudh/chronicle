@@ -72,7 +72,7 @@ export function SignIn() {
   );
 
   return (
-    <Screen scroll center wide={isSplit}>
+    <Screen scroll center width={isSplit ? "wide" : "narrow"}>
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}

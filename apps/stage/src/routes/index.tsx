@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router";
 import { Spinner } from "~/components/common/Spinner";
+import { Toaster } from "~/components/ui/sonner";
 import { AuthProvider, useAuth } from "~/lib/auth";
 import { ThemeEngine } from "~/theme/ThemeEngine";
 import { CharacterSelect } from "./CharacterSelect";
 import { Play } from "./Play";
-import { Settings } from "./Settings";
 import { SignIn } from "./SignIn";
+import { Settings } from "./settings";
 import { Worlds } from "./Worlds";
 
 const SIGN_IN_PATH = "/sign-in";
@@ -48,6 +49,7 @@ export function AppRoutes() {
     <AuthProvider>
       <ThemeEngine>
         <AuthGate />
+        <Toaster />
       </ThemeEngine>
     </AuthProvider>
   );

@@ -87,7 +87,7 @@ export function CharacterSelect() {
     isValidBuild(stats, world.statDefinitionsJson, world.pointBudget);
 
   return (
-    <Screen wide>
+    <Screen width="wide">
       <PageHeader
         title={world?.title ?? "Choose a character"}
         leading={<BackButton onPress={() => void navigate(-1)} />}

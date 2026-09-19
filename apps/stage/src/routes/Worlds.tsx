@@ -42,7 +42,7 @@ export function Worlds() {
   );
 
   return (
-    <Screen wide>
+    <Screen width="wide">
       <PageHeader
         title="Chronicle"
         trailing={

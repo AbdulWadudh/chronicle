@@ -12,6 +12,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: { "~": resolve(projectRoot, "src") },
+    dedupe: ["react", "react-dom"],
   },
   server: {
     port: 8082,

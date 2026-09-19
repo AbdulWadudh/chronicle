@@ -114,3 +114,18 @@
     }
   }
 }
+
+@theme inline {
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-text-primary);
+  --color-muted: var(--color-secondary);
+  --color-muted-foreground: var(--color-text-muted);
+  --color-card-foreground: var(--color-text-primary);
+  --color-popover: var(--color-card);
+  --color-popover-foreground: var(--color-text-primary);
+  --color-border: var(--color-card-border);
+  --color-input: var(--color-input-surface);
+  --color-ring: var(--color-primary);
+  --color-destructive: var(--color-danger);
+  --color-destructive-foreground: var(--color-text-primary);
+}
