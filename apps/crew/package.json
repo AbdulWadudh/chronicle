@@ -12,7 +12,7 @@
   "dependencies": {
     "@chronicle/config": "workspace:*",
     "@chronicle/db": "workspace:*",
-    "@chronicle/shared": "workspace:*",
+    "@chronicle/utils": "workspace:*",
     "@lancedb/lancedb": "latest",
     "bullmq": "latest",
     "ioredis": "latest",

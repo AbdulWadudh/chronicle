@@ -1,5 +1,5 @@
 {
-  "name": "@chronicle/shared",
+  "name": "@chronicle/utils",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@chronicle/config": "workspace:*",
     "zod": "latest"
   }
 }

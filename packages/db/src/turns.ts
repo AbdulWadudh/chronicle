@@ -1,4 +1,4 @@
-import type { TurnNode } from "@chronicle/shared";
+import type { TurnNode } from "@chronicle/utils";
 import type { schema } from ".";
 
 export type TurnRow = typeof schema.turns.$inferSelect;

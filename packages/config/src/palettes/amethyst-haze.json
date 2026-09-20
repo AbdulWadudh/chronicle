@@ -1,0 +1,42 @@
+{
+  "id": "amethyst-haze",
+  "name": "Amethyst Haze",
+  "blurb": "Violet glass over deep plum, with a heavier blur behind every panel.",
+  "shape": {
+    "radius": 24,
+    "blurIntensity": 44,
+    "glassOpacity": 0.62
+  },
+  "dark": {
+    "canvas": "#0A0614",
+    "card": "#140C24",
+    "cardBorder": "#26183F",
+    "inputSurface": "#1A1030",
+    "audioPillBg": "#211640",
+    "textPrimary": "#F1EAFF",
+    "textSecondary": "#B4A3D8",
+    "textMuted": "#7A6B9C",
+    "primary": "#A855F7",
+    "primaryForeground": "#10031F",
+    "secondary": "#211640",
+    "secondaryForeground": "#E6DCFA",
+    "accent": "#F472B6",
+    "accentForeground": "#1B0410"
+  },
+  "light": {
+    "canvas": "#FAF6FF",
+    "card": "#FFFFFF",
+    "cardBorder": "#E4D9F7",
+    "inputSurface": "#F2EBFD",
+    "audioPillBg": "#EBE0FB",
+    "textPrimary": "#1A0F2B",
+    "textSecondary": "#54426F",
+    "textMuted": "#8878A3",
+    "primary": "#7C3AED",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#EBE0FB",
+    "secondaryForeground": "#1A0F2B",
+    "accent": "#DB2777",
+    "accentForeground": "#FFFFFF"
+  }
+}

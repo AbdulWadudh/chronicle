@@ -1,0 +1,40 @@
+{
+  "id": "crimson-ember",
+  "name": "Crimson Ember",
+  "blurb": "Charcoal warmed by ember orange. Built for firelit, dangerous stories.",
+  "shape": {
+    "radius": 16
+  },
+  "dark": {
+    "canvas": "#0A0706",
+    "card": "#16100E",
+    "cardBorder": "#2A1D18",
+    "inputSurface": "#1D1512",
+    "audioPillBg": "#241914",
+    "textPrimary": "#F7EDE6",
+    "textSecondary": "#B7A398",
+    "textMuted": "#7A6A61",
+    "primary": "#F2542D",
+    "primaryForeground": "#140502",
+    "secondary": "#241914",
+    "secondaryForeground": "#F0E2D9",
+    "accent": "#FFB703",
+    "accentForeground": "#1A0F00"
+  },
+  "light": {
+    "canvas": "#FDF6F2",
+    "card": "#FFFFFF",
+    "cardBorder": "#EBDACE",
+    "inputSurface": "#F7EBE3",
+    "audioPillBg": "#F3E0D5",
+    "textPrimary": "#21100A",
+    "textSecondary": "#6B4B3C",
+    "textMuted": "#9A7B6B",
+    "primary": "#C2410C",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#F3E0D5",
+    "secondaryForeground": "#21100A",
+    "accent": "#B45309",
+    "accentForeground": "#FFFFFF"
+  }
+}

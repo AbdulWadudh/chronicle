@@ -4,7 +4,7 @@ import type {
   StatePatch,
   TurnChoice,
   WorldState,
-} from "@chronicle/shared";
+} from "@chronicle/utils";
 import {
   type AnySQLiteColumn,
   index,
@@ -18,7 +18,7 @@ import { characters, worlds } from "./world";
 export const turns = sqliteTable(
   "turns",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().$defaultFn(Bun.randomUUIDv7),
     parentId: text("parent_id").references((): AnySQLiteColumn => turns.id, {
       onDelete: "cascade",
     }),
@@ -33,7 +33,9 @@ export const turns = sqliteTable(
     stateDiffJson: text("state_diff_json", { mode: "json" }).$type<StatePatch>(),
     diceCheckJson: text("dice_check_json", { mode: "json" }).$type<DiceCheck>(),
     branchIndex: integer("branch_index").notNull().default(0),
-    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (table) => [
     index("turns_parent_idx").on(table.parentId),
@@ -45,7 +47,7 @@ export const turns = sqliteTable(
 export const checkpoints = sqliteTable(
   "checkpoints",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().$defaultFn(Bun.randomUUIDv7),
     turnId: text("turn_id")
       .notNull()
       .references(() => turns.id, { onDelete: "cascade" }),
@@ -57,7 +59,9 @@ export const checkpoints = sqliteTable(
       .references(() => worlds.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     snapshotJson: text("snapshot_json", { mode: "json" }).$type<WorldState>().notNull(),
-    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (table) => [index("checkpoints_character_idx").on(table.characterId, table.createdAt)],
 );

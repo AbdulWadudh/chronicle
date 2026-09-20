@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-export const QUEUE_PREFIX = "{chronicle}";
-
-export const QUEUE_DIFFUSION = "chronicle-diffusion";
-export const QUEUE_TTS = "chronicle-tts";
-export const QUEUE_MEMORY = "chronicle-memory";
-
 export function audioChannel(turnId: string): string {
   return `stream:audio:${turnId}`;
 }

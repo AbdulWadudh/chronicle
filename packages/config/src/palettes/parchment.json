@@ -1,0 +1,43 @@
+{
+  "id": "parchment",
+  "name": "Parchment",
+  "blurb": "Ink on aged paper, a serif for the prose and generous leading.",
+  "shape": {
+    "radius": 8,
+    "lineHeightMultiplier": 1.85,
+    "fontNarrative": "\"Lora\", ui-serif, Georgia, serif",
+    "fontUI": "\"Inter\", ui-sans-serif, system-ui, sans-serif"
+  },
+  "dark": {
+    "canvas": "#12100C",
+    "card": "#1B1813",
+    "cardBorder": "#2E2A22",
+    "inputSurface": "#201D17",
+    "audioPillBg": "#26221B",
+    "textPrimary": "#F0E9D8",
+    "textSecondary": "#B5AA92",
+    "textMuted": "#7E7563",
+    "primary": "#C89B3C",
+    "primaryForeground": "#16120A",
+    "secondary": "#26221B",
+    "secondaryForeground": "#EDE4D0",
+    "accent": "#8C6239",
+    "accentForeground": "#FFF6E7"
+  },
+  "light": {
+    "canvas": "#F7F1E3",
+    "card": "#FFFDF7",
+    "cardBorder": "#E3D9C2",
+    "inputSurface": "#F2EADA",
+    "audioPillBg": "#EDE3CE",
+    "textPrimary": "#2B2416",
+    "textSecondary": "#5C5138",
+    "textMuted": "#8A7C5E",
+    "primary": "#8A6410",
+    "primaryForeground": "#FFFDF7",
+    "secondary": "#EDE3CE",
+    "secondaryForeground": "#2B2416",
+    "accent": "#7C4A21",
+    "accentForeground": "#FFFDF7"
+  }
+}

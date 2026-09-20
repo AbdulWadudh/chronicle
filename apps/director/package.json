@@ -12,7 +12,8 @@
   "dependencies": {
     "@chronicle/config": "workspace:*",
     "@chronicle/db": "workspace:*",
-    "@chronicle/shared": "workspace:*",
+    "@chronicle/utils": "workspace:*",
+    "@faker-js/faker": "latest",
     "better-auth": "latest",
     "bullmq": "latest",
     "hono": "latest",

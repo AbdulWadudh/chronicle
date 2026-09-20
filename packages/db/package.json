@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@chronicle/config": "workspace:*",
-    "@chronicle/shared": "workspace:*",
+    "@chronicle/utils": "workspace:*",
     "better-auth": "latest",
     "@better-auth/drizzle-adapter": "latest",
     "drizzle-orm": "latest"

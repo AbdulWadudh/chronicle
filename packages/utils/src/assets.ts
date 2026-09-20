@@ -2,6 +2,20 @@ export const SCENE_CONTENT_TYPE = "image/png";
 export const AUDIO_CONTENT_TYPE = "audio/mpeg";
 export const PORTRAIT_CONTENT_TYPE = "image/png";
 
+export const AVATAR_CONTENT_TYPES: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+};
+
+export function userPrefix(userId: string): string {
+  return `users/${userId}`;
+}
+
+export function avatarKey(userId: string, extension: string): string {
+  return `${userPrefix(userId)}/avatar.${extension}`;
+}
+
 export function worldPrefix(worldId: string): string {
   return `worlds/${worldId}`;
 }

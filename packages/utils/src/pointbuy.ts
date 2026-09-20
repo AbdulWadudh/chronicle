@@ -1,4 +1,4 @@
-import { STATS } from "./rules";
+import { STATS } from "@chronicle/config";
 import type { StatBlock, StatDefinition, StatRank } from "./types";
 
 const CUMULATIVE_COST: readonly number[] = [0, 0, 1, 2, 4, 6];

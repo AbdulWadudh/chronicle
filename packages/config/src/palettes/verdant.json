@@ -1,0 +1,40 @@
+{
+  "id": "verdant",
+  "name": "Verdant",
+  "blurb": "Moss, canopy and lichen. Quiet enough to read under for hours.",
+  "shape": {
+    "radius": 14
+  },
+  "dark": {
+    "canvas": "#05100B",
+    "card": "#0C1A12",
+    "cardBorder": "#1A2E20",
+    "inputSurface": "#102117",
+    "audioPillBg": "#15281B",
+    "textPrimary": "#E9F5EC",
+    "textSecondary": "#9BB5A4",
+    "textMuted": "#66806F",
+    "primary": "#4ADE80",
+    "primaryForeground": "#04140A",
+    "secondary": "#15281B",
+    "secondaryForeground": "#DDEDE1",
+    "accent": "#A3E635",
+    "accentForeground": "#0B1400"
+  },
+  "light": {
+    "canvas": "#F3F9F4",
+    "card": "#FFFFFF",
+    "cardBorder": "#D5E5D9",
+    "inputSurface": "#EAF3EC",
+    "audioPillBg": "#DFEDE2",
+    "textPrimary": "#0B1F12",
+    "textSecondary": "#3F5C48",
+    "textMuted": "#74907D",
+    "primary": "#15803D",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#DFEDE2",
+    "secondaryForeground": "#0B1F12",
+    "accent": "#4D7C0F",
+    "accentForeground": "#FFFFFF"
+  }
+}

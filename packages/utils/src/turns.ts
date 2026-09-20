@@ -1,5 +1,5 @@
+import { DICE } from "@chronicle/config";
 import { z } from "zod";
-import { DICE } from "./rules";
 import { statePatchSchema } from "./types";
 
 export const diceCheckSchema = z.object({
