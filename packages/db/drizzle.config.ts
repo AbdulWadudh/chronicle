@@ -1,4 +1,4 @@
-import { defaultDatabasePath } from "@chronicle/config";
+import { defaultDatabasePath } from "@chronicle/config/paths";
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({

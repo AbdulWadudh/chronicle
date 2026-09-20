@@ -1,0 +1,42 @@
+{
+  "id": "arctic",
+  "name": "Arctic",
+  "blurb": "Cold slate and glacier cyan, tight corners, almost no blur.",
+  "shape": {
+    "radius": 10,
+    "blurIntensity": 12,
+    "glassOpacity": 0.88
+  },
+  "dark": {
+    "canvas": "#080C0F",
+    "card": "#0F161B",
+    "cardBorder": "#1E2A33",
+    "inputSurface": "#141D24",
+    "audioPillBg": "#19242C",
+    "textPrimary": "#ECF3F7",
+    "textSecondary": "#9BAFBC",
+    "textMuted": "#667C8A",
+    "primary": "#38BDF8",
+    "primaryForeground": "#03121A",
+    "secondary": "#19242C",
+    "secondaryForeground": "#DEEAF1",
+    "accent": "#2DD4BF",
+    "accentForeground": "#01140F"
+  },
+  "light": {
+    "canvas": "#F5F9FB",
+    "card": "#FFFFFF",
+    "cardBorder": "#DCE7ED",
+    "inputSurface": "#EDF4F8",
+    "audioPillBg": "#E3EDF3",
+    "textPrimary": "#0A1419",
+    "textSecondary": "#42565F",
+    "textMuted": "#7A8C96",
+    "primary": "#0284C7",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#E3EDF3",
+    "secondaryForeground": "#0A1419",
+    "accent": "#0D9488",
+    "accentForeground": "#FFFFFF"
+  }
+}

@@ -17,7 +17,7 @@
       "dependencies": {
         "@chronicle/config": "workspace:*",
         "@chronicle/db": "workspace:*",
-        "@chronicle/shared": "workspace:*",
+        "@chronicle/utils": "workspace:*",
         "@lancedb/lancedb": "latest",
         "bullmq": "latest",
         "ioredis": "latest",
@@ -30,7 +30,8 @@
       "dependencies": {
         "@chronicle/config": "workspace:*",
         "@chronicle/db": "workspace:*",
-        "@chronicle/shared": "workspace:*",
+        "@chronicle/utils": "workspace:*",
+        "@faker-js/faker": "^10.6.0",
         "better-auth": "latest",
         "bullmq": "latest",
         "hono": "latest",
@@ -43,7 +44,8 @@
       "version": "0.0.0",
       "dependencies": {
         "@base-ui/react": "latest",
-        "@chronicle/shared": "workspace:*",
+        "@chronicle/config": "workspace:*",
+        "@chronicle/utils": "workspace:*",
         "@fontsource-variable/plus-jakarta-sans": "latest",
         "@hugeicons/core-free-icons": "latest",
         "@hugeicons/react": "latest",
@@ -76,7 +78,6 @@
       "name": "@chronicle/config",
       "version": "0.0.0",
       "dependencies": {
-        "@chronicle/shared": "workspace:*",
         "zod": "latest",
       },
     },
@@ -86,7 +87,7 @@
       "dependencies": {
         "@better-auth/drizzle-adapter": "latest",
         "@chronicle/config": "workspace:*",
-        "@chronicle/shared": "workspace:*",
+        "@chronicle/utils": "workspace:*",
         "better-auth": "latest",
         "drizzle-orm": "latest",
       },
@@ -94,10 +95,11 @@
         "drizzle-kit": "latest",
       },
     },
-    "packages/shared": {
-      "name": "@chronicle/shared",
+    "packages/utils": {
+      "name": "@chronicle/utils",
       "version": "0.0.0",
       "dependencies": {
+        "@chronicle/config": "workspace:*",
         "zod": "latest",
       },
     },
@@ -153,9 +155,9 @@
 
     "@chronicle/director": ["@chronicle/director@workspace:apps/director"],
 
-    "@chronicle/shared": ["@chronicle/shared@workspace:packages/shared"],
-
     "@chronicle/stage": ["@chronicle/stage@workspace:apps/stage"],
+
+    "@chronicle/utils": ["@chronicle/utils@workspace:packages/utils"],
 
     "@dimforge/rapier3d-compat": ["@dimforge/rapier3d-compat@0.12.0", "", {}, "sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow=="],
 
@@ -218,6 +220,8 @@
     "@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.25.12", "", { "os": "win32", "cpu": "ia32" }, "sha512-HkqnmmBoCbCwxUKKNPBixiWDGCpQGVsrQfJoVGYLPT41XWF8lHuE5N6WhVia2n4o5QK5M4tYr21827fNhi4byQ=="],
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.25.12", "", { "os": "win32", "cpu": "x64" }, "sha512-alJC0uCZpTFrSL0CCDjcgleBXPnCrEAhTBILpeAp7M/OFgoqtAetfBzX0xM00MUsVVPpVjlPuMbREqnZCXaTnA=="],
+
+    "@faker-js/faker": ["@faker-js/faker@10.6.0", "", {}, "sha512-3RQHgEtvL1Frl/d1cSreo7qhJ3Gk1OdNUai/CtZ8G+wYeRQnJih3s9xJ9/kgYekPQRdwgh0HXRPqMlzWGwivIQ=="],
 
     "@floating-ui/core": ["@floating-ui/core@1.8.0", "", { "dependencies": { "@floating-ui/utils": "^0.2.12" } }, "sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ=="],
 

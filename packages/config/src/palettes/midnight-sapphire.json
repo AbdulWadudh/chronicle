@@ -1,0 +1,40 @@
+{
+  "id": "midnight-sapphire",
+  "name": "Midnight Sapphire",
+  "blurb": "Deep navy with an electric blue that carries every action.",
+  "shape": {
+    "radius": 18
+  },
+  "dark": {
+    "canvas": "#060A14",
+    "card": "#0C1322",
+    "cardBorder": "#1A2438",
+    "inputSurface": "#111A2C",
+    "audioPillBg": "#162034",
+    "textPrimary": "#E8EEF9",
+    "textSecondary": "#9AA9C4",
+    "textMuted": "#64748B",
+    "primary": "#3B82F6",
+    "primaryForeground": "#04070E",
+    "secondary": "#16203A",
+    "secondaryForeground": "#DCE6F7",
+    "accent": "#22D3EE",
+    "accentForeground": "#04101A"
+  },
+  "light": {
+    "canvas": "#F4F7FD",
+    "card": "#FFFFFF",
+    "cardBorder": "#D9E2F2",
+    "inputSurface": "#EDF2FB",
+    "audioPillBg": "#E4ECF9",
+    "textPrimary": "#0B1220",
+    "textSecondary": "#44546F",
+    "textMuted": "#7C8CA6",
+    "primary": "#1D4ED8",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#E4ECF9",
+    "secondaryForeground": "#0B1220",
+    "accent": "#0891B2",
+    "accentForeground": "#FFFFFF"
+  }
+}

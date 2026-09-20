@@ -1,0 +1,40 @@
+{
+  "id": "rose-quartz",
+  "name": "Rose Quartz",
+  "blurb": "Soft rose and orchid on a warm dusk. The gentlest set here.",
+  "shape": {
+    "radius": 26
+  },
+  "dark": {
+    "canvas": "#100A0D",
+    "card": "#1B1116",
+    "cardBorder": "#311F27",
+    "inputSurface": "#22151B",
+    "audioPillBg": "#2A1A21",
+    "textPrimary": "#FCEEF3",
+    "textSecondary": "#C9A8B5",
+    "textMuted": "#8E7280",
+    "primary": "#FB7185",
+    "primaryForeground": "#1A0409",
+    "secondary": "#2A1A21",
+    "secondaryForeground": "#F4DEE6",
+    "accent": "#C084FC",
+    "accentForeground": "#14041F"
+  },
+  "light": {
+    "canvas": "#FFF7F9",
+    "card": "#FFFFFF",
+    "cardBorder": "#F2DDE4",
+    "inputSurface": "#FCEFF3",
+    "audioPillBg": "#F9E4EB",
+    "textPrimary": "#2A0F18",
+    "textSecondary": "#6B4451",
+    "textMuted": "#9C7A86",
+    "primary": "#E11D48",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#F9E4EB",
+    "secondaryForeground": "#2A0F18",
+    "accent": "#9333EA",
+    "accentForeground": "#FFFFFF"
+  }
+}

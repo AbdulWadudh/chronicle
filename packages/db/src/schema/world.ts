@@ -1,12 +1,12 @@
-import type { Inventory, StatBlock, StatDefinition, WorldState } from "@chronicle/shared";
-import { STATS } from "@chronicle/shared";
+import { STATS } from "@chronicle/config";
+import type { Inventory, StatBlock, StatDefinition, WorldState } from "@chronicle/utils";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { users } from "./auth";
 
 export const worlds = sqliteTable(
   "worlds",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().$defaultFn(Bun.randomUUIDv7),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -22,7 +22,9 @@ export const worlds = sqliteTable(
       .notNull(),
     pointBudget: integer("point_budget").notNull().default(STATS.defaultPointBudget),
     initialStateJson: text("initial_state_json", { mode: "json" }).$type<WorldState>().notNull(),
-    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (table) => [
     index("worlds_user_idx").on(table.userId),
@@ -33,7 +35,7 @@ export const worlds = sqliteTable(
 export const characters = sqliteTable(
   "characters",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().$defaultFn(Bun.randomUUIDv7),
     worldId: text("world_id")
       .notNull()
       .references(() => worlds.id, { onDelete: "cascade" }),
@@ -45,7 +47,9 @@ export const characters = sqliteTable(
     portraitUrl: text("portrait_url"),
     statsJson: text("stats_json", { mode: "json" }).$type<StatBlock>().notNull(),
     inventoryJson: text("inventory_json", { mode: "json" }).$type<Inventory>().notNull(),
-    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (table) => [
     index("characters_world_idx").on(table.worldId),

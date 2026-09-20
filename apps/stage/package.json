@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@base-ui/react": "latest",
-    "@chronicle/shared": "workspace:*",
+    "@chronicle/config": "workspace:*",
+    "@chronicle/utils": "workspace:*",
     "@fontsource-variable/plus-jakarta-sans": "latest",
     "@hugeicons/core-free-icons": "latest",
     "@hugeicons/react": "latest",

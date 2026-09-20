@@ -1,0 +1,40 @@
+{
+  "id": "solar-flare",
+  "name": "Solar Flare",
+  "blurb": "Amber and scarlet at full brightness. Loud, and meant to be.",
+  "shape": {
+    "radius": 12
+  },
+  "dark": {
+    "canvas": "#0D0A03",
+    "card": "#171105",
+    "cardBorder": "#2E2209",
+    "inputSurface": "#1F1706",
+    "audioPillBg": "#261C08",
+    "textPrimary": "#FEF6E4",
+    "textSecondary": "#C4B18A",
+    "textMuted": "#85775A",
+    "primary": "#F59E0B",
+    "primaryForeground": "#150E00",
+    "secondary": "#261C08",
+    "secondaryForeground": "#F5E9CE",
+    "accent": "#EF4444",
+    "accentForeground": "#1A0303"
+  },
+  "light": {
+    "canvas": "#FFFBF0",
+    "card": "#FFFFFF",
+    "cardBorder": "#F0E3C6",
+    "inputSurface": "#FDF5E3",
+    "audioPillBg": "#FAEDD2",
+    "textPrimary": "#1F1703",
+    "textSecondary": "#6B5628",
+    "textMuted": "#99855A",
+    "primary": "#B45309",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#FAEDD2",
+    "secondaryForeground": "#1F1703",
+    "accent": "#DC2626",
+    "accentForeground": "#FFFFFF"
+  }
+}

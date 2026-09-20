@@ -1,0 +1,49 @@
+{
+  "id": "terminal",
+  "name": "Terminal",
+  "blurb": "Phosphor green on black, monospaced throughout, corners squared off.",
+  "shape": {
+    "radius": 2,
+    "borderWidth": 1,
+    "blurIntensity": 0,
+    "glassOpacity": 1,
+    "lineHeightMultiplier": 1.7,
+    "fontUI": "\"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+    "fontNarrative": "\"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+    "fontMono": "\"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+  },
+  "dark": {
+    "canvas": "#000000",
+    "card": "#070B07",
+    "cardBorder": "#16301B",
+    "inputSurface": "#0A130C",
+    "audioPillBg": "#0E1A10",
+    "textPrimary": "#C8F7C5",
+    "textSecondary": "#6FBF73",
+    "textMuted": "#3F7A48",
+    "primary": "#22C55E",
+    "primaryForeground": "#00140A",
+    "secondary": "#0E1A10",
+    "secondaryForeground": "#C8F7C5",
+    "accent": "#A3E635",
+    "accentForeground": "#0A1400",
+    "hairline": "#22C55E29",
+    "hairlineStrong": "#22C55E5C"
+  },
+  "light": {
+    "canvas": "#F2F5F0",
+    "card": "#FFFFFF",
+    "cardBorder": "#D2DED0",
+    "inputSurface": "#E9EFE7",
+    "audioPillBg": "#E0E9DE",
+    "textPrimary": "#0B1A0D",
+    "textSecondary": "#3C5A40",
+    "textMuted": "#6E8A72",
+    "primary": "#15803D",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#E0E9DE",
+    "secondaryForeground": "#0B1A0D",
+    "accent": "#4D7C0F",
+    "accentForeground": "#FFFFFF"
+  }
+}

@@ -204,16 +204,3 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = runtimeSettingsSchema.p
 export const RUNTIME_SETTING_GROUPS = Object.keys(
   DEFAULT_RUNTIME_SETTINGS,
 ) as RuntimeSettingsGroup[];
-
-export function mergeRuntimeSettings(
-  base: RuntimeSettings,
-  patch: RuntimeSettingsPatch,
-): RuntimeSettings {
-  const merged: Record<string, unknown> = { ...base };
-  for (const group of RUNTIME_SETTING_GROUPS) {
-    const incoming = patch[group];
-    if (incoming === undefined) continue;
-    merged[group] = { ...base[group], ...incoming };
-  }
-  return runtimeSettingsSchema.parse(merged);
-}

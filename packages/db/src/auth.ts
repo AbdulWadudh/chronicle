@@ -1,9 +1,10 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { env } from "@chronicle/config";
-import { API } from "@chronicle/shared";
+import { API } from "@chronicle/config";
+import { env } from "@chronicle/config/env";
 import { betterAuth } from "better-auth";
 import { bearer } from "better-auth/plugins";
-import type { ChronicleDatabase } from "./client";
+import { promoteFirstAccount } from "./accounts";
+import type { ChronicleDatabase } from "./db";
 import * as schema from "./schema";
 
 export const AUTH_BASE_PATH = API.auth;
@@ -22,6 +23,15 @@ export function createAuth(db: ChronicleDatabase) {
     emailAndPassword: { enabled: true },
     trustedOrigins: configuration.AUTH_TRUSTED_ORIGINS,
     plugins: [bearer()],
+    databaseHooks: {
+      user: {
+        create: {
+          after: async () => {
+            await promoteFirstAccount();
+          },
+        },
+      },
+    },
     advanced: {
       database: { generateId: () => Bun.randomUUIDv7() },
     },

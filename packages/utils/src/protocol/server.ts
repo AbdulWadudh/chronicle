@@ -1,5 +1,5 @@
+import { DICE } from "@chronicle/config";
 import { z } from "zod";
-import { DICE } from "../rules";
 import { turnNodeSchema } from "../turns";
 import { serverEnvelopeSchema } from "./envelope";
 

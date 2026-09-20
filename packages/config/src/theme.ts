@@ -30,6 +30,8 @@ export interface ThemeTokens {
   borderWidth: number;
   glassOpacity: number;
   blurIntensity: number;
+  shadowOffset: number;
+  shadowColor: string;
   fontNarrative: string;
   fontUI: string;
   fontMono: string;
@@ -39,6 +41,8 @@ export interface ThemeTokens {
 }
 
 export type ThemeTokenKey = keyof ThemeTokens;
+
+export type ThemeScheme = ThemeTokens["mode"];
 
 const SHARED_TYPOGRAPHY = {
   fontNarrative: '"Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif',
@@ -81,6 +85,8 @@ export const DEFAULT_THEME_TOKENS: ThemeTokens = {
   borderWidth: 1,
   glassOpacity: 0.72,
   blurIntensity: 32,
+  shadowOffset: 0,
+  shadowColor: "#F5F3EE",
   ...SHARED_TYPOGRAPHY,
 };
 
@@ -116,6 +122,8 @@ export const DEFAULT_LIGHT_THEME_TOKENS: ThemeTokens = {
   borderWidth: 1,
   glassOpacity: 0.9,
   blurIntensity: 20,
+  shadowOffset: 0,
+  shadowColor: "#16150F",
   ...SHARED_TYPOGRAPHY,
 };
 
@@ -123,7 +131,3 @@ export const THEME_PRESETS: Record<ThemeTokens["mode"], ThemeTokens> = {
   dark: DEFAULT_THEME_TOKENS,
   light: DEFAULT_LIGHT_THEME_TOKENS,
 };
-
-export function mergeThemeTokens(base: ThemeTokens, overrides: Partial<ThemeTokens>): ThemeTokens {
-  return { ...base, ...overrides };
-}
