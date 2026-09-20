@@ -160,7 +160,7 @@ export function Settings() {
             onClick={() => void navigate("/admin")}
             className={`${PANEL} pressable flex-row items-center gap-3 text-left hover:border-hairline-strong hover:bg-raised-hover`}
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-sunken text-text-muted">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-control border-(length:--border-width-card) border-hairline bg-sunken text-text-muted">
               <HugeiconsIcon icon={SlidersHorizontalIcon} size={17} strokeWidth={1.5} />
             </span>
             <span className="min-w-0 flex-1">

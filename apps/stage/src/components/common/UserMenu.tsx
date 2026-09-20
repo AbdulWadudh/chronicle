@@ -25,7 +25,7 @@ export function UserMenu() {
     <Menu>
       <MenuTrigger
         aria-label={`Account menu for ${user.name === "" ? user.email : user.name}`}
-        className="cursor-pointer rounded-(--radius-control) outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+        className="cursor-pointer rounded-control outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
       >
         <Avatar>
           <AvatarFallback>{initialsOf(user.name, user.email)}</AvatarFallback>

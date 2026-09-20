@@ -1,20 +1,26 @@
 import { loadSettings, newId, schema, toTurnNode } from "@chronicle/db";
-import { PROTOCOL_VERSION, splitIntoSentences, type TurnNode } from "@chronicle/utils";
+import {
+  PROTOCOL_VERSION,
+  splitIntoSentences,
+  type TurnChoice,
+  type TurnNode,
+} from "@chronicle/utils";
 import {
   CHECK_PROPOSAL_SCHEMA,
   type CheckProposal,
   type ResolvedCheck,
   resolveCheck,
 } from "~/engine/adjudicator";
+import { proposeChoices } from "~/engine/choices";
+import { enqueueScene } from "~/engine/imagery";
 import { completeStructured, streamChat } from "~/engine/llm";
-import { buildCheckPrompt, buildNarrativePrompt, buildScenePrompt } from "~/engine/prompt";
-import { diffusionQueue, memoryQueue, ttsQueue } from "~/queue";
+import { buildCheckPrompt, buildNarrativePrompt } from "~/engine/prompt";
+import { memoryQueue, ttsQueue } from "~/queue";
 import { closeBuffer, openBuffer } from "~/ws/buffer";
 import type { TurnContext } from "~/ws/context";
 import { ownTurn } from "~/ws/media";
 import { beginTurn, type ChronicleSocket, finishTurn, send } from "~/ws/session";
 
-const MAX_SEED = 2_147_483_647;
 const FIRST_VARIANT = 1;
 
 interface CheckDecision {
@@ -53,7 +59,8 @@ export async function runTurn(input: StartTurnInput): Promise<void> {
     const check = await adjudicate(input, turnId, signal);
     const narrative = await streamNarrative(input, turnId, check, signal);
     await dispatchMedia(context, turnId, narrative);
-    const turn = await commitTurn(input, turnId, narrative, check);
+    const choices = await proposeChoices(narrative, signal);
+    const turn = await commitTurn(input, turnId, narrative, check, choices);
     send(socket, { v: PROTOCOL_VERSION, replyTo, type: "TURN_COMMITTED", turn });
   } catch (error) {
     if (signal.aborted) {
@@ -120,7 +127,7 @@ async function adjudicate(
   return resolved;
 }
 
-async function streamNarrative(
+export async function streamNarrative(
   input: StartTurnInput,
   turnId: string,
   check: ResolvedCheck | null,
@@ -148,31 +155,14 @@ async function streamNarrative(
   return narrative.trim();
 }
 
-async function dispatchMedia(
+export async function enqueueSentenceAudio(
   context: TurnContext,
   turnId: string,
   narrative: string,
 ): Promise<void> {
   const settings = await loadSettings();
-  const sentences = splitIntoSentences(narrative);
-  await diffusionQueue.add("scene", {
-    turnId,
-    worldId: context.world.id,
-    characterId: context.character.id,
-    variant: FIRST_VARIANT,
-    prompt: buildScenePrompt(context.world, narrative, settings.prompt.sceneChars),
-    negativePrompt: settings.image.negativePrompt,
-    seed: Math.floor(Math.random() * MAX_SEED),
-    checkpoint: settings.image.checkpoint,
-    width: settings.image.width,
-    height: settings.image.height,
-    steps: settings.image.steps,
-    cfg: settings.image.cfg,
-    sampler: settings.image.sampler,
-    scheduler: settings.image.scheduler,
-  });
   await Promise.all(
-    sentences.map((text, sentenceIndex) =>
+    splitIntoSentences(narrative).map((text, sentenceIndex) =>
       ttsQueue.add("sentence", {
         turnId,
         worldId: context.world.id,
@@ -184,6 +174,16 @@ async function dispatchMedia(
       }),
     ),
   );
+}
+
+export async function dispatchMedia(
+  context: TurnContext,
+  turnId: string,
+  narrative: string,
+  variant: number = FIRST_VARIANT,
+): Promise<void> {
+  await enqueueScene(context.world, context.character, turnId, narrative, variant);
+  await enqueueSentenceAudio(context, turnId, narrative);
   await memoryQueue.add("episode", {
     turnId,
     characterId: context.character.id,
@@ -197,6 +197,7 @@ async function commitTurn(
   turnId: string,
   narrative: string,
   check: ResolvedCheck | null,
+  choices: TurnChoice[],
 ): Promise<TurnNode> {
   const { context } = input;
   const createdAt = new Date();
@@ -206,7 +207,7 @@ async function commitTurn(
     characterId: context.character.id,
     playerAction: input.action,
     narrativeText: narrative,
-    choicesJson: [],
+    choicesJson: choices,
     sceneImageUrl: null,
     audioUrlsJson: [],
     stateDiffJson: null,
@@ -218,7 +219,7 @@ async function commitTurn(
   return toTurnNode(row);
 }
 
-function toNarrativeRequest(input: StartTurnInput, checkOutcome: string | null) {
+export function toNarrativeRequest(input: StartTurnInput, checkOutcome: string | null) {
   return {
     world: input.context.world,
     character: input.context.character,

@@ -1,8 +1,9 @@
 import type { StatBlock, StatDefinition, StatePatch } from "@chronicle/utils";
 import { clampStatRank } from "@chronicle/utils";
+import { PreferenceHorizontalIcon } from "@hugeicons/core-free-icons";
 import { type ReactNode, useState } from "react";
-import { AppModal } from "~/components/common/AppModal";
 import { NumberField } from "~/components/common/NumberField";
+import { Sheet } from "~/components/ui/sheet";
 
 export interface DirectorConsoleModalProps {
   visible: boolean;
@@ -10,7 +11,7 @@ export interface DirectorConsoleModalProps {
   statDefinitions: readonly StatDefinition[];
   stats: StatBlock;
   affinities: Record<string, number>;
-  onApply: (patch: StatePatch, whisper: string | null) => void;
+  onApply: (patch: StatePatch) => void;
   onSaveCheckpoint: (name: string) => void;
 }
 
@@ -34,22 +35,23 @@ export function DirectorConsoleModal({
 }: DirectorConsoleModalProps) {
   const [draftStats, setDraftStats] = useState<StatBlock>(stats);
   const [draftAffinities, setDraftAffinities] = useState(affinities);
-  const [whisper, setWhisper] = useState("");
   const [checkpointName, setCheckpointName] = useState("");
 
   function apply(): void {
-    onApply(
-      { statOverrides: draftStats, affinityDeltas: diffAffinities(affinities, draftAffinities) },
-      whisper.trim().length > 0 ? whisper.trim() : null,
-    );
-    setWhisper("");
+    onApply({
+      statOverrides: draftStats,
+      affinityDeltas: diffAffinities(affinities, draftAffinities),
+    });
     onClose();
   }
 
   return (
-    <AppModal
-      visible={visible}
+    <Sheet
+      open={visible}
+      storageKey="director-console"
+      icon={PreferenceHorizontalIcon}
       title="Director's Console"
+      subtitle="Steer the next turn without the player seeing"
       onClose={onClose}
       actions={[
         { label: "Cancel", onPress: onClose, tone: "secondary" },
@@ -89,16 +91,6 @@ export function DirectorConsoleModal({
         )}
       </Section>
 
-      <Section title="Director's whisper">
-        <textarea
-          value={whisper}
-          onChange={(event) => setWhisper(event.target.value)}
-          placeholder="Hidden instruction for the next turn…"
-          aria-label="Director's whisper"
-          className="min-h-20 resize-none rounded-(--radius-control) border-(length:--border-width-card) border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
-        />
-      </Section>
-
       <Section title="Checkpoint">
         <div className="flex gap-2">
           <input
@@ -106,7 +98,7 @@ export function DirectorConsoleModal({
             onChange={(event) => setCheckpointName(event.target.value)}
             placeholder="Checkpoint name"
             aria-label="Checkpoint name"
-            className="flex-1 rounded-(--radius-control) border-(length:--border-width-card) border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
+            className="flex-1 rounded-control border-(length:--border-width-card) border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
           />
           <button
             type="button"
@@ -115,13 +107,13 @@ export function DirectorConsoleModal({
               onSaveCheckpoint(checkpointName.trim());
               setCheckpointName("");
             }}
-            className="rounded-(--radius-control) bg-secondary px-4 py-3 text-secondary-foreground disabled:opacity-40"
+            className="rounded-control bg-secondary px-4 py-3 text-secondary-foreground disabled:opacity-40"
           >
             Save
           </button>
         </div>
       </Section>
-    </AppModal>
+    </Sheet>
   );
 }
 

@@ -58,7 +58,7 @@ export function SignIn() {
       >
         <div className="flex flex-col items-center gap-3.5">
           <img src="/logo.png" alt="" width={64} height={64} className="object-contain" />
-          <span className="rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-raised-hover px-2.5 py-0.5 text-[0.5625rem] font-medium tracking-[0.18em] text-text-accent uppercase">
+          <span className="rounded-control border-(length:--border-width-card) border-hairline bg-raised-hover px-2.5 py-0.5 text-[0.5625rem] font-medium tracking-[0.18em] text-text-accent uppercase">
             Interactive Worlds
           </span>
           <div className="flex flex-col items-center gap-1.5">
@@ -111,7 +111,7 @@ export function SignIn() {
               {error !== null ? (
                 <p
                   role="alert"
-                  className="rounded-(--radius-control) border border-danger/40 bg-danger/10 px-3 py-1.5 text-[0.8125rem] text-danger"
+                  className="rounded-control border border-danger/40 bg-danger/10 px-3 py-1.5 text-[0.8125rem] text-danger"
                 >
                   {error}
                 </p>

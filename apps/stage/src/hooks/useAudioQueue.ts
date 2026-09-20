@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { assetUrl } from "~/lib/assets";
 
 export type AudioChannel = "voice" | "ambience" | "foley";
 
@@ -53,7 +54,7 @@ export function useAudioQueue(enabled: boolean): AudioQueue {
       if (url === undefined) break;
 
       releaseVoice();
-      const player = new Audio(url);
+      const player = new Audio(assetUrl(url));
       voice.current = player;
       setPlayingSentenceIndex(index);
 
@@ -94,7 +95,7 @@ export function useAudioQueue(enabled: boolean): AudioQueue {
 
   const playAmbience = useCallback((url: string) => {
     release(ambience.current);
-    const player = new Audio(url);
+    const player = new Audio(assetUrl(url));
     player.loop = true;
     player.volume = AMBIENCE_VOLUME;
     ambience.current = player;
@@ -108,7 +109,7 @@ export function useAudioQueue(enabled: boolean): AudioQueue {
 
   const playFoley = useCallback((url: string) => {
     release(foley.current);
-    const player = new Audio(url);
+    const player = new Audio(assetUrl(url));
     player.volume = FOLEY_VOLUME;
     foley.current = player;
     void player.play().catch(() => undefined);

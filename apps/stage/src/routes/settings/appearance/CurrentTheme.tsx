@@ -52,7 +52,7 @@ export function CurrentTheme({ saved }: { saved: boolean }) {
         <div className="min-w-0">
           <p className="flex items-center gap-2 text-[0.875rem] font-medium tracking-[-0.01em] text-text-primary">
             {active?.name ?? "Chronicle"}
-            <span className="rounded-(--radius-control) bg-primary/15 px-1.5 py-0.5 text-[0.5625rem] font-medium tracking-[0.08em] text-text-accent uppercase">
+            <span className="rounded-control bg-primary/15 px-1.5 py-0.5 text-[0.5625rem] font-medium tracking-[0.08em] text-text-accent uppercase">
               {saved ? "Yours" : "Built in"}
             </span>
           </p>

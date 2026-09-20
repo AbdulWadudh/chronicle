@@ -44,7 +44,7 @@ export function MergePaletteDialog({ palette, open, onOpenChange }: MergePalette
             {sections.map((section) => (
               <div
                 key={section.title}
-                className="raise flex items-center gap-4 rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-raised px-3.5 py-3"
+                className="raise flex items-center gap-4 rounded-control border-(length:--border-width-card) border-hairline bg-raised px-3.5 py-3"
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-[0.8125rem] font-medium text-text-primary">{section.title}</p>

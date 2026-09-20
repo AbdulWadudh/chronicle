@@ -22,10 +22,10 @@ export function SettingsGroup({ meta, index, defaultOpen = true, children }: Set
     <Collapsible.Root
       defaultOpen={defaultOpen}
       style={{ ["--rise-index" as string]: index }}
-      className="raise rise-in overflow-hidden rounded-(--radius-card) border-(length:--border-width-card) border-hairline bg-card"
+      className="raise rise-in overflow-hidden rounded-card border-(length:--border-width-card) border-hairline bg-card"
     >
       <Collapsible.Trigger className="group flex w-full cursor-pointer items-start gap-3 border-b border-hairline bg-raised px-4 py-3.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-inset">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-(--radius-control) border border-primary/15 bg-primary/[0.06] text-text-accent/80">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-primary/15 bg-primary/[0.06] text-text-accent/80">
           <HugeiconsIcon icon={meta.icon} size={17} strokeWidth={1.5} />
         </span>
         <span className="min-w-0 flex-1">

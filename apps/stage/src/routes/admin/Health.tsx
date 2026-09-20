@@ -51,10 +51,10 @@ function ServiceRow({ service, index }: { service: ServiceProbe; index: number }
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.03, ease: "easeOut" }}
-      className="flex items-center gap-3 rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-raised px-3 py-2.5"
+      className="flex items-center gap-3 rounded-control border-(length:--border-width-card) border-hairline bg-raised px-3 py-2.5"
     >
       <span
-        className={`flex size-8 shrink-0 items-center justify-center rounded-(--radius-control) border ${meta.chip}`}
+        className={`flex size-8 shrink-0 items-center justify-center rounded-control border ${meta.chip}`}
       >
         <HugeiconsIcon icon={meta.icon} size={15} strokeWidth={2} />
       </span>
@@ -69,7 +69,7 @@ function ServiceRow({ service, index }: { service: ServiceProbe; index: number }
         {formatLatency(service.latencyMs)}
       </span>
       <span
-        className={`shrink-0 rounded-(--radius-control) border px-2 py-0.5 text-[0.625rem] font-semibold tracking-[0.06em] uppercase ${meta.chip}`}
+        className={`shrink-0 rounded-control border px-2 py-0.5 text-[0.625rem] font-semibold tracking-[0.06em] uppercase ${meta.chip}`}
       >
         {meta.label}
       </span>
@@ -81,10 +81,10 @@ function HealthBody({ report }: { report: AdminHealthReport }) {
   const overall = STATE_META[report.overall];
   return (
     <>
-      <div className="flex items-center justify-between gap-3 rounded-(--radius-card) border-(length:--border-width-card) border-hairline bg-card px-4 py-3.5">
+      <div className="flex items-center justify-between gap-3 rounded-card border-(length:--border-width-card) border-hairline bg-card px-4 py-3.5">
         <div className="flex items-center gap-3">
           <span
-            className={`flex size-9 items-center justify-center rounded-(--radius-control) border ${overall.chip}`}
+            className={`flex size-9 items-center justify-center rounded-control border ${overall.chip}`}
           >
             <HugeiconsIcon icon={overall.icon} size={17} strokeWidth={2} />
           </span>
@@ -98,7 +98,7 @@ function HealthBody({ report }: { report: AdminHealthReport }) {
           </div>
         </div>
         <span
-          className={`rounded-(--radius-control) border px-2.5 py-1 text-[0.6875rem] font-semibold tracking-[0.06em] uppercase ${overall.chip}`}
+          className={`rounded-control border px-2.5 py-1 text-[0.6875rem] font-semibold tracking-[0.06em] uppercase ${overall.chip}`}
         >
           {overall.label}
         </span>

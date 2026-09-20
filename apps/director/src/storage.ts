@@ -1,8 +1,16 @@
 import { env } from "@chronicle/config/env";
 
+export const UPLOAD_MAX_BYTES = 8 * 1024 * 1024;
+
+export const UPLOAD_TYPES: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+};
+
 let client: Bun.S3Client | null = null;
 
-export function storage(): Bun.S3Client {
+function storage(): Bun.S3Client {
   if (client === null) {
     const configuration = env();
     client = new Bun.S3Client({
@@ -17,7 +25,6 @@ export function storage(): Bun.S3Client {
 }
 
 export async function upload(key: string, bytes: Uint8Array, type: string): Promise<string> {
-  const configuration = env();
   await storage().write(key, bytes, { type });
-  return `${configuration.STORAGE_ENDPOINT}/${configuration.STORAGE_BUCKET_ASSETS}/${key}`;
+  return `${env().STORAGE_ENDPOINT}/${env().STORAGE_BUCKET_ASSETS}/${key}?v=${Date.now()}`;
 }

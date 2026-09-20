@@ -22,6 +22,7 @@ export default defineConfig({
       "/api": { target: directorTarget, changeOrigin: true, ws: true },
       "/health": { target: directorTarget, changeOrigin: true },
     },
+    allowedHosts: ["8082.k79.quest", "*.k79.quest"],
   },
   build: { target: "es2022" },
   optimizeDeps: { exclude: ["@chronicle/utils", "@chronicle/config"] },

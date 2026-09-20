@@ -7,7 +7,7 @@ import {
 } from "@chronicle/config";
 import { invalidateSettings } from "@chronicle/db";
 import { Worker } from "bullmq";
-import { renderScene } from "~/processors/diffusion";
+import { renderImage } from "~/processors/diffusion";
 import { rememberEpisode } from "~/processors/memory";
 import { synthesize } from "~/processors/tts";
 import { connection, disconnectRedis, subscriber } from "~/redis";
@@ -19,7 +19,7 @@ const MEMORY_CONCURRENCY = 2;
 const shared = { connection: connection(), prefix: QUEUE_PREFIX };
 
 const workers = [
-  new Worker(QUEUE_DIFFUSION, renderScene, { ...shared, concurrency: DIFFUSION_CONCURRENCY }),
+  new Worker(QUEUE_DIFFUSION, renderImage, { ...shared, concurrency: DIFFUSION_CONCURRENCY }),
   new Worker(QUEUE_TTS, synthesize, { ...shared, concurrency: TTS_CONCURRENCY }),
   new Worker(QUEUE_MEMORY, rememberEpisode, { ...shared, concurrency: MEMORY_CONCURRENCY }),
 ];

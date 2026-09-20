@@ -41,7 +41,7 @@ export function ThemePreview() {
   return (
     <section
       aria-label="Live preview"
-      className="raise overflow-hidden rounded-(--radius-card) border-(length:--border-width-card) border-card-border bg-card"
+      className="raise overflow-hidden rounded-card border-(length:--border-width-card) border-card-border bg-card"
     >
       <header className="flex items-center justify-between gap-3 border-b border-hairline bg-raised px-4 py-2.5">
         <span className="flex items-center gap-2 text-[0.75rem] font-medium text-text-secondary">
@@ -143,11 +143,11 @@ export function ThemePreview() {
           </div>
 
           <div className="flex flex-col justify-between gap-3">
-            <div className="flex items-center justify-between gap-3 rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-raised px-3 py-2">
+            <div className="flex items-center justify-between gap-3 rounded-control border-(length:--border-width-card) border-hairline bg-raised px-3 py-2">
               <span className="text-[0.75rem] text-text-secondary">Ambience</span>
               <Switch checked={pulse} onCheckedChange={setPulse} aria-label="Preview toggle" />
             </div>
-            <div className="flex items-center gap-2 rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-audio-pill-bg px-3 py-2">
+            <div className="flex items-center gap-2 rounded-control border-(length:--border-width-card) border-hairline bg-audio-pill-bg px-3 py-2">
               <HugeiconsIcon
                 icon={DiceIcon}
                 size={14}
@@ -165,7 +165,7 @@ export function ThemePreview() {
           {STATUS.map((status) => (
             <span
               key={status.key}
-              className={`inline-flex items-center gap-1.5 rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-sunken px-2.5 py-1 text-[0.6875rem] ${status.tone}`}
+              className={`inline-flex items-center gap-1.5 rounded-control border-(length:--border-width-card) border-hairline bg-sunken px-2.5 py-1 text-[0.6875rem] ${status.tone}`}
             >
               <HugeiconsIcon icon={status.icon} size={12} strokeWidth={2} />
               {status.label}
@@ -178,7 +178,7 @@ export function ThemePreview() {
             <span
               key={key}
               title={key}
-              className="h-7 flex-1 rounded-(--radius-control) border-(length:--border-width-card) border-hairline"
+              className="h-7 flex-1 rounded-control border-(length:--border-width-card) border-hairline"
               style={{ backgroundColor: String(tokens[key]) }}
             />
           ))}

@@ -2,9 +2,10 @@
 
 Build progress tracker. Read this first. Update it at every wave gate, before the commit.
 
-**Status:** All waves complete. Wave 6 turned appearance settings into a theme studio, moved
-admin onto roles, and put every surface on theme tokens. Verified in a real browser at 375px and
-1440px, with token values measured over CDP rather than inferred.
+**Status:** Wave 7A (authoring) complete and verified live. Worlds and characters can now be
+created from the client, with premise-assisted drafting, generated covers and portraits, and a
+backstory that reaches the narrator. Waves 7B-7D (playable turn, immersive delivery, memory and
+progression) are planned and approved, not yet built.
 **Updated:** 2026-09-20
 
 ## Waves
@@ -18,6 +19,10 @@ admin onto roles, and put every surface on theme tokens. Verified in a real brow
 | 4b | Skia flowchart, R3F dice, NarrativeStream, ChoicePills, Director console, settings UI | done |
 | 5 | `@chronicle/stage` rewritten as a Vite + React 19 PWA; director serves the build | done |
 | 6 | Theme studio, saved themes, role-based admin, Base UI primitive layer | done |
+| 7A | World and character authoring, per-field compose, pronouns, generated cover and portrait | done |
+| 7B | Playable turn: choices, dice ordering, state fold, Director's Console | choices, whisper and the dice overlay done; dice ordering and state fold open |
+| 7C | Immersive delivery: per-sentence audio, scene skeletons, REGENERATE, degraded paths | audio persistence, REGENERATE, live render progress and the painting state done; Cinema Mode gating open |
+| 7D | Memory and progression: branching, checkpoints, nomic-embed recall | planned |
 
 ## Wave 6
 
@@ -30,6 +35,28 @@ admin onto roles, and put every surface on theme tokens. Verified in a real brow
 - `.claude/rules/theming.md` and the `changelog/` directory
 
 ### Open
+
+- Face identity does not persist between renders. ComfyUI has no IPAdapter, InstantID, PuLID or
+  ReActor installed — checked against all 1037 nodes. The achievable fix is a stored
+  `characters.appearance` line injected into every portrait and scene prompt, which needs a
+  migration.
+- `image.steps` and `cfg` sit at the Lightning preset's 6 and 2. Measured better at 10 and 3.
+- Three ESRGAN upscalers exist in `Data/Models/ESRGAN` but ComfyUI maps no `upscale_models` path,
+  so the detail pass upscales in latent space rather than through a real upscaler.
+- `bun --watch` does not reload an app when only a workspace package changes. Touch the app's
+  `src/index.ts` or the fix will look dead.
+
+- `SUBMIT_ACTION` carries no `directorWhisper`, so the composer's whisper card sets a direction
+  the director never receives. Closing it is a two-line additive field on the client schema and
+  is **waiting on approval** — the WS protocol shape is gated.
+- Image fidelity: `image.checkpoint` is `DreamShaperXL_Lightning` at 6 steps / cfg 2, which reads
+  soft. The full-SDXL preset (epicrealismXL, 26 steps, cfg 7, `dpmpp_2m`) is already selectable in
+  admin, and switching is a settings change, not a code change.
+- Face consistency across scenes is prompt-level only — `buildScenePrompt` leads with the
+  character's name, pronoun subject and a bio slice. True consistency needs an IP-Adapter
+  reference pass in the ComfyUI workflow.
+- Narration still streams while the die tumbles; the dice-first ordering is unbuilt.
+- `loader.ts` still passes `world.initialState`; the state fold is unbuilt.
 
 - Profile screen for name, password and avatar — endpoints exist, UI does not
 - Saved themes have no owner column; per-user themes need a migration
@@ -44,7 +71,7 @@ admin onto roles, and put every surface on theme tokens. Verified in a real brow
 - `packages/config` — `env.ts` (Zod, lazy + cached), `paths.ts` (OS data root, `ensureFile`)
 - `packages/shared` — `types.ts`, `turns.ts`, `theme.ts`, `pointbuy.ts`, `protocol/`
 - `packages/db` — `schema/{auth,world,narrative,settings}`, `client.ts` (bun:sqlite WAL),
-  `auth.ts` (Better Auth at `/api/v1/auth`), `settings.ts`, migrations `0000`+`0001`
+  `auth.ts` (Better Auth at `/api/v1/auth`), `settings.ts`, migrations `0000`-`0004`
 - `apps/director` — `app.ts`, `auth.ts`, `queue.ts`, `routes/{worlds,characters,turns,settings}`,
   `engine/{llm,prompt,adjudicator}`, `ws/{gateway,session,turnSession,buffer,loader,context}`
 - `apps/crew` — `redis.ts`, `storage.ts` (Bun.S3Client),
@@ -105,16 +132,18 @@ parsing checked against expected values.
 
 ## Open
 
-- The D20 roller still has not been seen rendering. It is lazy-loaded and the code path
-  runs, but no dice check has been caught on screen.
-- `choices_json` is `[]` on every turn, so the composer never shows choice pills. This is
-  director-side, not client-side.
-- TTS produces nothing — `audio_urls_json` is `[]`. Kokoro-FastAPI is not installed.
+- ~~The D20 roller has not been seen rendering.~~ Caught on screen 2026-09-20 on
+  `echo-voice · DC 12`, showing 11. It renders, but narration streams underneath it.
+- ~~`choices_json` is `[]` on every turn.~~ Fixed. `engine/choices.ts` drafts three labelled
+  choices with hints per turn; `SELECT_CHOICE` plays the stored label. Measured 2026-09-20:
+  3 choices on a 4.3 s turn.
+- ~~`audio_urls_json` is `[]`.~~ Fixed. `recordSentenceAudio` in `director/src/assets.ts`
+  writes each clip as it lands. **Kokoro-FastAPI is installed and healthy** on 8880 — verified
+  2026-09-20, a 47,660-byte mp3 in 1.52 s.
 - `DirectorConsoleModal` now receives real `statDefinitions` and `stats`. `affinities` is
   still `{}` — the world state that holds them is not exposed by any GET route. Closing it
   needs a director change, not a client one.
-- No screen can create a world. `POST /api/v1/worlds` works, but nothing in the client
-  calls it, so a new account can only reach the Community tab.
+- ~~No screen can create a world.~~ Fixed in 7A.
 - Booleans in runtime settings render as a free-text input (`thinking` shows `true`).
   They should be a switch.
 - Placeholder embedding in `crew/processors/memory.ts` — a character-frequency hash, not a

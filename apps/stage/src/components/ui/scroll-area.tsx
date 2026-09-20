@@ -23,11 +23,11 @@ function ScrollArea({
       <ScrollAreaPrimitive.Scrollbar
         data-slot="scroll-area-scrollbar"
         orientation="vertical"
-        className="flex w-(--scrollbar-width) justify-center rounded-(--radius-control) bg-raised-hover opacity-0 transition-opacity delay-200 duration-300 data-hovering:opacity-100 data-hovering:delay-0 data-scrolling:opacity-100 data-scrolling:delay-0 motion-reduce:transition-none"
+        className="flex w-(--scrollbar-width) justify-center rounded-control bg-raised-hover opacity-0 transition-opacity delay-200 duration-300 data-hovering:opacity-100 data-hovering:delay-0 data-scrolling:opacity-100 data-scrolling:delay-0 motion-reduce:transition-none"
       >
         <ScrollAreaPrimitive.Thumb
           data-slot="scroll-area-thumb"
-          className="w-full rounded-(--radius-control) bg-hairline-strong transition-colors hover:bg-hairline-strong"
+          className="w-full rounded-control bg-hairline-strong transition-colors hover:bg-hairline-strong"
         />
       </ScrollAreaPrimitive.Scrollbar>
 

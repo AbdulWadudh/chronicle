@@ -28,7 +28,7 @@ function SaveStatus({ status }: { status: ReturnType<typeof useSettings>["status
           exit={{ opacity: 0, y: 4 }}
           transition={{ duration: 0.18 }}
           aria-live="polite"
-          className={`flex items-center gap-1.5 rounded-(--radius-control) border px-2.5 py-1 text-[0.6875rem] ${
+          className={`flex items-center gap-1.5 rounded-control border px-2.5 py-1 text-[0.6875rem] ${
             status === "failed"
               ? "border-danger/30 bg-danger/10 text-danger"
               : "border-success/25 bg-success/10 text-success"

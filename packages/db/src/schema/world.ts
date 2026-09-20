@@ -44,6 +44,9 @@ export const characters = sqliteTable(
       .references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     bio: text("bio").notNull().default(""),
+    pronouns: text("pronouns", { enum: ["he", "she", "they"] })
+      .notNull()
+      .default("they"),
     portraitUrl: text("portrait_url"),
     statsJson: text("stats_json", { mode: "json" }).$type<StatBlock>().notNull(),
     inventoryJson: text("inventory_json", { mode: "json" }).$type<Inventory>().notNull(),

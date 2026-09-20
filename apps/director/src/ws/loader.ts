@@ -1,12 +1,10 @@
-import { db, schema } from "@chronicle/db";
+import { db, schema, toCharacter, toWorld } from "@chronicle/db";
 import {
-  characterSchema,
   indexTurns,
   nextBranchIndex,
   pathToRoot,
   type TurnNode,
   turnNodeSchema,
-  worldSchema,
 } from "@chronicle/utils";
 import { eq } from "drizzle-orm";
 import type { TurnContext } from "~/ws/context";
@@ -30,16 +28,8 @@ export async function loadTurnContext(
     .get();
   if (worldRow === undefined) return null;
 
-  const character = characterSchema.parse({
-    ...characterRow,
-    stats: characterRow.statsJson,
-    inventory: characterRow.inventoryJson,
-  });
-  const world = worldSchema.parse({
-    ...worldRow,
-    statDefinitions: worldRow.statDefinitionsJson,
-    initialState: worldRow.initialStateJson,
-  });
+  const character = toCharacter(characterRow);
+  const world = toWorld(worldRow);
 
   const turnRows = await db
     .select()

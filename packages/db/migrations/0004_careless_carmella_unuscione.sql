@@ -1,0 +1,1 @@
+ALTER TABLE `characters` ADD `pronouns` text DEFAULT 'they' NOT NULL;

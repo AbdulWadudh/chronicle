@@ -3,6 +3,14 @@ import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { type AuthEnv, requireSession } from "~/auth";
+import { enqueueScene } from "~/engine/imagery";
+import { loadTurnContext } from "~/ws/loader";
+import { ownTurnFor } from "~/ws/media";
+import { nextVariant } from "~/ws/regenerate";
+
+const sceneSchema = z.object({
+  prompt: z.string().trim().max(600).nullable().default(null),
+});
 
 const checkpointSchema = z.object({
   turnId: z.string().min(1),
@@ -34,6 +42,31 @@ export const turnRoutes = new Hono<AuthEnv>()
       .orderBy(asc(schema.turns.createdAt))
       .all();
     return context.json({ items: items.map(toTurnNode) });
+  })
+  .post("/:turnId/scene", async (context) => {
+    const body = sceneSchema.safeParse(await context.req.json().catch(() => null));
+    if (!body.success) return context.json({ error: "Invalid scene prompt." }, 400);
+
+    const turnId = context.req.param("turnId");
+    const turn = await db.select().from(schema.turns).where(eq(schema.turns.id, turnId)).get();
+    if (turn === undefined) return context.json({ error: "Turn not found." }, 404);
+
+    const user = context.get("user");
+    const loaded = await loadTurnContext(turn.characterId, user.id, turn.parentId);
+    if (loaded === null) return context.json({ error: "Turn not found." }, 404);
+
+    ownTurnFor(turnId, user.id, turn.characterId);
+
+    const subject = body.data.prompt;
+    await enqueueScene(
+      loaded.world,
+      loaded.character,
+      turnId,
+      turn.narrativeText,
+      nextVariant(turn.sceneImageUrl),
+      subject === null || subject.length === 0 ? undefined : subject,
+    );
+    return context.json({ turnId, queued: true }, 202);
   })
   .post("/checkpoints", async (context) => {
     const body = checkpointSchema.safeParse(await context.req.json().catch(() => null));

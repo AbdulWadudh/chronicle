@@ -39,7 +39,7 @@ export function EditableNumber({
       {outside ? (
         <span
           title={outsideHint}
-          className="flex size-5 shrink-0 items-center justify-center rounded-(--radius-control) bg-warning/15 text-warning"
+          className="flex size-5 shrink-0 items-center justify-center rounded-control bg-warning/15 text-warning"
         >
           <HugeiconsIcon icon={Alert02Icon} size={12} strokeWidth={2} />
           <span className="sr-only">{outsideHint}</span>
@@ -52,7 +52,7 @@ export function EditableNumber({
           aria-label={`${ariaLabel}, ${value}. Click to type a value`}
           onClick={() => setDraft(value)}
           className={cn(
-            "w-18 cursor-text rounded-(--radius-control) border-(length:--border-width-card) border-transparent px-2 py-1.5 text-right text-[0.9375rem] font-semibold tabular-nums outline-none hover:border-hairline focus-visible:border-primary/60",
+            "w-18 cursor-text rounded-control border-(length:--border-width-card) border-transparent px-2 py-1.5 text-right text-[0.9375rem] font-semibold tabular-nums outline-none hover:border-hairline focus-visible:border-primary/60",
             outside ? "text-warning" : "text-text-primary",
           )}
         >

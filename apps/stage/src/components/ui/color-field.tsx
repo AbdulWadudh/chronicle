@@ -27,21 +27,21 @@ export function ColorField({
   return (
     <div
       className={cn(
-        "flex items-center gap-2.5 rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-raised px-2.5 py-2 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover motion-reduce:transition-none",
+        "flex items-center gap-2.5 rounded-control border-(length:--border-width-card) border-hairline bg-raised px-2.5 py-2 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover motion-reduce:transition-none",
         className,
       )}
     >
       <Popover>
         <PopoverTrigger
           aria-label={`Pick ${label}`}
-          className="chronicle-swatch size-7 shrink-0 cursor-pointer rounded-(--radius-control) border-(length:--border-width-card) border-hairline-strong outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
+          className="chronicle-swatch size-7 shrink-0 cursor-pointer rounded-control border-(length:--border-width-card) border-hairline-strong outline-none focus-visible:ring-2 focus-visible:ring-ring/70"
           style={{ "--swatch": value } as React.CSSProperties}
         />
         <PopoverContent className="w-57">
           <HexAlphaColorPicker color={value} onChange={onChange} />
           <div className="mt-3 flex items-center gap-2">
             <span
-              className="chronicle-swatch size-6 shrink-0 rounded-(--radius-control) border-(length:--border-width-card) border-hairline-strong"
+              className="chronicle-swatch size-6 shrink-0 rounded-control border-(length:--border-width-card) border-hairline-strong"
               style={{ "--swatch": value } as React.CSSProperties}
             />
             <HexColorInput
@@ -50,7 +50,7 @@ export function ColorField({
               alpha
               prefixed
               aria-label={`${label} hex`}
-              className="w-full rounded-(--radius-control) border-(length:--border-width-card) border-card-border bg-input-surface px-2.5 py-1.5 font-mono text-[0.75rem] text-text-primary uppercase outline-none focus:border-primary/60"
+              className="w-full rounded-control border-(length:--border-width-card) border-card-border bg-input-surface px-2.5 py-1.5 font-mono text-[0.75rem] text-text-primary uppercase outline-none focus:border-primary/60"
             />
           </div>
         </PopoverContent>
@@ -75,7 +75,7 @@ export function ColorField({
           type="button"
           onClick={onRevert}
           aria-label={`Revert ${label} to its default`}
-          className="shrink-0 cursor-pointer rounded-(--radius-control) p-1 text-primary transition-colors hover:bg-raised-hover hover:text-text-accent motion-reduce:transition-none"
+          className="shrink-0 cursor-pointer rounded-control p-1 text-primary transition-colors hover:bg-raised-hover hover:text-text-accent motion-reduce:transition-none"
         >
           <HugeiconsIcon icon={RefreshIcon} size={12} strokeWidth={1.8} />
         </button>

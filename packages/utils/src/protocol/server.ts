@@ -30,6 +30,13 @@ export const sceneImageReadySchema = base.extend({
   imageUrl: z.string(),
 });
 
+export const sceneProgressSchema = base.extend({
+  type: z.literal("SCENE_PROGRESS"),
+  turnId: z.string(),
+  value: z.number().int().nonnegative(),
+  max: z.number().int().positive(),
+});
+
 export const diceCheckRequiredSchema = base.extend({
   type: z.literal("DICE_CHECK_REQUIRED"),
   turnId: z.string(),
@@ -62,6 +69,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   narrativeChunkSchema,
   sentenceAudioReadySchema,
   sceneImageReadySchema,
+  sceneProgressSchema,
   diceCheckRequiredSchema,
   turnCommittedSchema,
   errorSchema,

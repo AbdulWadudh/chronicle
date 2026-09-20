@@ -168,6 +168,11 @@ Path versioning rules are global, in `~/.claude/rules/api.md`. Chronicle mounts:
 - Queue payloads are typed in `@chronicle/utils` (`jobs.ts`); the queue names themselves
   (`QUEUE_DIFFUSION`, `QUEUE_PREFIX`, ...) are constants in `@chronicle/config`. Director
   enqueues, crew consumes, neither redefines a shape.
+- `diffusionJobSchema` is a discriminated union on `kind`: `scene`, `cover`, `portrait`.
+  Authoring jobs carry a lower `JOB_PRIORITY` so they never stall an in-play scene on the
+  concurrency-1 queue.
+- Crew never writes SQLite. A finished render is published to `ASSET_CHANNEL` and the
+  director's `startAssetWriter` performs the write, keeping the single-writer rule intact.
 
 ## WebSocket authentication
 
@@ -222,17 +227,27 @@ it only talks to the HTTP endpoints — but this is where the services are run f
 | `G:\AI\STABILITY_MATRIX\Data\Packages\ComfyUI` | ComfyUI, serves `DIFFUSION_ENDPOINT` |
 | `G:\AI\STABILITY_MATRIX\Data\Models\StableDiffusion` | ComfyUI checkpoints |
 
-Installed checkpoints:
+Installed checkpoints, confirmed against `GET /object_info/CheckpointLoaderSimple`
+on 2026-09-20. Both are Lightning; no full-step SDXL checkpoint is installed.
 
 | File | Kind | Steps | CFG | Sampler |
 | --- | --- | --- | --- | --- |
-| `DreamShaperXL_Lightning.safetensors` | Lightning, the default | 6 | 2 | `dpmpp_sde` / karras |
-| `epicrealismXL_pureFix.safetensors` | full SDXL, photoreal | 26 | 7 | `dpmpp_2m` / karras |
+| `RealVisXL_V5.0_Lightning_fp16.safetensors` | Lightning, **the default** | 8 | 2 | `dpmpp_sde` / karras |
+| `DreamShaperXL_Lightning.safetensors` | Lightning, stylised | 6 | 2 | `dpmpp_sde` / karras |
+
+RealVis holds faces, hands and skin far better than DreamShaper and is the default for
+that reason. `epicrealismXL_pureFix` is **not** installed — an earlier version of this
+file claimed it was. Never name a checkpoint here without asking ComfyUI first.
 
 Lightning settings on a full model produce mush, and full-model settings on Lightning
-produce burnt output — the two rows are not interchangeable. Checkpoint, steps, cfg,
+produce burnt output — the rows are not interchangeable. Checkpoint, steps, cfg,
 sampler and scheduler are all runtime settings (`image.*`), so switching models is a
 settings change, never a code change.
+
+`image.upscale` adds a hires pass: the base latent is upscaled by that multiple and run
+through a second `KSampler` at `image.upscaleDenoise`. At 1.5 it is the difference
+between a soft 1024 and a sharp 1536. Measured 2026-09-20 on the 16 GB card: 1536x1536 in
+**21 s**, 3.19 MB, no OOM with the LLM and Kokoro resident. `1` turns the pass off.
 
 `image.checkpoint` accepts either a bare filename or a path relative to ComfyUI's
 checkpoints root, which `extra_model_paths.yaml` points at `Data/Models/StableDiffusion`.
@@ -248,7 +263,8 @@ normalise to forward slashes, a leading slash is stripped, and absolute paths, `
 traversal, and non-model extensions are rejected. It becomes a file path in another
 process, so it is a trust boundary.
 
-Kokoro-FastAPI is not installed yet, so `TTS_ENDPOINT` will fail until it is.
+Kokoro-FastAPI serves `TTS_ENDPOINT` on 8880. Verified 2026-09-20: `/health` returns healthy and
+`/v1/audio/speech` returns mp3.
 
 ## Import aliases
 

@@ -1,16 +1,18 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router";
+import { AppCrash } from "~/components/common/AppCrash";
+import { ErrorBoundary } from "~/components/common/ErrorBoundary";
 import { Spinner } from "~/components/common/Spinner";
 import { Toaster } from "~/components/ui/sonner";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import { AuthProvider, useAuth } from "~/lib/auth";
 import { ThemeEngine } from "~/theme/ThemeEngine";
 import { Accounts, Admin, Health, Runtime } from "./admin";
-import { CharacterSelect } from "./CharacterSelect";
-import { Play } from "./Play";
+import { CharacterSelect } from "./characters";
+import { Play } from "./play";
 import { SignIn } from "./SignIn";
 import { Settings } from "./settings";
-import { Worlds } from "./Worlds";
+import { Worlds } from "./worlds";
 
 const SIGN_IN_PATH = "/sign-in";
 
@@ -52,13 +54,15 @@ function AuthGate() {
 
 export function AppRoutes() {
   return (
-    <AuthProvider>
-      <ThemeEngine>
-        <TooltipProvider delay={350}>
-          <AuthGate />
-          <Toaster />
-        </TooltipProvider>
-      </ThemeEngine>
-    </AuthProvider>
+    <ErrorBoundary label="Chronicle" fallback={<AppCrash />}>
+      <AuthProvider>
+        <ThemeEngine>
+          <TooltipProvider delay={350}>
+            <AuthGate />
+            <Toaster />
+          </TooltipProvider>
+        </ThemeEngine>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

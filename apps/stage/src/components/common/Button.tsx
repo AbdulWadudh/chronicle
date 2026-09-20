@@ -52,7 +52,7 @@ export function Button({
       onClick={onPress}
       disabled={inert}
       aria-busy={busy}
-      className={`flex min-h-11 w-full items-center justify-center gap-2 rounded-(--radius-control) px-5 transition active:scale-[0.98] active:opacity-90 disabled:cursor-not-allowed ${
+      className={`flex min-h-11 w-full items-center justify-center gap-2 rounded-control px-5 transition active:scale-[0.98] active:opacity-90 disabled:cursor-not-allowed ${
         inert ? "bg-sunken" : SURFACE[tone]
       }`}
     >
@@ -63,7 +63,7 @@ export function Button({
         {label}
       </span>
       {trailing && !busy ? (
-        <span className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-(--radius-control) bg-scrim">
+        <span className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-control bg-scrim">
           <HugeiconsIcon icon={ArrowUpRight01Icon} size={14} strokeWidth={1.5} color={foreground} />
         </span>
       ) : null}

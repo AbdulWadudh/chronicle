@@ -4,13 +4,13 @@ import { useIsDark, useThemeStore } from "~/theme/store";
 
 const CLASS_NAMES = {
   toast:
-    "!rounded-(--radius-control) !border-(length:--border-width-card) !border-card-border !bg-card !text-text-primary !shadow-(--shadow-overlay)",
+    "!rounded-control !border-(length:--border-width-card) !border-card-border !bg-card !text-text-primary !shadow-(--shadow-overlay)",
   title: "!text-[0.8125rem] !font-medium",
   description: "!text-[0.75rem] !text-text-muted",
-  actionButton: "!rounded-(--radius-control) !bg-primary !text-primary-foreground",
-  cancelButton: "!rounded-(--radius-control) !bg-secondary !text-secondary-foreground",
+  actionButton: "!rounded-control !bg-primary !text-primary-foreground",
+  cancelButton: "!rounded-control !bg-secondary !text-secondary-foreground",
   closeButton:
-    "!rounded-(--radius-control) !border-(length:--border-width-card) !border-card-border !bg-card !text-text-muted hover:!text-text-primary",
+    "!rounded-control !border-(length:--border-width-card) !border-card-border !bg-card !text-text-muted hover:!text-text-primary",
   success:
     "!border-success/35 !bg-[color-mix(in_srgb,var(--color-success)_12%,var(--color-card))] [&_[data-icon]]:!text-success [&_[data-title]]:!text-success",
   error:

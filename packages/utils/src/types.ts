@@ -34,6 +34,18 @@ export const worldStateSchema = z.object({
 
 export const worldVisibilitySchema = z.enum(["private", "public"]);
 
+export const pronounsSchema = z.enum(["he", "she", "they"]);
+
+const PRONOUN_PHRASE: Record<z.infer<typeof pronounsSchema>, string> = {
+  he: "he/him",
+  she: "she/her",
+  they: "they/them",
+};
+
+export function pronounPhrase(pronouns: z.infer<typeof pronounsSchema>): string {
+  return PRONOUN_PHRASE[pronouns];
+}
+
 export const worldSchema = z.object({
   id: z.string(),
   userId: z.string(),
@@ -54,6 +66,7 @@ export const characterSchema = z.object({
   userId: z.string(),
   name: z.string().min(1),
   bio: z.string().default(""),
+  pronouns: pronounsSchema.default("they"),
   portraitUrl: z.string().nullable(),
   stats: statBlockSchema,
   inventory: inventorySchema,
@@ -77,6 +90,7 @@ export type InventoryItem = z.infer<typeof inventoryItemSchema>;
 export type Inventory = z.infer<typeof inventorySchema>;
 export type WorldState = z.infer<typeof worldStateSchema>;
 export type WorldVisibility = z.infer<typeof worldVisibilitySchema>;
+export type Pronouns = z.infer<typeof pronounsSchema>;
 export type World = z.infer<typeof worldSchema>;
 export type Character = z.infer<typeof characterSchema>;
 export type StatePatch = z.infer<typeof statePatchSchema>;

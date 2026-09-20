@@ -54,10 +54,10 @@ function AccountRow({
   return (
     <div
       style={{ ["--rise-index" as string]: index }}
-      className="raise rise-in flex flex-wrap items-center gap-3 rounded-(--radius-card) border-(length:--border-width-card) border-hairline bg-raised px-4 py-3.5"
+      className="raise rise-in flex flex-wrap items-center gap-3 rounded-card border-(length:--border-width-card) border-hairline bg-raised px-4 py-3.5"
     >
       <span
-        className={`flex size-9 shrink-0 items-center justify-center rounded-(--radius-control) border-(length:--border-width-card) ${
+        className={`flex size-9 shrink-0 items-center justify-center rounded-control border-(length:--border-width-card) ${
           isAdmin
             ? "border-primary/25 bg-primary/[0.08] text-text-accent"
             : "border-hairline bg-sunken text-text-muted"
@@ -70,7 +70,7 @@ function AccountRow({
         <span className="flex items-center gap-2 text-[0.875rem] font-medium text-text-primary">
           <span className="truncate">{account.name}</span>
           {isSelf ? (
-            <span className="shrink-0 rounded-(--radius-control) border-(length:--border-width-card) border-hairline px-1.5 py-0.5 text-[0.5625rem] font-medium tracking-[0.08em] text-text-muted uppercase">
+            <span className="shrink-0 rounded-control border-(length:--border-width-card) border-hairline px-1.5 py-0.5 text-[0.5625rem] font-medium tracking-[0.08em] text-text-muted uppercase">
               You
             </span>
           ) : null}
@@ -81,7 +81,7 @@ function AccountRow({
       </span>
 
       <span
-        className={`shrink-0 rounded-(--radius-control) px-2.5 py-1 text-[0.6875rem] font-medium ${
+        className={`shrink-0 rounded-control px-2.5 py-1 text-[0.6875rem] font-medium ${
           isAdmin ? "bg-primary/15 text-text-accent" : "bg-sunken text-text-muted"
         }`}
       >

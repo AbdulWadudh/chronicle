@@ -21,8 +21,15 @@ export function forgetSocket(socket: ChronicleSocket): void {
   sockets.delete(socket);
 }
 
+export function socketsFor(userId: string, characterId: string): ChronicleSocket[] {
+  return [...sockets].filter(
+    (socket) => socket.data.userId === userId && socket.data.characterId === characterId,
+  );
+}
+
 export function send(socket: ChronicleSocket, message: ServerMessage): void {
   socket.send(JSON.stringify(message));
+  if (message.type === "SCENE_PROGRESS") return;
   if ("turnId" in message && typeof message.turnId === "string") {
     record(message.turnId, message);
   }

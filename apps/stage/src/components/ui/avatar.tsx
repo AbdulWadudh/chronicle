@@ -7,7 +7,7 @@ function Avatar({ className, ...props }: ComponentProps<typeof AvatarPrimitive.R
     <AvatarPrimitive.Root
       data-slot="avatar"
       className={cn(
-        "flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-primary/15 text-[0.75rem] font-semibold text-text-accent select-none",
+        "flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-control border-(length:--border-width-card) border-hairline bg-primary/15 text-[0.75rem] font-semibold text-text-accent select-none",
         className,
       )}
       {...props}

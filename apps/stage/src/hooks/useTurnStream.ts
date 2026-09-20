@@ -1,9 +1,11 @@
 import { API } from "@chronicle/config";
 import type { ServerMessage, TurnNode } from "@chronicle/utils";
 import { useCallback, useEffect, useState } from "react";
-import { get } from "~/lib/api";
+import { get, post } from "~/lib/api";
 import { useAudioQueue } from "./useAudioQueue";
 import { type SocketStatus, useGameSocket } from "./useGameSocket";
+
+const RENDER_TIMEOUT_MS = 180_000;
 
 export interface PendingDiceCheck {
   turnId: string;
@@ -24,9 +26,14 @@ export interface TurnStream {
   pendingCheck: PendingDiceCheck | null;
   playingSentenceIndex: number | null;
   error: string | null;
-  submitAction: (action: string, mode: "scratch" | "enhanced") => void;
-  selectChoice: (choiceIndex: 0 | 1 | 2) => void;
+  submitAction: (action: string, directorWhisper: string | null) => void;
+  selectChoice: (choiceIndex: 0 | 1 | 2, directorWhisper: string | null) => void;
+  progressOf: (turnId: string) => number | null;
   abort: () => void;
+  regenerate: (turnId: string, target: "narrative" | "audio") => void;
+  repaintScene: (turnId: string, prompt: string | null) => void;
+  isPainting: (turnId: string) => boolean;
+  replayAudio: (turn: TurnNode) => void;
   acknowledgeDice: () => void;
   skipAudio: () => void;
 }
@@ -38,6 +45,22 @@ export function useTurnStream(characterId: string | null, cinemaMode: boolean): 
   const [sceneImageUrl, setSceneImageUrl] = useState<string | null>(null);
   const [pendingCheck, setPendingCheck] = useState<PendingDiceCheck | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paintingTurnIds, setPaintingTurnIds] = useState<readonly string[]>([]);
+
+  const stopPainting = useCallback((turnId: string) => {
+    setPaintingTurnIds((previous) => previous.filter((id) => id !== turnId));
+  }, []);
+
+  const startPainting = useCallback(
+    (turnId: string) => {
+      setPaintingTurnIds((previous) =>
+        previous.includes(turnId) ? previous : [...previous, turnId],
+      );
+      setTimeout(() => stopPainting(turnId), RENDER_TIMEOUT_MS);
+    },
+    [stopPainting],
+  );
+  const [progress, setProgress] = useState<Record<string, number>>({});
 
   const audio = useAudioQueue(cinemaMode);
 
@@ -51,7 +74,9 @@ export function useTurnStream(characterId: string | null, cinemaMode: boolean): 
         );
         if (cancelled) return;
         setCommittedTurns(history.items);
-        setSceneImageUrl(history.items.at(-1)?.sceneImageUrl ?? null);
+        const last = history.items.at(-1);
+        setSceneImageUrl(last?.sceneImageUrl ?? null);
+        if (last !== undefined && last.sceneImageUrl === null) startPainting(last.id);
       } catch (cause) {
         if (!cancelled)
           setError(cause instanceof Error ? cause.message : "Could not load history.");
@@ -60,13 +85,14 @@ export function useTurnStream(characterId: string | null, cinemaMode: boolean): 
     return () => {
       cancelled = true;
     };
-  }, [characterId]);
+  }, [characterId, startPainting]);
 
   const handleMessage = useCallback(
     (message: ServerMessage) => {
       switch (message.type) {
         case "TURN_INITIALIZED":
           setActiveTurnId(message.turnId);
+          startPainting(message.turnId);
           setStreamingText("");
           setSceneImageUrl(null);
           setError(null);
@@ -77,8 +103,21 @@ export function useTurnStream(characterId: string | null, cinemaMode: boolean): 
         case "SENTENCE_AUDIO_READY":
           audio.enqueueSentence(message.sentenceIndex, message.audioUrl);
           break;
+        case "SCENE_PROGRESS":
+          setProgress((previous) => ({
+            ...previous,
+            [message.turnId]: Math.round((message.value / message.max) * 100),
+          }));
+          break;
         case "SCENE_IMAGE_READY":
           setSceneImageUrl(message.imageUrl);
+          stopPainting(message.turnId);
+          setProgress(({ [message.turnId]: _done, ...rest }) => rest);
+          setCommittedTurns((previous) =>
+            previous.map((turn) =>
+              turn.id === message.turnId ? { ...turn, sceneImageUrl: message.imageUrl } : turn,
+            ),
+          );
           break;
         case "DICE_CHECK_REQUIRED":
           setPendingCheck({
@@ -92,38 +131,89 @@ export function useTurnStream(characterId: string | null, cinemaMode: boolean): 
           });
           break;
         case "TURN_COMMITTED":
-          setCommittedTurns((previous) => [...previous, message.turn]);
+          setCommittedTurns((previous) =>
+            previous.some((turn) => turn.id === message.turn.id)
+              ? previous.map((turn) => (turn.id === message.turn.id ? message.turn : turn))
+              : [...previous, message.turn],
+          );
           setStreamingText("");
           setActiveTurnId(null);
           break;
         case "ERROR":
           setError(message.message);
           setActiveTurnId(null);
+          if (message.turnId !== null) {
+            const failed = message.turnId;
+            stopPainting(failed);
+          }
           break;
         default:
           break;
       }
     },
-    [audio],
+    [audio, startPainting, stopPainting],
   );
 
   const socket = useGameSocket(characterId, handleMessage);
 
   const submitAction = useCallback(
-    (action: string, mode: "scratch" | "enhanced") => {
+    (action: string, directorWhisper: string | null) => {
       const parentTurnId = committedTurns.at(-1)?.id ?? null;
-      socket.send({ type: "SUBMIT_ACTION", parentTurnId, action, mode });
+      socket.send({
+        type: "SUBMIT_ACTION",
+        parentTurnId,
+        action,
+        mode: "scratch",
+        directorWhisper,
+      });
     },
     [committedTurns, socket],
   );
 
   const selectChoice = useCallback(
-    (choiceIndex: 0 | 1 | 2) => {
+    (choiceIndex: 0 | 1 | 2, directorWhisper: string | null) => {
       const parentTurnId = committedTurns.at(-1)?.id;
       if (parentTurnId === undefined) return;
-      socket.send({ type: "SELECT_CHOICE", parentTurnId, choiceIndex });
+      socket.send({ type: "SELECT_CHOICE", parentTurnId, choiceIndex, directorWhisper });
     },
     [committedTurns, socket],
+  );
+
+  const progressOf = useCallback(
+    (turnId: string): number | null => progress[turnId] ?? null,
+    [progress],
+  );
+
+  const regenerate = useCallback(
+    (turnId: string, target: "narrative" | "audio") => {
+      socket.send({ type: "REGENERATE", turnId, target });
+      if (target === "narrative") startPainting(turnId);
+    },
+    [socket, startPainting],
+  );
+
+  const repaintScene = useCallback(
+    (turnId: string, prompt: string | null) => {
+      startPainting(turnId);
+      void post(`${API.turns}/${turnId}/scene`, { prompt }).catch((cause: unknown) => {
+        stopPainting(turnId);
+        setError(cause instanceof Error ? cause.message : "The scene could not be repainted.");
+      });
+    },
+    [startPainting, stopPainting],
+  );
+
+  const isPainting = useCallback(
+    (turnId: string): boolean => paintingTurnIds.includes(turnId),
+    [paintingTurnIds],
+  );
+
+  const replayAudio = useCallback(
+    (turn: TurnNode) => {
+      audio.reset();
+      for (const clip of turn.audioUrls) audio.enqueueSentence(clip.sentenceIndex, clip.audioUrl);
+    },
+    [audio],
   );
 
   const abort = useCallback(() => {
@@ -146,7 +236,12 @@ export function useTurnStream(characterId: string | null, cinemaMode: boolean): 
     error: error ?? socket.lastError,
     submitAction,
     selectChoice,
+    progressOf,
     abort,
+    regenerate,
+    repaintScene,
+    isPainting,
+    replayAudio,
     acknowledgeDice,
     skipAudio: audio.skipToEnd,
   };

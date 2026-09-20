@@ -9,12 +9,14 @@ export const submitActionSchema = base.extend({
   parentTurnId: z.string().nullable(),
   action: z.string().min(1),
   mode: z.enum(["scratch", "enhanced"]),
+  directorWhisper: z.string().nullable().default(null),
 });
 
 export const selectChoiceSchema = base.extend({
   type: z.literal("SELECT_CHOICE"),
   parentTurnId: z.string(),
   choiceIndex: z.union([z.literal(0), z.literal(1), z.literal(2)]),
+  directorWhisper: z.string().nullable().default(null),
 });
 
 export const regenerateSchema = base.extend({

@@ -96,6 +96,11 @@ const structured: FieldMetaFor<"structured"> = {
 };
 
 const prompt: FieldMetaFor<"prompt"> = {
+  sentences: {
+    label: "Narration length",
+    unit: "sentences",
+    hint: "How long each reply runs. Two keeps play moving; raise it only if you want prose over pace.",
+  },
   historyDepth: {
     label: "Turns of history",
     unit: "turns",
@@ -146,6 +151,15 @@ const image: FieldMetaFor<"image"> = {
     label: "Scheduler",
     mono: true,
     hint: "How the noise level steps down across the run.",
+  },
+  upscale: {
+    label: "Detail pass",
+    unit: "×",
+    hint: "Renders again at this multiple of the base size to recover fine detail. 1 turns it off; 1.5 roughly doubles the time.",
+  },
+  upscaleDenoise: {
+    label: "Detail strength",
+    hint: "How much the detail pass is allowed to change. Low keeps the composition, high reinvents it.",
   },
   negativePrompt: {
     label: "Negative prompt",
