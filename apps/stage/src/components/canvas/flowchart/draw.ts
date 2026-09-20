@@ -1,4 +1,4 @@
-import type { ThemeTokens } from "@chronicle/shared";
+import type { ThemeTokens } from "@chronicle/config";
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
 import { type Edge, type FlowchartGraph, NODE_HEIGHT, NODE_WIDTH, splinePath } from "./layout";
 

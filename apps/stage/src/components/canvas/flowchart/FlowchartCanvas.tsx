@@ -1,4 +1,4 @@
-import type { TurnNode } from "@chronicle/shared";
+import type { TurnNode } from "@chronicle/utils";
 import type { CanvasKit, Surface } from "canvaskit-wasm";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Spinner } from "~/components/common/Spinner";
@@ -90,7 +90,7 @@ export function FlowchartCanvas({ turns, activeTurnId, width, height }: Flowchar
     <div
       {...gestures}
       style={{ width, height, touchAction: "none" }}
-      className="relative cursor-grab overflow-hidden rounded-[var(--radius-card)] bg-canvas active:cursor-grabbing"
+      className="relative cursor-grab overflow-hidden rounded-(--radius-card) bg-canvas active:cursor-grabbing"
     >
       <canvas ref={canvasRef} style={{ width, height }} className="block" />
 

@@ -1,4 +1,4 @@
-import { API } from "@chronicle/shared";
+import { API } from "@chronicle/config";
 import { BookOpen01Icon, PreferenceHorizontalIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { motion } from "motion/react";
@@ -84,7 +84,7 @@ export function Play() {
   );
 
   return (
-    <div className="flex h-full flex-col bg-canvas pt-[var(--safe-top)] pb-[var(--safe-bottom)]">
+    <div className="flex h-full flex-col bg-canvas pt-(--safe-top) pb-(--safe-bottom)">
       <header className="flex shrink-0 items-center justify-between border-b border-hairline px-3 py-2.5">
         <BackButton onPress={() => void navigate(-1)} label="Back" />
 
@@ -97,7 +97,7 @@ export function Play() {
           type="button"
           onClick={() => setConsoleOpen(true)}
           aria-label="Open director console"
-          className="flex h-9 w-9 items-center justify-center rounded-full border-[length:var(--border-width-card)] border-hairline bg-raised text-text-accent"
+          className="flex h-9 w-9 items-center justify-center rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-raised text-text-accent"
         >
           <HugeiconsIcon icon={PreferenceHorizontalIcon} size={16} strokeWidth={1.5} />
         </button>
@@ -135,16 +135,16 @@ export function Play() {
                 body="Describe what your character does and the world will answer."
               />
             ) : (
-              <div className="flex w-full max-w-[680px] flex-col gap-6 self-center">
+              <div className="flex w-full max-w-170 flex-col gap-6 self-center">
                 {stream.committedTurns.map((turn) => (
                   <article key={turn.id} className="flex flex-col gap-3">
                     <div className="flex items-start gap-2.5">
-                      <span className="mt-1.5 h-4 w-[2px] shrink-0 rounded-full bg-primary/70" />
+                      <span className="mt-1.5 h-4 w-0.5 shrink-0 rounded-full bg-primary/70" />
                       <p className="flex-1 text-[0.875rem] italic leading-snug text-text-muted">
                         {turn.playerAction}
                       </p>
                     </div>
-                    <p className="text-[1rem] leading-[var(--leading-narrative)] text-text-secondary">
+                    <p className="text-[1rem] leading-(--leading-narrative) text-text-secondary">
                       {turn.narrativeText}
                     </p>
                   </article>

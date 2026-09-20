@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router";
 import { Spinner } from "~/components/common/Spinner";
 import { Toaster } from "~/components/ui/sonner";
+import { TooltipProvider } from "~/components/ui/tooltip";
 import { AuthProvider, useAuth } from "~/lib/auth";
 import { ThemeEngine } from "~/theme/ThemeEngine";
-import { Admin, Runtime } from "./admin";
+import { Accounts, Admin, Health, Runtime } from "./admin";
 import { CharacterSelect } from "./CharacterSelect";
 import { Play } from "./Play";
 import { SignIn } from "./SignIn";
@@ -42,6 +43,8 @@ function AuthGate() {
       <Route path="/settings" element={<Settings />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/admin/runtime" element={<Runtime />} />
+      <Route path="/admin/health" element={<Health />} />
+      <Route path="/admin/accounts" element={<Accounts />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -51,8 +54,10 @@ export function AppRoutes() {
   return (
     <AuthProvider>
       <ThemeEngine>
-        <AuthGate />
-        <Toaster />
+        <TooltipProvider delay={350}>
+          <AuthGate />
+          <Toaster />
+        </TooltipProvider>
       </ThemeEngine>
     </AuthProvider>
   );

@@ -1,14 +1,13 @@
-import { API } from "@chronicle/shared";
-import { Globe02Icon, Settings02Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { motion } from "motion/react";
+import { API } from "@chronicle/config";
+import { Globe02Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import { PageHeader } from "~/components/common/PageHeader";
 import { type Page, PaginatedList } from "~/components/common/PaginatedList";
 import { Screen } from "~/components/common/Screen";
+import { UserMenu } from "~/components/common/UserMenu";
+import { Segmented, type SegmentedOption } from "~/components/ui/segmented";
 import { get } from "~/lib/api";
-import { useAuth } from "~/lib/auth";
 
 interface WorldRow {
   id: string;
@@ -21,14 +20,13 @@ interface WorldRow {
 
 type Scope = "mine" | "community";
 
-const SCOPES: { key: Scope; label: string }[] = [
-  { key: "mine", label: "My Worlds" },
-  { key: "community", label: "Community" },
+const SCOPES: readonly SegmentedOption<Scope>[] = [
+  { value: "mine", label: "My Worlds", icon: UserIcon },
+  { value: "community", label: "Community", icon: Globe02Icon },
 ];
 
 export function Worlds() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
   const [scope, setScope] = useState<Scope>("mine");
 
   const loadPage = useCallback(
@@ -43,46 +41,15 @@ export function Worlds() {
 
   return (
     <Screen width="wide">
-      <PageHeader
-        title="Chronicle"
-        trailing={
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => void navigate("/settings")}
-              aria-label="Runtime settings"
-              className="flex h-9 w-9 items-center justify-center rounded-full border-[length:var(--border-width-card)] border-hairline bg-raised text-text-accent"
-            >
-              <HugeiconsIcon icon={Settings02Icon} size={16} strokeWidth={1.5} />
-            </button>
-            <button
-              type="button"
-              onClick={() => void signOut()}
-              className="rounded-full px-3 py-2 text-[0.8125rem] text-text-muted"
-            >
-              Sign out
-            </button>
-          </div>
-        }
-      />
+      <PageHeader title="Chronicle" trailing={<UserMenu />} />
 
-      <div className="flex shrink-0 gap-2 pb-4" role="tablist" aria-label="World scope">
-        {SCOPES.map((option) => (
-          <button
-            type="button"
-            key={option.key}
-            role="tab"
-            aria-selected={scope === option.key}
-            onClick={() => setScope(option.key)}
-            className={`rounded-full px-4 py-2 text-[0.8125rem] ${
-              scope === option.key
-                ? "bg-primary font-medium text-primary-foreground"
-                : "bg-secondary text-secondary-foreground"
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
+      <div className="shrink-0 pb-4 sm:max-w-85">
+        <Segmented
+          value={scope}
+          options={SCOPES}
+          onValueChange={setScope}
+          ariaLabel="World scope"
+        />
       </div>
 
       <PaginatedList
@@ -96,14 +63,12 @@ export function Worlds() {
             ? "Worlds you create appear here. Browse Community to play something someone else has published."
             : "Nobody has published a public world yet. Anything you mark public will show up here."
         }
-        renderItem={(world) => (
-          <motion.button
+        renderItem={(world, index) => (
+          <button
             type="button"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.2 }}
+            style={{ ["--rise-index" as string]: index }}
             onClick={() => void navigate(`/character-select?worldId=${world.id}`)}
-            className="w-full overflow-hidden rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-card-border bg-card text-left"
+            className="pressable rise-in w-full cursor-pointer overflow-hidden rounded-(--radius-card) border-(length:--border-width-card) border-card-border bg-card text-left hover:border-hairline-strong"
           >
             {world.coverImageUrl !== null ? (
               <img
@@ -120,7 +85,7 @@ export function Worlds() {
               <p className="text-sm text-text-muted">{world.genre}</p>
               <p className="line-clamp-2 text-sm text-text-secondary">{world.description}</p>
             </div>
-          </motion.button>
+          </button>
         )}
       />
     </Screen>

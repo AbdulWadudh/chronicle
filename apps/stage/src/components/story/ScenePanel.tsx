@@ -1,4 +1,4 @@
-import type { TurnNode } from "@chronicle/shared";
+import type { TurnNode } from "@chronicle/utils";
 import { HierarchyIcon, ImageNotFound01Icon } from "@hugeicons/core-free-icons";
 import { motion } from "motion/react";
 import { lazy, Suspense } from "react";
@@ -46,10 +46,10 @@ export function ScenePanel({
             role="tab"
             aria-selected={tab === option.key}
             onClick={() => onTabChange(option.key)}
-            className={`flex h-8 items-center justify-center rounded-full px-3.5 text-[0.75rem] font-medium ${
+            className={`flex h-8 items-center justify-center rounded-(--radius-control) px-3.5 text-[0.75rem] font-medium ${
               tab === option.key
                 ? "bg-primary text-primary-foreground"
-                : "border-[length:var(--border-width-card)] border-hairline bg-raised text-text-muted"
+                : "border-(length:--border-width-card) border-hairline bg-raised text-text-muted"
             }`}
           >
             {option.label}
@@ -57,7 +57,7 @@ export function ScenePanel({
         ))}
       </div>
 
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-hairline bg-card">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-(--radius-card) border-(length:--border-width-card) border-hairline bg-card">
         {tab === "map" ? (
           turns.length === 0 ? (
             <EmptyState
