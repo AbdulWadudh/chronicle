@@ -1,8 +1,8 @@
-import type { ThemeTokens } from "@chronicle/shared";
+import type { ThemeTokens } from "@chronicle/config";
 
 export type CssVariables = Record<`--${string}`, string>;
 
-const COLOR_TOKENS = [
+export const COLOR_TOKENS = [
   "canvas",
   "card",
   "cardBorder",
@@ -29,7 +29,10 @@ const COLOR_TOKENS = [
   "success",
   "warning",
   "danger",
+  "shadowColor",
 ] as const satisfies readonly (keyof ThemeTokens)[];
+
+export type ThemeColorKey = (typeof COLOR_TOKENS)[number];
 
 function kebab(value: string): string {
   return value.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`);
@@ -41,10 +44,21 @@ export function toCssVariables(tokens: ThemeTokens): CssVariables {
     variables[`--color-${kebab(key)}`] = String(tokens[key]);
   }
   variables["--radius-card"] = `${tokens.radius}px`;
-  variables["--radius-control"] = `${Math.max(6, Math.round(tokens.radius * 0.6))}px`;
+  variables["--radius-control"] = `${Math.round(tokens.radius * 0.6)}px`;
   variables["--border-width-card"] = `${tokens.borderWidth}px`;
   variables["--blur-card"] = `${tokens.blurIntensity}px`;
   variables["--glass-opacity"] = String(tokens.glassOpacity);
+  variables["--glass-opacity-overlay"] = String(Math.max(tokens.glassOpacity, 0.5));
+  const offset = tokens.shadowOffset;
+  variables["--shadow-offset"] = `${offset}px`;
+  variables["--shadow-hard"] =
+    offset === 0 ? "none" : `${offset}px ${offset}px 0 0 ${tokens.shadowColor}`;
+  variables["--shadow-overlay"] =
+    offset === 0
+      ? "0 24px 60px -20px rgb(0 0 0 / 0.75)"
+      : `${offset}px ${offset}px 0 0 ${tokens.shadowColor}`;
+  variables["--hover-lift"] = offset === 0 ? "-2px" : "0px";
+  variables["--press-scale"] = offset === 0 ? "0.97" : "0.98";
   variables["--font-scale"] = String(tokens.fontScale);
   variables["--font-narrative"] = tokens.fontNarrative;
   variables["--font-ui"] = tokens.fontUI;

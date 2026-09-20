@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "./styles/motion.css";
+@import "./styles/scrollbar.css";
 
 @theme {
   --color-canvas: #050505;
@@ -6,7 +8,8 @@
   --color-card-border: #1c1c20;
   --color-card-glow: #d8a23a;
   --color-input-surface: #121215;
-  --color-audio-pill: #17171b;
+  --color-audio-pill-bg: #17171b;
+  --color-overlay-vignette: #00000000;
   --color-text-primary: #f5f3ee;
   --color-text-secondary: #a8a49c;
   --color-text-muted: #6b6862;
@@ -78,6 +81,18 @@
     font: inherit;
     color: inherit;
   }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+  }
 }
 
 @utility scrollbar-none {
@@ -116,11 +131,13 @@
   }
 
   .app-modal,
+  [data-slot="alert-dialog"],
+  [data-slot="dialog-content"],
   [data-slot="popover-content"],
   [data-slot="select-content"] {
     background-color: color-mix(
       in srgb,
-      var(--color-card) calc(var(--glass-opacity, 1) * 100%),
+      var(--color-card) calc(var(--glass-opacity-overlay, 1) * 100%),
       transparent
     );
     backdrop-filter: blur(calc(var(--blur-card, 0px) * 0.5));
