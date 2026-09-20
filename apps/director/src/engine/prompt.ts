@@ -1,15 +1,25 @@
-import type { Character, TurnNode, World, WorldState } from "@chronicle/utils";
+import {
+  CHECK_RULES,
+  CHOICE_RULES,
+  IMAGERY,
+  NARRATOR_ENHANCED,
+  NARRATOR_RULES,
+  SUBJECT_BY_PRONOUN,
+} from "@chronicle/config";
+import {
+  type Character,
+  pronounPhrase,
+  type TurnNode,
+  type World,
+  type WorldState,
+} from "@chronicle/utils";
 import type { ChatMessage } from "~/engine/llm";
 
-const NARRATOR_SYSTEM = [
-  "You are the narrator of an interactive story.",
-  "Write in second person, present tense.",
-  "Produce three to five sentences of vivid prose, then stop.",
-  "Never write the player's dialogue or decide their intent.",
-  "Never mention dice, statistics, or game mechanics.",
-].join(" ");
-
-const CHOICE_SCHEMA_HINT = "Return exactly three distinct, concrete next actions.";
+function narratorSystem(sentences: number): string {
+  const [voice, tense, ...rest] = NARRATOR_RULES;
+  const length = `Write at most ${sentences} ${sentences === 1 ? "sentence" : "sentences"}, then stop.`;
+  return [voice, tense, length, ...rest].join(" ");
+}
 
 export function describeStats(world: World, character: Character): string {
   return world.statDefinitions
@@ -40,7 +50,7 @@ export function buildContext(
   return [
     `Setting: ${world.title}. ${world.description}`,
     `Genre: ${world.genre}`,
-    `Protagonist: ${character.name}. ${character.bio}`,
+    `Protagonist: ${character.name} (${pronounPhrase(character.pronouns)}). ${character.bio}`,
     `Abilities: ${describeStats(world, character)}`,
     describeState(state, recentFacts),
   ]
@@ -68,11 +78,11 @@ export interface NarrativeRequest {
 
 export function buildNarrativePrompt(
   request: NarrativeRequest,
-  prompt: { historyDepth: number; recentFacts: number },
+  prompt: { historyDepth: number; recentFacts: number; sentences: number },
 ): ChatMessage[] {
   const system = [
-    NARRATOR_SYSTEM,
-    request.mode === "enhanced" ? "Elevate the player's phrasing into richer prose." : "",
+    narratorSystem(prompt.sentences),
+    request.mode === "enhanced" ? NARRATOR_ENHANCED : "",
     request.directorWhisper === null ? "" : `Hidden direction: ${request.directorWhisper}`,
   ]
     .filter((part) => part.length > 0)
@@ -103,10 +113,10 @@ export function buildCheckPrompt(request: NarrativeRequest): ChatMessage[] {
     {
       role: "system",
       content: [
-        "Decide whether the player's action needs an ability check.",
+        CHECK_RULES[0],
         `Available stat ids: ${statIds}.`,
-        "Only require a check when failure would be interesting.",
-        "Difficulty ranges from 5 (trivial) to 30 (near impossible).",
+        CHECK_RULES[1],
+        CHECK_RULES[2],
       ].join(" "),
     },
     { role: "user", content: request.action },
@@ -115,11 +125,44 @@ export function buildCheckPrompt(request: NarrativeRequest): ChatMessage[] {
 
 export function buildChoicePrompt(narrative: string): ChatMessage[] {
   return [
-    { role: "system", content: CHOICE_SCHEMA_HINT },
+    { role: "system", content: CHOICE_RULES.join(" ") },
     { role: "user", content: narrative },
   ];
 }
 
-export function buildScenePrompt(world: World, narrative: string, maxChars: number): string {
-  return `${world.genre} cinematic illustration, ${narrative.slice(0, maxChars)}, dramatic lighting, highly detailed`;
+export function buildScenePrompt(
+  world: World,
+  character: Character,
+  narrative: string,
+  maxChars: number,
+): string {
+  const { lead, framing, style } = IMAGERY.scene;
+  const who = SUBJECT_BY_PRONOUN[character.pronouns];
+  return `${lead}, ${world.genre}, ${who} mid-action: ${clip(narrative, maxChars)}, ${framing}, ${style}`;
+}
+
+export function buildCoverPrompt(world: World, maxChars: number): string {
+  const { lead, style } = IMAGERY.cover;
+  return `${world.genre} ${lead}, ${world.title}, ${clip(world.description, maxChars)}, ${style}`;
+}
+
+function clip(text: string, maxChars: number): string {
+  if (text.length <= maxChars) return text;
+  const window = text.slice(0, maxChars);
+  const sentence = Math.max(
+    window.lastIndexOf("."),
+    window.lastIndexOf("!"),
+    window.lastIndexOf("?"),
+  );
+  if (sentence > maxChars / 2) return window.slice(0, sentence + 1);
+  const word = window.lastIndexOf(" ");
+  return word > 0 ? window.slice(0, word) : window;
+}
+
+export function buildPortraitPrompt(world: World, character: Character, maxChars: number): string {
+  const { lead, chest, waist, style, belowChest } = IMAGERY.portrait;
+  const description = clip(character.bio, maxChars);
+  const framing = belowChest.test(description) ? waist : chest;
+  const who = SUBJECT_BY_PRONOUN[character.pronouns];
+  return `${world.genre} ${lead}, ${character.name}, ${who}, ${description}, ${framing}, ${style}`;
 }

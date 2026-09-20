@@ -20,7 +20,7 @@ function MenuContent({
         <MenuPrimitive.Popup
           data-slot="menu-content"
           className={cn(
-            "min-w-[11rem] origin-(--transform-origin) rounded-(--radius-control) border-(length:--border-width-card) border-card-border bg-card p-1 text-text-primary shadow-(--shadow-overlay) outline-none transition-[opacity,scale] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none",
+            "min-w-[11rem] origin-(--transform-origin) rounded-control border-(length:--border-width-card) border-card-border bg-card p-1 text-text-primary shadow-(--shadow-overlay) outline-none transition-[opacity,scale] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none",
             className,
           )}
           {...props}
@@ -35,7 +35,7 @@ function MenuItem({ className, ...props }: ComponentProps<typeof MenuPrimitive.I
     <MenuPrimitive.Item
       data-slot="menu-item"
       className={cn(
-        "flex cursor-pointer items-center gap-2.5 rounded-(--radius-control) px-2.5 py-2 text-[0.8125rem] outline-none select-none data-highlighted:bg-sunken",
+        "flex cursor-pointer items-center gap-2.5 rounded-control px-2.5 py-2 text-[0.8125rem] outline-none select-none data-highlighted:bg-sunken",
         className,
       )}
       {...props}

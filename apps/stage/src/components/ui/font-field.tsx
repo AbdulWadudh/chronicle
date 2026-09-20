@@ -75,7 +75,7 @@ export function FontField({ value, onChange, ariaLabel }: FontFieldProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label={ariaLabel}
-        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-(--radius-control) border-(length:--border-width-card) border-card-border bg-input-surface px-3.5 py-2.5 text-[0.8125rem] text-text-primary outline-none transition-colors hover:border-hairline-strong focus-visible:border-primary/60 motion-reduce:transition-none"
+        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-control border-(length:--border-width-card) border-card-border bg-input-surface px-3.5 py-2.5 text-[0.8125rem] text-text-primary outline-none transition-colors hover:border-hairline-strong focus-visible:border-primary/60 motion-reduce:transition-none"
       >
         <span className="truncate" style={{ fontFamily: value }}>
           {current}
@@ -133,7 +133,7 @@ export function FontField({ value, onChange, ariaLabel }: FontFieldProps) {
                     onChange(stack);
                     setOpen(false);
                   }}
-                  className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-(--radius-control) px-2.5 py-2 text-left transition-colors hover:bg-raised-hover motion-reduce:transition-none ${
+                  className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-control px-2.5 py-2 text-left transition-colors hover:bg-raised-hover motion-reduce:transition-none ${
                     selected ? "text-text-accent" : "text-text-primary"
                   }`}
                 >

@@ -1,7 +1,10 @@
+import { db, schema } from "@chronicle/db";
 import { type ClientMessage, PROTOCOL_VERSION, parseClientMessage } from "@chronicle/utils";
+import { eq } from "drizzle-orm";
 import { replayFrom } from "~/ws/buffer";
 import { loadTurnContext } from "~/ws/loader";
-import { disownSocket, startMediaRelay } from "~/ws/media";
+import { startMediaRelay } from "~/ws/media";
+import { regenerateTurn } from "~/ws/regenerate";
 import {
   type ChronicleSocket,
   cancelTurn,
@@ -23,7 +26,6 @@ export function websocketHandlers(): {
       registerSocket(socket);
     },
     close(socket) {
-      disownSocket(socket);
       forgetSocket(socket);
     },
     message(socket, raw) {
@@ -58,19 +60,37 @@ async function dispatch(socket: ChronicleSocket, message: ClientMessage): Promis
       return;
     }
 
-    case "SUBMIT_ACTION":
-      await startTurn(socket, message.msgId, message.parentTurnId, message.action, message.mode);
+    case "REGENERATE":
+      await regenerateTurn(socket, message.msgId, message.turnId, message.target);
       return;
 
-    case "SELECT_CHOICE":
+    case "SUBMIT_ACTION":
       await startTurn(
         socket,
         message.msgId,
         message.parentTurnId,
-        `Choice ${message.choiceIndex + 1}`,
-        "scratch",
+        message.action,
+        message.mode,
+        message.directorWhisper,
       );
       return;
+
+    case "SELECT_CHOICE": {
+      const label = await choiceLabel(message.parentTurnId, message.choiceIndex);
+      if (label === null) {
+        sendError(socket, message.msgId, "NOT_FOUND", "That choice is no longer offered.");
+        return;
+      }
+      await startTurn(
+        socket,
+        message.msgId,
+        message.parentTurnId,
+        label,
+        "scratch",
+        message.directorWhisper,
+      );
+      return;
+    }
 
     default:
       sendError(socket, message.msgId, "BAD_REQUEST", `Unhandled message ${message.type}.`);
@@ -83,6 +103,7 @@ async function startTurn(
   parentTurnId: string | null,
   action: string,
   mode: "scratch" | "enhanced",
+  directorWhisper: string | null,
 ): Promise<void> {
   const characterId = socket.data.characterId;
   if (characterId === null) {
@@ -94,5 +115,14 @@ async function startTurn(
     sendError(socket, replyTo, "NOT_FOUND", "Character or world not found.");
     return;
   }
-  await runTurn({ socket, replyTo, context, parentTurnId, action, mode, directorWhisper: null });
+  await runTurn({ socket, replyTo, context, parentTurnId, action, mode, directorWhisper });
+}
+
+async function choiceLabel(parentTurnId: string, choiceIndex: number): Promise<string | null> {
+  const row = await db
+    .select({ choicesJson: schema.turns.choicesJson })
+    .from(schema.turns)
+    .where(eq(schema.turns.id, parentTurnId))
+    .get();
+  return row?.choicesJson[choiceIndex]?.label ?? null;
 }

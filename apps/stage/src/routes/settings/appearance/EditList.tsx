@@ -12,7 +12,7 @@ function Value({ value, colour }: { value: string; colour: boolean }) {
       {colour ? (
         <span
           aria-hidden="true"
-          className="chronicle-swatch size-3.5 shrink-0 rounded-(--radius-control) border border-hairline-strong"
+          className="chronicle-swatch size-3.5 shrink-0 rounded-control border border-hairline-strong"
           style={{ ["--swatch" as string]: value }}
         />
       ) : null}
@@ -26,7 +26,7 @@ export function EditList({ edits }: { edits: readonly ThemeEdit[] }) {
 
   if (edits.length === 0) {
     return (
-      <p className="rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-raised px-3 py-4 text-center text-[0.75rem] text-text-muted">
+      <p className="rounded-control border-(length:--border-width-card) border-hairline bg-raised px-3 py-4 text-center text-[0.75rem] text-text-muted">
         Nothing changed since the preset was applied. Saving keeps it exactly as it is.
       </p>
     );
@@ -37,12 +37,12 @@ export function EditList({ edits }: { edits: readonly ThemeEdit[] }) {
       {edits.map((edit) => (
         <div
           key={`${edit.scheme}-${edit.key}`}
-          className="flex items-center gap-3 rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-raised px-3 py-2"
+          className="flex items-center gap-3 rounded-control border-(length:--border-width-card) border-hairline bg-raised px-3 py-2"
         >
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1.5 text-[0.75rem] font-medium text-text-primary">
               {labelOf(edit.key)}
-              <span className="rounded-(--radius-control) bg-sunken px-1.5 py-0.5 text-[0.5625rem] tracking-[0.08em] text-text-muted uppercase">
+              <span className="rounded-control bg-sunken px-1.5 py-0.5 text-[0.5625rem] tracking-[0.08em] text-text-muted uppercase">
                 {edit.scheme}
               </span>
             </span>

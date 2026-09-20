@@ -35,7 +35,7 @@ export function Segmented<T extends string>({
       aria-label={ariaLabel}
       data-slot="segmented"
       className={cn(
-        "inline-flex w-full items-center gap-1 rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-sunken p-1",
+        "inline-flex w-full items-center gap-1 rounded-control border-(length:--border-width-card) border-hairline bg-sunken p-1",
         className,
       )}
     >
@@ -45,13 +45,13 @@ export function Segmented<T extends string>({
           <Radio.Root
             key={option.value}
             value={option.value}
-            className="relative flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-(--radius-control) px-3 text-[0.75rem] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+            className="relative flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-control px-3 text-[0.75rem] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           >
             {selected ? (
               <motion.span
                 layoutId={indicator}
                 aria-hidden="true"
-                className="absolute inset-0 rounded-(--radius-control) bg-primary"
+                className="absolute inset-0 rounded-control bg-primary"
                 transition={{ type: "spring", stiffness: 520, damping: 38, mass: 0.7 }}
               />
             ) : null}

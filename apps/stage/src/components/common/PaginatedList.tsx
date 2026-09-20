@@ -1,6 +1,7 @@
 import { AlertCircleIcon, InboxIcon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { type ReactElement, useEffect, useRef } from "react";
+import { cn } from "~/lib/utils";
 import { EmptyState } from "./EmptyState";
 import { Spinner } from "./Spinner";
 import { type PageLoader, usePaginatedData } from "./usePaginatedData";
@@ -15,7 +16,7 @@ export interface PaginatedListProps<T> {
   emptyBody?: string;
   emptyIcon?: IconSvgElement;
   autoLoadMore?: boolean;
-  numColumns?: number;
+  listClassName?: string;
   header?: ReactElement;
 }
 
@@ -27,7 +28,7 @@ export function PaginatedList<T>({
   emptyBody,
   emptyIcon = InboxIcon,
   autoLoadMore = true,
-  numColumns,
+  listClassName,
   header,
 }: PaginatedListProps<T>) {
   const data = usePaginatedData(loadPage);
@@ -47,16 +48,11 @@ export function PaginatedList<T>({
     return () => observer.disconnect();
   }, [autoLoadMore, loadMore]);
 
-  const columns =
-    numColumns !== undefined && numColumns > 1
-      ? { display: "grid", gridTemplateColumns: `repeat(${numColumns}, minmax(0, 1fr))` }
-      : undefined;
-
   const isEmpty = data.items.length === 0;
 
   if (isEmpty && data.error !== null) {
     return (
-      <div className="flex flex-1 flex-col">
+      <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto">
         {header}
         <EmptyState icon={AlertCircleIcon} title="That did not load" body={data.error} />
       </div>
@@ -65,7 +61,7 @@ export function PaginatedList<T>({
 
   if (isEmpty && !data.loading) {
     return (
-      <div className="flex flex-1 flex-col">
+      <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto">
         {header}
         <EmptyState icon={emptyIcon} title={emptyLabel} body={emptyBody} />
       </div>
@@ -73,9 +69,9 @@ export function PaginatedList<T>({
   }
 
   return (
-    <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto">
+    <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto pr-[calc(var(--shadow-offset)+0.25rem)]">
       {header}
-      <ul className="m-0 flex list-none flex-col gap-3 p-0" style={columns}>
+      <ul className={cn("m-0 flex list-none flex-col gap-3 p-0", listClassName)}>
         {data.items.map((item, index) => (
           <li key={keyExtractor(item)}>{renderItem(item, index)}</li>
         ))}
@@ -87,7 +83,7 @@ export function PaginatedList<T>({
           <button
             type="button"
             onClick={data.loadMore}
-            className="rounded-(--radius-control) bg-secondary px-5 py-2.5 font-medium text-secondary-foreground"
+            className="rounded-control bg-secondary px-5 py-2.5 font-medium text-secondary-foreground"
           >
             Load more
           </button>

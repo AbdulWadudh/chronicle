@@ -1,5 +1,6 @@
 export * from "./api";
 export * from "./assets";
+export * from "./compose";
 export * from "./health";
 export * from "./http";
 export * from "./jobs";

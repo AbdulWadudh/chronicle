@@ -15,4 +15,17 @@ function Label({ className, htmlFor, ...props }: ComponentProps<"label">) {
   );
 }
 
-export { Label };
+function GroupLabel({ className, ...props }: ComponentProps<"h3">) {
+  return (
+    <h3
+      data-slot="group-label"
+      className={cn(
+        "text-[0.875rem] font-medium tracking-[-0.01em] text-text-primary select-none",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export { GroupLabel, Label };

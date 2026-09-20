@@ -13,6 +13,12 @@ export { AUTH_BASE_PATH, type ChronicleAuth, createAuth } from "./auth";
 export { type ChronicleDatabase, db } from "./db";
 export { newId } from "./ids";
 export { runMigrations } from "./migrate";
+export {
+  type CharacterRow,
+  toCharacter,
+  toWorld,
+  type WorldRow,
+} from "./rows";
 export * as schema from "./schema";
 export {
   cachedSettings,

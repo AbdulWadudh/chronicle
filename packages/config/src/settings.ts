@@ -23,6 +23,7 @@ export const SETTING_BOUNDS = {
     historyDepth: { min: 1, max: 40, step: 1 },
     recentFacts: { min: 1, max: 40, step: 1 },
     sceneChars: { min: 64, max: 2000, step: 32 },
+    sentences: { min: 1, max: 6, step: 1 },
   },
   turn: {
     bufferSize: { min: 1, max: 512, step: 8 },
@@ -32,6 +33,8 @@ export const SETTING_BOUNDS = {
     height: { min: 256, max: 2048, step: 64 },
     steps: { min: 1, max: 60, step: 1 },
     cfg: { min: 1, max: 20, step: 0.5 },
+    upscale: { min: 1, max: 2, step: 0.25 },
+    upscaleDenoise: { min: 0.1, max: 0.8, step: 0.05 },
   },
   tts: {
     speed: { min: 0.25, max: 4, step: 0.25 },
@@ -60,6 +63,7 @@ const promptSchema = z.object({
   historyDepth: wholeBound(SETTING_BOUNDS.prompt.historyDepth).default(8),
   recentFacts: wholeBound(SETTING_BOUNDS.prompt.recentFacts).default(6),
   sceneChars: wholeBound(SETTING_BOUNDS.prompt.sceneChars).default(320),
+  sentences: wholeBound(SETTING_BOUNDS.prompt.sentences).default(2),
 });
 
 const turnSchema = z.object({
@@ -119,11 +123,17 @@ const imageSchema = z.object({
   checkpoint: checkpointSchema.prefault("DreamShaperXL_Lightning.safetensors"),
   width: wholeBound(SETTING_BOUNDS.image.width).default(1024),
   height: wholeBound(SETTING_BOUNDS.image.height).default(1024),
-  steps: wholeBound(SETTING_BOUNDS.image.steps).default(6),
+  steps: wholeBound(SETTING_BOUNDS.image.steps).default(8),
   cfg: bound(SETTING_BOUNDS.image.cfg).default(2),
   sampler: z.string().min(1).default("dpmpp_sde"),
   scheduler: z.string().min(1).default("karras"),
-  negativePrompt: z.string().default("text, watermark, blurry"),
+  upscale: bound(SETTING_BOUNDS.image.upscale).default(1.5),
+  upscaleDenoise: bound(SETTING_BOUNDS.image.upscaleDenoise).default(0.4),
+  negativePrompt: z
+    .string()
+    .default(
+      "text, watermark, signature, lowres, jpeg artifacts, blurry, out of focus, deformed hands, extra fingers, bad anatomy, mutated, disfigured face, oversaturated, flat lighting",
+    ),
 });
 
 export interface VoiceGroup {
@@ -185,14 +195,26 @@ export const runtimeSettingsSchema = z.object({
   dice: diceSchema.prefault({}),
 });
 
+function patchOf<T extends z.ZodRawShape>(group: z.ZodObject<T>) {
+  const shape = Object.fromEntries(
+    Object.entries(group.shape).map(([key, field]) => [
+      key,
+      z.optional(
+        field instanceof z.ZodDefault || field instanceof z.ZodPrefault ? field.unwrap() : field,
+      ),
+    ]),
+  ) as { [K in keyof T]: z.ZodOptional<T[K]> };
+  return z.object(shape).optional();
+}
+
 export const runtimeSettingsPatchSchema = z.object({
-  narrative: narrativeSchema.partial().optional(),
-  structured: structuredSchema.partial().optional(),
-  prompt: promptSchema.partial().optional(),
-  turn: turnSchema.partial().optional(),
-  image: imageSchema.partial().optional(),
-  tts: ttsSchema.partial().optional(),
-  dice: diceSchema.partial().optional(),
+  narrative: patchOf(narrativeSchema),
+  structured: patchOf(structuredSchema),
+  prompt: patchOf(promptSchema),
+  turn: patchOf(turnSchema),
+  image: patchOf(imageSchema),
+  tts: patchOf(ttsSchema),
+  dice: patchOf(diceSchema),
 });
 
 export type RuntimeSettings = z.infer<typeof runtimeSettingsSchema>;

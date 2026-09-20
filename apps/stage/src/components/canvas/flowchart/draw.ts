@@ -1,12 +1,7 @@
 import type { ThemeTokens } from "@chronicle/config";
 import type { Canvas, CanvasKit, Paint } from "canvaskit-wasm";
+import type { Viewport } from "~/hooks/usePanZoom";
 import { type Edge, type FlowchartGraph, NODE_HEIGHT, NODE_WIDTH, splinePath } from "./layout";
-
-export interface Viewport {
-  x: number;
-  y: number;
-  scale: number;
-}
 
 const EDGE_WIDTH = 1.5;
 const FAILED_EDGE_WIDTH = 2;

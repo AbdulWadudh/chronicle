@@ -1,4 +1,5 @@
 export * from "./palettes";
+export * from "./prompts";
 export * from "./queues";
 export * from "./routes";
 export * from "./rules";

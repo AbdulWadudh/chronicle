@@ -1,38 +1,91 @@
-import type { TurnChoice } from "@chronicle/utils";
-import { ArrowUp02Icon, MagicWand01Icon, SparklesIcon, StopIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { type KeyboardEvent, useState } from "react";
+import type { ComposeMode, TurnChoice } from "@chronicle/utils";
+import { ArrowRight02Icon, ArrowUp02Icon, Idea01Icon, StopIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { type CSSProperties, type KeyboardEvent, useState } from "react";
+import { FieldActions } from "~/components/common/FieldActions";
+import { WhisperCard } from "~/components/story/WhisperCard";
+import { Button } from "~/components/ui/button";
+import { Textarea } from "~/components/ui/textarea";
+import { Tooltip } from "~/components/ui/tooltip";
 import { useThemeTokens } from "~/theme/ThemeEngine";
 
-export type ActionMode = "scratch" | "enhanced";
-
-const DRAFT_STYLE = { fieldSizing: "content", minHeight: 56, maxHeight: 128 } as const;
+const DRAFT_STYLE = { fieldSizing: "content", minHeight: 52, maxHeight: 132 } as const;
 
 export interface ComposerProps {
   choices: readonly TurnChoice[];
   busy: boolean;
+  composing: ComposeMode | null;
+  whisper: string;
+  composingWhisper: ComposeMode | null;
+  onWhisperChange: (whisper: string) => void;
+  onComposeWhisper: (mode: ComposeMode, draft: string) => Promise<string | null>;
   onSelectChoice: (choiceIndex: 0 | 1 | 2) => void;
-  onSubmitAction: (action: string, mode: ActionMode) => void;
+  onSubmitAction: (action: string) => void;
+  onCompose: (mode: ComposeMode, draft: string) => Promise<string | null>;
   onAbort: () => void;
+}
+
+interface ChoiceRowProps {
+  choice: TurnChoice;
+  index: number;
+  onPress: () => void;
+}
+
+function ChoiceRow({ choice, index, onPress }: ChoiceRowProps) {
+  return (
+    <button
+      type="button"
+      onClick={onPress}
+      style={{ "--rise-index": index } as CSSProperties}
+      className="pressable rise-in group flex items-start gap-3 rounded-card border-(length:--border-width-card) border-primary/25 bg-linear-to-r from-primary/12 via-accent/8 to-transparent px-4 py-3 text-left transition-colors hover:border-primary/55 motion-reduce:transition-none"
+    >
+      <HugeiconsIcon
+        icon={ArrowRight02Icon}
+        size={15}
+        strokeWidth={2}
+        className="mt-0.5 shrink-0 text-text-accent"
+      />
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-[0.9375rem] leading-snug font-medium text-text-primary">
+          {choice.label}
+        </span>
+        {choice.hint.length === 0 ? null : (
+          <span className="text-[0.75rem] leading-snug text-text-muted">{choice.hint}</span>
+        )}
+      </span>
+    </button>
+  );
 }
 
 export function Composer({
   choices,
   busy,
+  composing,
+  whisper,
+  composingWhisper,
+  onWhisperChange,
+  onComposeWhisper,
   onSelectChoice,
   onSubmitAction,
+  onCompose,
   onAbort,
 }: ComposerProps) {
   const tokens = useThemeTokens();
   const [draft, setDraft] = useState("");
-  const [mode, setMode] = useState<ActionMode>("scratch");
-  const [focused, setFocused] = useState(false);
-  const ready = draft.trim().length > 0 && !busy;
+  const [showChoices, setShowChoices] = useState(false);
+  const ready = draft.trim().length > 0 && !busy && composing === null;
+  const offering = choices.length > 0 && !busy;
 
   function submit(): void {
     if (!ready) return;
-    onSubmitAction(draft.trim(), mode);
+    onSubmitAction(draft.trim());
     setDraft("");
+    setShowChoices(false);
+  }
+
+  function choose(choiceIndex: 0 | 1 | 2): void {
+    setShowChoices(false);
+    onSelectChoice(choiceIndex);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>): void {
@@ -41,123 +94,113 @@ export function Composer({
     submit();
   }
 
+  async function compose(mode: ComposeMode): Promise<void> {
+    const value = await onCompose(mode, draft.trim());
+    if (value !== null) setDraft(value);
+  }
+
   return (
-    <div className="flex w-full max-w-170 flex-col gap-3 self-center border-t border-hairline bg-canvas/95 px-4 pt-3 pb-4">
-      {choices.length > 0 && !busy ? (
-        <div className="flex flex-col gap-2">
+    <div className="flex w-full max-w-170 flex-col gap-2.5 self-center px-4 pt-3 pb-4">
+      {offering ? (
+        <div
+          className={showChoices ? "flex flex-col gap-2" : "hidden md:flex md:flex-col md:gap-2"}
+        >
           {choices.slice(0, 3).map((choice, index) => (
-            <button
-              type="button"
+            <ChoiceRow
               key={choice.label}
-              onClick={() => onSelectChoice(index as 0 | 1 | 2)}
-              className="flex items-center gap-3 rounded-(--radius-card) border-(length:--border-width-card) border-hairline bg-raised px-4 py-3 text-left"
-            >
-              <span className="text-[0.6875rem] font-semibold text-text-muted">{index + 1}</span>
-              <span className="flex-1 text-[0.875rem] leading-snug text-text-secondary">
-                {choice.label}
-              </span>
-            </button>
+              choice={choice}
+              index={index}
+              onPress={() => choose(index as 0 | 1 | 2)}
+            />
           ))}
         </div>
       ) : null}
 
-      <fieldset className="flex items-center gap-1.5 border-0 p-0">
-        <legend className="sr-only">Action mode</legend>
-        <ModeChip
-          label="Scratch"
-          icon={MagicWand01Icon}
-          active={mode === "scratch"}
-          onSelect={() => setMode("scratch")}
-        />
-        <ModeChip
-          label="Enhance"
-          icon={SparklesIcon}
-          active={mode === "enhanced"}
-          onSelect={() => setMode("enhanced")}
-        />
-      </fieldset>
-
-      <div className="flex items-end gap-2">
-        <textarea
+      <div className="flex flex-col rounded-card border-(length:--border-width-card) border-card-border bg-input-surface transition-colors focus-within:border-primary/60 motion-reduce:transition-none">
+        <Textarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="What do you do?"
+          placeholder={offering ? "or type any action you want…" : "What do you do?"}
           rows={1}
-          disabled={busy}
+          disabled={busy || composing !== null}
           aria-label="Your action"
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
           style={DRAFT_STYLE}
-          className={`flex-1 resize-none rounded-(--radius-card) border bg-input-surface px-5 py-3.5 text-[0.9375rem] leading-[22px] text-text-primary outline-none placeholder:text-text-muted ${
-            focused ? "border-primary" : "border-card-border"
-          }`}
+          className="rounded-none border-transparent bg-transparent px-4 pt-3.5 pb-1 text-[0.9375rem] leading-[22px] focus:border-transparent"
         />
-        {busy ? (
-          <button
-            type="button"
-            onClick={onAbort}
-            aria-label="Stop generating"
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-(--radius-control) bg-secondary"
-          >
-            <HugeiconsIcon icon={StopIcon} size={18} strokeWidth={2} color={tokens.textSecondary} />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={submit}
-            disabled={!ready}
-            aria-label="Send action"
-            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-(--radius-control) transition active:scale-95 ${
-              ready ? "bg-primary" : "bg-sunken"
-            }`}
-          >
-            <HugeiconsIcon
-              icon={ArrowUp02Icon}
-              size={20}
-              strokeWidth={2}
-              color={ready ? tokens.primaryForeground : tokens.textMuted}
+
+        <div className="flex items-center justify-between gap-2 px-2.5 pb-2.5">
+          <div className="flex items-center gap-1">
+            <FieldActions
+              label="action"
+              busyMode={composing}
+              canEnhance={draft.trim().length > 0}
+              disabled={busy}
+              onCompose={(mode) => void compose(mode)}
             />
-          </button>
-        )}
+            {offering ? (
+              <Tooltip
+                content={showChoices ? "Hide suggestions" : `Show ${choices.length} suggestions`}
+              >
+                <Button
+                  variant="outline"
+                  size="iconSm"
+                  onClick={() => setShowChoices((open) => !open)}
+                  aria-expanded={showChoices}
+                  aria-label={showChoices ? "Hide suggestions" : "Show suggestions"}
+                  className={`md:hidden ${
+                    showChoices
+                      ? "border-primary/60 bg-primary/15 text-text-accent"
+                      : "border-primary/30 bg-raised-hover text-text-accent hover:border-primary/60 hover:text-text-accent"
+                  }`}
+                >
+                  <HugeiconsIcon icon={Idea01Icon} size={13} strokeWidth={1.75} />
+                </Button>
+              </Tooltip>
+            ) : null}
+            <WhisperCard
+              whisper={whisper}
+              disabled={busy}
+              composing={composingWhisper}
+              onCompose={onComposeWhisper}
+              onChange={onWhisperChange}
+            />
+          </div>
+
+          {busy ? (
+            <button
+              type="button"
+              onClick={onAbort}
+              aria-label="Stop generating"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-secondary"
+            >
+              <HugeiconsIcon
+                icon={StopIcon}
+                size={16}
+                strokeWidth={2}
+                color={tokens.textSecondary}
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={submit}
+              disabled={!ready}
+              aria-label="Send action"
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-control transition active:scale-95 motion-reduce:transition-none ${
+                ready ? "bg-primary" : "bg-sunken"
+              }`}
+            >
+              <HugeiconsIcon
+                icon={ArrowUp02Icon}
+                size={17}
+                strokeWidth={2.25}
+                color={ready ? tokens.primaryForeground : tokens.textMuted}
+              />
+            </button>
+          )}
+        </div>
       </div>
     </div>
-  );
-}
-
-interface ModeChipProps {
-  label: string;
-  icon: IconSvgElement;
-  active: boolean;
-  onSelect: () => void;
-}
-
-function ModeChip({ label, icon, active, onSelect }: ModeChipProps) {
-  const tokens = useThemeTokens();
-  return (
-    <label
-      className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-(--radius-control) px-3 focus-within:outline focus-within:outline-2 focus-within:outline-primary ${
-        active ? "bg-primary" : "border-(length:--border-width-card) border-hairline bg-raised"
-      }`}
-    >
-      <input
-        type="radio"
-        name="action-mode"
-        checked={active}
-        onChange={onSelect}
-        className="sr-only"
-      />
-      <HugeiconsIcon
-        icon={icon}
-        size={13}
-        strokeWidth={1.5}
-        color={active ? tokens.primaryForeground : tokens.textMuted}
-      />
-      <span
-        className={`text-[0.75rem] font-medium ${active ? "text-primary-foreground" : "text-text-muted"}`}
-      >
-        {label}
-      </span>
-    </label>
   );
 }

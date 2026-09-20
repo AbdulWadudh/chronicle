@@ -26,7 +26,7 @@ export function MeasureRow({ meta, value, overridden, onChange, onRevert }: Meas
   const outside = value < meta.bound.min || value > meta.bound.max;
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-(--radius-card) border-(length:--border-width-card) border-hairline bg-raised px-4 py-3.5 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8 motion-reduce:transition-none">
+    <div className="flex flex-col gap-2.5 rounded-card border-(length:--border-width-card) border-hairline bg-raised px-4 py-3.5 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8 motion-reduce:transition-none">
       <div className="min-w-0">
         <Label htmlFor={id} className="flex items-center gap-1.5">
           {meta.label}
@@ -85,7 +85,7 @@ export function MeasureRow({ meta, value, overridden, onChange, onRevert }: Meas
                 key={preset.label}
                 variant={value === preset.value ? "default" : "outline"}
                 onClick={() => onChange(preset.value)}
-                className="h-6 rounded-(--radius-control) px-2 text-[0.625rem] font-medium"
+                className="h-6 rounded-control px-2 text-[0.625rem] font-medium"
               >
                 {preset.label}
               </Button>

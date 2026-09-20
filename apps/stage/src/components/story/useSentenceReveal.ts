@@ -1,7 +1,5 @@
 import { splitIntoSentences } from "@chronicle/utils";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-const TIMED_SENTENCE_MS = 1400;
+import { useCallback, useMemo, useRef, useState } from "react";
 
 export interface RevealedSentence {
   key: string;
@@ -28,8 +26,8 @@ export function useSentenceReveal(
       return { key, text: sentence };
     });
   }, [text]);
+
   const [skipped, setSkipped] = useState(false);
-  const [timedCount, setTimedCount] = useState(0);
   const previousText = useRef(text);
 
   if (previousText.current !== text) {
@@ -37,28 +35,12 @@ export function useSentenceReveal(
     if (skipped) setSkipped(false);
   }
 
-  useEffect(() => {
-    if (cinemaMode || skipped) return;
-    setTimedCount(0);
-    const timer = setInterval(() => {
-      setTimedCount((count) => {
-        if (count >= sentences.length) {
-          clearInterval(timer);
-          return count;
-        }
-        return count + 1;
-      });
-    }, TIMED_SENTENCE_MS);
-    return () => clearInterval(timer);
-  }, [cinemaMode, sentences.length, skipped]);
-
   const revealAll = useCallback(() => setSkipped(true), []);
 
-  const gatedCount = cinemaMode
-    ? playingSentenceIndex === null
-      ? Math.min(1, sentences.length)
-      : Math.min(playingSentenceIndex + 1, sentences.length)
-    : Math.min(timedCount, sentences.length);
+  const gatedCount =
+    cinemaMode && playingSentenceIndex !== null
+      ? Math.min(playingSentenceIndex + 1, sentences.length)
+      : sentences.length;
 
   const revealedCount = skipped ? sentences.length : gatedCount;
 

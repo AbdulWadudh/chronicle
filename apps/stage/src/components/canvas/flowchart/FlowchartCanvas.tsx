@@ -2,13 +2,14 @@ import type { TurnNode } from "@chronicle/utils";
 import type { CanvasKit, Surface } from "canvaskit-wasm";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Spinner } from "~/components/common/Spinner";
+import { usePanZoom } from "~/hooks/usePanZoom";
 import { useThemeTokens } from "~/theme/ThemeEngine";
 import { loadCanvasKit } from "./canvaskit";
 import { drawGraph } from "./draw";
 import { edgesOf, layoutGraph, NODE_HEIGHT, NODE_WIDTH } from "./layout";
-import { usePanZoom } from "./usePanZoom";
 
 const LABEL_LIMIT = 64;
+const MAP_ZOOM = { minScale: 0.4, maxScale: 2.5, offset: 24 };
 
 export interface FlowchartCanvasProps {
   turns: readonly TurnNode[];
@@ -23,7 +24,8 @@ export function FlowchartCanvas({ turns, activeTurnId, width, height }: Flowchar
   const surfaceRef = useRef<Surface | null>(null);
   const [kit, setKit] = useState<CanvasKit | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
-  const { viewport, ...gestures } = usePanZoom();
+  const { viewport, onPointerDown, onPointerMove, onPointerUp, onWheel } = usePanZoom(MAP_ZOOM);
+  const gestures = { onPointerDown, onPointerMove, onPointerUp, onWheel };
 
   const graph = useMemo(() => layoutGraph(turns, activeTurnId), [turns, activeTurnId]);
   const edges = useMemo(() => edgesOf(graph), [graph]);
@@ -90,7 +92,7 @@ export function FlowchartCanvas({ turns, activeTurnId, width, height }: Flowchar
     <div
       {...gestures}
       style={{ width, height, touchAction: "none" }}
-      className="relative cursor-grab overflow-hidden rounded-(--radius-card) bg-canvas active:cursor-grabbing"
+      className="relative cursor-grab overflow-hidden rounded-card bg-canvas active:cursor-grabbing"
     >
       <canvas ref={canvasRef} style={{ width, height }} className="block" />
 

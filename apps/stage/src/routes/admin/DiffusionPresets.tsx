@@ -24,7 +24,7 @@ export function DiffusionPresets({ image, onApply }: DiffusionPresetsProps) {
   const mismatched = FAST_CHECKPOINT.test(image.checkpoint) && image.steps > 12;
 
   return (
-    <div className="flex flex-col gap-2 rounded-(--radius-card) border-(length:--border-width-card) border-hairline bg-raised px-4 py-3.5">
+    <div className="flex flex-col gap-2 rounded-card border-(length:--border-width-card) border-hairline bg-raised px-4 py-3.5">
       <div>
         <p className="text-[0.875rem] font-medium tracking-[-0.01em] text-text-primary">
           Step and guidance preset
@@ -44,7 +44,7 @@ export function DiffusionPresets({ image, onApply }: DiffusionPresetsProps) {
               key={preset.id}
               aria-pressed={selected}
               onClick={() => onApply(preset.values)}
-              className={`h-auto flex-col items-start gap-1 rounded-(--radius-control) px-3.5 py-3 text-left font-normal whitespace-normal ${
+              className={`h-auto flex-col items-start gap-1 rounded-control px-3.5 py-3 text-left font-normal whitespace-normal ${
                 selected ? "border-primary/40 bg-primary/[0.07] hover:border-primary/40" : ""
               }`}
             >
@@ -73,7 +73,7 @@ export function DiffusionPresets({ image, onApply }: DiffusionPresetsProps) {
       {mismatched ? (
         <p
           role="alert"
-          className="mt-1 rounded-(--radius-control) border border-warning/30 bg-warning/10 px-3 py-2 text-[0.6875rem] leading-relaxed text-warning"
+          className="mt-1 rounded-control border border-warning/30 bg-warning/10 px-3 py-2 text-[0.6875rem] leading-relaxed text-warning"
         >
           The checkpoint below names itself a fast model, but {image.steps} steps are set. That
           combination burns the output. Pick the Lightning preset, or load a full SDXL checkpoint.

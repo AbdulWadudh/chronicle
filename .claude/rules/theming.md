@@ -7,7 +7,9 @@ Tokens are defined in `packages/config` (`theme.ts`) and emitted as CSS variable
 ## Every value comes from a token
 
 - No hardcoded radius, colour or border width in a screen or a `components/ui` primitive.
-  `rounded-(--radius-card)` for surfaces, `rounded-(--radius-control)` for controls.
+  `rounded-card` for surfaces, `rounded-control` for controls. The radii live in `@theme`, so
+  Tailwind generates those canonical utilities — `rounded-(--radius-card)` is the same pixels
+  written the long way, and the global canonical-class rule wins.
 - `rounded-full` survives only where the shape is circular by function: the spinner, status dots,
   the alpha-checkerboard swatch. A switch, slider thumb and scrollbar all follow the token.
 - `--radius-control` is `round(radius * 0.6)` with **no floor**. A floor makes `radius: 0` a lie.

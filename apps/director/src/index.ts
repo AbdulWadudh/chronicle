@@ -2,6 +2,7 @@ import { API } from "@chronicle/config";
 import { env } from "@chronicle/config/env";
 import { promoteFirstAccount, runMigrations, seedThemePalettes } from "@chronicle/db";
 import { createApp } from "~/app";
+import { startAssetWriter } from "~/assets";
 import { verifyToken } from "~/auth";
 import { websocketHandlers } from "~/ws/gateway";
 import type { SocketData } from "~/ws/session";
@@ -9,6 +10,7 @@ import type { SocketData } from "~/ws/session";
 runMigrations();
 await seedThemePalettes();
 await promoteFirstAccount();
+startAssetWriter();
 
 const app = createApp();
 const configuration = env();

@@ -21,7 +21,7 @@ function Tooltip({ content, children, side = "top", sideOffset = 6, className }:
           <TooltipPrimitive.Popup
             data-slot="tooltip"
             className={cn(
-              "origin-(--transform-origin) rounded-(--radius-control) border-(length:--border-width-card) border-card-border bg-card px-2.5 py-1.5 text-[0.6875rem] font-medium text-text-primary shadow-(--shadow-overlay) transition-[opacity,scale] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none",
+              "origin-(--transform-origin) rounded-control border-(length:--border-width-card) border-card-border bg-card px-2.5 py-1.5 text-[0.6875rem] font-medium text-text-primary shadow-(--shadow-overlay) transition-[opacity,scale] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none",
               className,
             )}
           >

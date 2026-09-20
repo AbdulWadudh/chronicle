@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import { cn } from "~/lib/utils";
 
 const buttonVariants = cva(
-  "pressable inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-(--radius-control) font-medium whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:bg-sunken disabled:text-text-muted",
+  "pressable inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-control font-medium whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:bg-sunken disabled:text-text-muted",
   {
     variants: {
       variant: {

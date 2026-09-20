@@ -24,7 +24,7 @@ export function NarrativeStream({
   }
 
   return (
-    <div className="relative flex flex-col gap-2 rounded-(--radius-card) border-(length:--border-width-card) border-card-border bg-card p-5">
+    <div className="relative flex flex-col gap-3">
       {reveal.sentences.slice(0, reveal.revealedCount).map((sentence, index) => (
         <motion.p
           key={sentence.key}
@@ -33,8 +33,8 @@ export function NarrativeStream({
           transition={{ duration: 0.22, ease: "easeOut" }}
           className={
             cinemaMode && index === playingSentenceIndex
-              ? "text-base leading-(--leading-narrative) text-text-primary"
-              : "text-base leading-(--leading-narrative) text-text-secondary"
+              ? "text-[1rem] leading-(--leading-narrative) text-text-primary"
+              : "text-[1rem] leading-(--leading-narrative) text-text-secondary"
           }
         >
           {sentence.text}
@@ -50,7 +50,7 @@ export function NarrativeStream({
             type="button"
             onClick={skip}
             aria-label="Reveal the full passage"
-            className="absolute inset-0 rounded-(--radius-card)"
+            className="absolute inset-0"
           />
         </>
       )}

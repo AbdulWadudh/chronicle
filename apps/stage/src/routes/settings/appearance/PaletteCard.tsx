@@ -25,12 +25,12 @@ export function PaletteCard({
         type="button"
         onClick={onApply}
         aria-pressed={selected}
-        className={`pressable rise-in flex w-full cursor-pointer flex-col gap-2 overflow-hidden rounded-(--radius-card) border-(length:--border-width-card) p-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60 ${
+        className={`pressable rise-in flex w-full cursor-pointer flex-col gap-2 overflow-hidden rounded-card border-(length:--border-width-card) p-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60 ${
           selected ? "border-primary bg-primary/[0.07]" : "border-hairline bg-raised"
         }`}
       >
         <span
-          className="relative flex h-16 flex-col justify-between overflow-hidden rounded-(--radius-control) p-2"
+          className="relative flex h-16 flex-col justify-between overflow-hidden rounded-control p-2"
           style={{ backgroundColor: tokens.canvas }}
         >
           <span className="flex items-center gap-1.5">
@@ -79,7 +79,7 @@ export function PaletteCard({
             </span>
           </span>
           {selected ? (
-            <span className="flex size-4 shrink-0 items-center justify-center rounded-(--radius-control) bg-primary text-primary-foreground">
+            <span className="flex size-4 shrink-0 items-center justify-center rounded-control bg-primary text-primary-foreground">
               <HugeiconsIcon icon={Tick02Icon} size={10} strokeWidth={3} />
             </span>
           ) : null}
@@ -93,7 +93,7 @@ export function PaletteCard({
           aria-label={`Take parts of ${palette.name}`}
           title={`Take parts of ${palette.name}`}
           onClick={onMerge}
-          className="absolute top-3.5 right-3.5 rounded-(--radius-control) bg-card"
+          className="absolute top-3.5 right-3.5 rounded-control bg-card"
         >
           <HugeiconsIcon icon={ColorsIcon} size={13} strokeWidth={1.8} />
         </Button>

@@ -5,20 +5,29 @@ import {
   useRef,
   useState,
 } from "react";
-import type { Viewport } from "./draw";
 
-const MIN_SCALE = 0.4;
-const MAX_SCALE = 2.5;
 const WHEEL_SENSITIVITY = 0.0015;
-const INITIAL_OFFSET = 24;
+
+export interface Viewport {
+  x: number;
+  y: number;
+  scale: number;
+}
+
+export interface PanZoomOptions {
+  minScale: number;
+  maxScale: number;
+  offset?: number;
+  clamp?: (viewport: Viewport) => Viewport;
+}
 
 interface Point {
   x: number;
   y: number;
 }
 
-function clampScale(value: number): number {
-  return Math.min(Math.max(value, MIN_SCALE), MAX_SCALE);
+function clampScale(value: number, options: PanZoomOptions): number {
+  return Math.min(Math.max(value, options.minScale), options.maxScale);
 }
 
 function localPoint(element: HTMLElement, clientX: number, clientY: number): Point {
@@ -28,40 +37,47 @@ function localPoint(element: HTMLElement, clientX: number, clientY: number): Poi
 
 export interface PanZoom {
   viewport: Viewport;
+  zoomBy: (factor: number, focus: Point) => void;
+  reset: () => void;
   onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
   onPointerMove: (event: ReactPointerEvent<HTMLElement>) => void;
   onPointerUp: (event: ReactPointerEvent<HTMLElement>) => void;
   onWheel: (event: ReactWheelEvent<HTMLElement>) => void;
 }
 
-export function usePanZoom(): PanZoom {
-  const [viewport, setViewport] = useState<Viewport>({
-    x: INITIAL_OFFSET,
-    y: INITIAL_OFFSET,
-    scale: 1,
-  });
+export function usePanZoom(options: PanZoomOptions): PanZoom {
+  const origin = options.offset ?? 0;
+  const [viewport, setViewport] = useState<Viewport>({ x: origin, y: origin, scale: 1 });
   const pointers = useRef(new Map<number, Point>());
   const pinchSpread = useRef<number | null>(null);
 
-  const zoomAt = useCallback((factor: number, focus: Point) => {
-    setViewport((current) => {
-      const scale = clampScale(current.scale * factor);
-      const ratio = scale / current.scale;
-      return {
-        scale,
-        x: focus.x - (focus.x - current.x) * ratio,
-        y: focus.y - (focus.y - current.y) * ratio,
-      };
-    });
-  }, []);
+  const zoomAt = useCallback(
+    (factor: number, focus: Point) => {
+      setViewport((current) => {
+        const scale = clampScale(current.scale * factor, options);
+        const ratio = scale / current.scale;
+        const next = {
+          scale,
+          x: focus.x - (focus.x - current.x) * ratio,
+          y: focus.y - (focus.y - current.y) * ratio,
+        };
+        return options.clamp === undefined ? next : options.clamp(next);
+      });
+    },
+    [options],
+  );
+
+  const reset = useCallback(() => {
+    setViewport({ x: origin, y: origin, scale: 1 });
+  }, [origin]);
 
   const onPointerDown = useCallback((event: ReactPointerEvent<HTMLElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
     pointers.current.set(
       event.pointerId,
       localPoint(event.currentTarget, event.clientX, event.clientY),
     );
     pinchSpread.current = null;
+    event.currentTarget.setPointerCapture(event.pointerId);
   }, []);
 
   const onPointerMove = useCallback(
@@ -86,13 +102,16 @@ export function usePanZoom(): PanZoom {
         return;
       }
 
-      setViewport((current) => ({
-        ...current,
-        x: current.x + (next.x - previous.x),
-        y: current.y + (next.y - previous.y),
-      }));
+      setViewport((current) => {
+        const panned = {
+          ...current,
+          x: current.x + (next.x - previous.x),
+          y: current.y + (next.y - previous.y),
+        };
+        return options.clamp === undefined ? panned : options.clamp(panned);
+      });
     },
-    [zoomAt],
+    [zoomAt, options],
   );
 
   const onPointerUp = useCallback((event: ReactPointerEvent<HTMLElement>) => {
@@ -110,5 +129,5 @@ export function usePanZoom(): PanZoom {
     [zoomAt],
   );
 
-  return { viewport, onPointerDown, onPointerMove, onPointerUp, onWheel };
+  return { viewport, zoomBy: zoomAt, reset, onPointerDown, onPointerMove, onPointerUp, onWheel };
 }

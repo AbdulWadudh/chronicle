@@ -35,12 +35,12 @@ export function AlertDialog({
         <AlertDialogPrimitive.Viewport className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <AlertDialogPrimitive.Popup
             data-slot="alert-dialog"
-            className="w-full max-w-[26rem] rounded-(--radius-card) border-(length:--border-width-card) border-card-border p-5 text-text-primary shadow-(--shadow-overlay) outline-none transition-[opacity,scale,translate] duration-200 ease-out data-ending-style:translate-y-1 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:translate-y-1 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none"
+            className="w-full max-w-[26rem] rounded-card border-(length:--border-width-card) border-card-border p-5 text-text-primary shadow-(--shadow-overlay) outline-none transition-[opacity,scale,translate] duration-200 ease-out data-ending-style:translate-y-1 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:translate-y-1 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none"
           >
             <div className="flex items-center gap-3">
               {icon === undefined ? null : (
                 <span
-                  className={`flex size-9 shrink-0 items-center justify-center rounded-(--radius-control) border-(length:--border-width-card) ${
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-control border-(length:--border-width-card) ${
                     tone === "destructive"
                       ? "border-danger/30 bg-danger/10 text-danger"
                       : "border-primary/20 bg-primary/[0.06] text-text-accent"

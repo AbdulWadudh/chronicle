@@ -144,5 +144,11 @@ export async function completeStructured<T>(
   if (content === undefined || content.length === 0) {
     throw new Error("LLM structured response carried no content");
   }
-  return JSON.parse(content) as T;
+  try {
+    return JSON.parse(content) as T;
+  } catch {
+    throw new Error(
+      `LLM returned malformed JSON for ${options.schemaName} after ${content.length} characters. Raise maxTokens if the response was cut short.`,
+    );
+  }
 }

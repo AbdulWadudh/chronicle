@@ -48,6 +48,20 @@ export function patch<T>(path: string, body: unknown): Promise<T> {
   return request<T>(path, { method: "PATCH", body: JSON.stringify(body) });
 }
 
+export async function putBytes<T>(path: string, file: File): Promise<T> {
+  const token = readToken();
+  const headers = new Headers({ "content-type": file.type });
+  if (token !== null) headers.set("authorization", `Bearer ${token}`);
+
+  const response = await fetch(`${directorOrigin()}${path}`, {
+    method: "PUT",
+    headers,
+    body: file,
+  });
+  if (!response.ok) throw new ApiError(response.status, await response.text());
+  return (await response.json()) as T;
+}
+
 export function remove(path: string): Promise<void> {
   return request<void>(path, { method: "DELETE" });
 }
