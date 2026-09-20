@@ -1,12 +1,14 @@
-import { env } from "@chronicle/config";
-import { runMigrations } from "@chronicle/db";
-import { API } from "@chronicle/shared";
+import { API } from "@chronicle/config";
+import { env } from "@chronicle/config/env";
+import { promoteFirstAccount, runMigrations, seedThemePalettes } from "@chronicle/db";
 import { createApp } from "~/app";
 import { verifyToken } from "~/auth";
 import { websocketHandlers } from "~/ws/gateway";
 import type { SocketData } from "~/ws/session";
 
-await runMigrations();
+runMigrations();
+await seedThemePalettes();
+await promoteFirstAccount();
 
 const app = createApp();
 const configuration = env();

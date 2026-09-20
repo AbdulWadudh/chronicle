@@ -1,4 +1,4 @@
-import { env } from "@chronicle/config";
+import { env } from "@chronicle/config/env";
 
 let client: Bun.S3Client | null = null;
 

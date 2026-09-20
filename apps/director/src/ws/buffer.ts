@@ -1,5 +1,5 @@
 import { cachedSettings } from "@chronicle/db";
-import type { ServerMessage } from "@chronicle/shared";
+import type { ServerMessage } from "@chronicle/utils";
 
 export interface BufferedTurn {
   turnId: string;

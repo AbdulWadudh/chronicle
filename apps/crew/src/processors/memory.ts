@@ -1,5 +1,5 @@
-import { env } from "@chronicle/config";
-import { type MemoryJob, memoryJobSchema, splitIntoSentences } from "@chronicle/shared";
+import { env } from "@chronicle/config/env";
+import { type MemoryJob, memoryJobSchema, splitIntoSentences } from "@chronicle/utils";
 import { type Connection, connect, type Table } from "@lancedb/lancedb";
 import type { Job } from "bullmq";
 

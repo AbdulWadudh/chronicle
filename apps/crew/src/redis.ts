@@ -1,4 +1,4 @@
-import { env } from "@chronicle/config";
+import { env } from "@chronicle/config/env";
 import { Redis } from "ioredis";
 
 let connectionInstance: Redis | null = null;

@@ -1,5 +1,6 @@
-import { database, newId, schema } from "@chronicle/db";
-import { STATS, statDefinitionSchema, worldStateSchema } from "@chronicle/shared";
+import { STATS } from "@chronicle/config";
+import { db, schema } from "@chronicle/db";
+import { statDefinitionSchema, worldStateSchema } from "@chronicle/utils";
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -30,7 +31,6 @@ export const worldRoutes = new Hono<AuthEnv>()
     );
     if (!query.success) return context.json({ error: "Invalid query." }, 400);
 
-    const db = await database();
     const user = context.get("user");
     const filter =
       query.data.scope === "community"
@@ -53,26 +53,25 @@ export const worldRoutes = new Hono<AuthEnv>()
     const body = createWorldSchema.safeParse(await context.req.json().catch(() => null));
     if (!body.success) return context.json({ error: "Invalid world." }, 400);
 
-    const db = await database();
     const user = context.get("user");
-    const world = {
-      id: newId(),
-      userId: user.id,
-      title: body.data.title,
-      description: body.data.description,
-      coverImageUrl: body.data.coverImageUrl,
-      genre: body.data.genre,
-      visibility: body.data.visibility,
-      statDefinitionsJson: body.data.statDefinitions,
-      pointBudget: body.data.pointBudget,
-      initialStateJson: body.data.initialState,
-      createdAt: new Date(),
-    };
-    await db.insert(schema.worlds).values(world);
+    const [world] = await db
+      .insert(schema.worlds)
+      .values({
+        userId: user.id,
+        title: body.data.title,
+        description: body.data.description,
+        coverImageUrl: body.data.coverImageUrl,
+        genre: body.data.genre,
+        visibility: body.data.visibility,
+        statDefinitionsJson: body.data.statDefinitions,
+        pointBudget: body.data.pointBudget,
+        initialStateJson: body.data.initialState,
+      })
+      .returning();
+    if (world === undefined) return context.json({ error: "The world was not written." }, 500);
     return context.json(world, 201);
   })
   .get("/:id", async (context) => {
-    const db = await database();
     const user = context.get("user");
     const row = await db
       .select()
@@ -86,7 +85,6 @@ export const worldRoutes = new Hono<AuthEnv>()
     return context.json(row);
   })
   .delete("/:id", async (context) => {
-    const db = await database();
     const user = context.get("user");
     await db
       .delete(schema.worlds)

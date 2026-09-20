@@ -1,5 +1,5 @@
-import { env } from "@chronicle/config";
-import { fetchBytes, fetchJson } from "@chronicle/shared";
+import { env } from "@chronicle/config/env";
+import { fetchBytes, fetchJson } from "@chronicle/utils";
 
 const POLL_INTERVAL_MS = 400;
 const POLL_TIMEOUT_MS = 180_000;

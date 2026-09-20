@@ -1,6 +1,4 @@
-import { env } from "@chronicle/config";
-import { type ChronicleAuth, createAuth, database, schema } from "@chronicle/db";
-import { asc } from "drizzle-orm";
+import { type ChronicleAuth, createAuth, db, roleOf, type UserRole } from "@chronicle/db";
 import type { Context, Next } from "hono";
 
 export interface AuthenticatedUser {
@@ -13,13 +11,14 @@ export interface AuthEnv {
   Variables: {
     user: AuthenticatedUser;
     sessionId: string;
+    role: UserRole;
   };
 }
 
 let auth: ChronicleAuth | null = null;
 
 export async function getAuth(): Promise<ChronicleAuth> {
-  if (auth === null) auth = createAuth(await database());
+  if (auth === null) auth = createAuth(db);
   return auth;
 }
 
@@ -54,38 +53,14 @@ export async function requireSession(
   await next();
 }
 
-let ownerEmail: string | null = null;
-
-async function resolveOwnerEmail(): Promise<string | null> {
-  if (ownerEmail !== null) return ownerEmail;
-  const configured = env().AUTH_OWNER_EMAIL;
-  if (configured !== undefined) {
-    ownerEmail = configured.toLowerCase();
-    return ownerEmail;
-  }
-  const db = await database();
-  const first = await db
-    .select({ email: schema.users.email })
-    .from(schema.users)
-    .orderBy(asc(schema.users.createdAt))
-    .limit(1)
-    .get();
-  ownerEmail = first?.email.toLowerCase() ?? null;
-  return ownerEmail;
-}
-
-export async function isOwner(user: AuthenticatedUser): Promise<boolean> {
-  const owner = await resolveOwnerEmail();
-  return owner !== null && user.email.toLowerCase() === owner;
-}
-
-export async function requireOwner(
+export async function requireAdmin(
   context: Context<AuthEnv>,
   next: Next,
 ): Promise<Response | undefined> {
-  const user = context.get("user");
-  if (!(await isOwner(user))) {
-    return context.json({ error: "This account is not the owner of this installation." }, 403);
+  const role = await roleOf(context.get("user").id);
+  if (role !== "admin") {
+    return context.json({ error: "This account is not an admin of this installation." }, 403);
   }
+  context.set("role", role);
   await next();
 }

@@ -1,5 +1,6 @@
-import type { DiceCheck, StatBlock } from "@chronicle/shared";
-import { DICE, statModifier } from "@chronicle/shared";
+import { DICE } from "@chronicle/config";
+import type { DiceCheck, StatBlock } from "@chronicle/utils";
+import { statModifier } from "@chronicle/utils";
 
 export interface CheckProposal {
   stat: string;

@@ -1,11 +1,11 @@
-import { invalidateSettings } from "@chronicle/db";
 import {
   QUEUE_DIFFUSION,
   QUEUE_MEMORY,
   QUEUE_PREFIX,
   QUEUE_TTS,
   SETTINGS_CHANNEL,
-} from "@chronicle/shared";
+} from "@chronicle/config";
+import { invalidateSettings } from "@chronicle/db";
 import { Worker } from "bullmq";
 import { renderScene } from "~/processors/diffusion";
 import { rememberEpisode } from "~/processors/memory";

@@ -1,4 +1,4 @@
-import { audioReadySchema, imageReadySchema, PROTOCOL_VERSION } from "@chronicle/shared";
+import { audioReadySchema, imageReadySchema, PROTOCOL_VERSION } from "@chronicle/utils";
 import type { Redis } from "ioredis";
 import { createRedis } from "~/queue";
 import { type ChronicleSocket, send } from "~/ws/session";

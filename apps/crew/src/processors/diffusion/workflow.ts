@@ -1,4 +1,4 @@
-import type { DiffusionJob } from "@chronicle/shared";
+import type { DiffusionJob } from "@chronicle/utils";
 
 export const NODE_SAVE = "9";
 
