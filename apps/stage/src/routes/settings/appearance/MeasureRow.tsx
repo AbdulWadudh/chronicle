@@ -2,6 +2,7 @@ import { RefreshIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useId } from "react";
 import { Button } from "~/components/ui/button";
+import { EditableNumber } from "~/components/ui/editable-number";
 import { Label } from "~/components/ui/label";
 import { Slider } from "~/components/ui/slider";
 import type { NumericTokenMeta } from "./tokens";
@@ -21,9 +22,11 @@ function decimalsOf(step: number): number {
 export function MeasureRow({ meta, value, overridden, onChange, onRevert }: MeasureRowProps) {
   const id = useId();
   const hintId = `${id}-hint`;
+  const decimals = decimalsOf(meta.bound.step);
+  const outside = value < meta.bound.min || value > meta.bound.max;
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-hairline bg-raised px-4 py-3.5 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8 motion-reduce:transition-none">
+    <div className="flex flex-col gap-2.5 rounded-(--radius-card) border-(length:--border-width-card) border-hairline bg-raised px-4 py-3.5 transition-colors duration-200 hover:border-hairline-strong hover:bg-raised-hover sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,340px)] sm:items-center sm:gap-8 motion-reduce:transition-none">
       <div className="min-w-0">
         <Label htmlFor={id} className="flex items-center gap-1.5">
           {meta.label}
@@ -44,8 +47,8 @@ export function MeasureRow({ meta, value, overridden, onChange, onRevert }: Meas
           <Slider
             id={id}
             value={value}
-            min={meta.bound.min}
-            max={meta.bound.max}
+            min={Math.min(meta.bound.min, value)}
+            max={Math.max(meta.bound.max, value)}
             step={meta.bound.step}
             onValueChange={(next) => {
               if (typeof next === "number") onChange(next);
@@ -64,18 +67,36 @@ export function MeasureRow({ meta, value, overridden, onChange, onRevert }: Meas
               <HugeiconsIcon icon={RefreshIcon} size={12} strokeWidth={1.8} />
             </Button>
           ) : null}
-          <div className="flex w-[84px] shrink-0 items-baseline justify-end gap-1">
-            <span className="text-[0.9375rem] font-semibold tabular-nums text-text-primary">
-              {value.toFixed(decimalsOf(meta.bound.step))}
-            </span>
-            {meta.unit === undefined ? null : (
-              <span className="text-[0.6875rem] text-text-muted">{meta.unit}</span>
-            )}
-          </div>
+          <EditableNumber
+            value={value.toFixed(decimals)}
+            step={meta.bound.step}
+            unit={meta.unit}
+            outside={outside}
+            outsideHint={`Outside the designed range of ${meta.bound.min} to ${meta.bound.max}`}
+            ariaLabel={meta.label}
+            describedBy={hintId}
+            onCommit={(raw) => onChange(Number(raw))}
+          />
         </div>
-        <span className="text-right text-[0.625rem] tabular-nums text-text-muted/50">
-          {meta.bound.min}–{meta.bound.max}
-        </span>
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <div className="flex flex-wrap gap-1">
+            {meta.presets.map((preset) => (
+              <Button
+                key={preset.label}
+                variant={value === preset.value ? "default" : "outline"}
+                onClick={() => onChange(preset.value)}
+                className="h-6 rounded-(--radius-control) px-2 text-[0.625rem] font-medium"
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+          <span
+            className={`text-[0.625rem] tabular-nums ${outside ? "font-medium text-warning" : "text-text-muted/50"}`}
+          >
+            {meta.bound.min}–{meta.bound.max}
+          </span>
+        </div>
       </div>
     </div>
   );
