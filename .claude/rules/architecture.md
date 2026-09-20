@@ -20,18 +20,25 @@ Use Bun native APIs. Node builtins and npm packages only where Bun has no equiva
 
 ```
 apps/stage    ─┐
-apps/director ─┼─> packages/shared
-apps/crew     ─┘    packages/config
-                    packages/db
+apps/director ─┼─> packages/utils -> packages/config
+apps/crew     ─┘
+                    packages/db -> packages/config, packages/utils
 ```
 
 - An app **never** imports another app. Not by relative path, not by package name.
-- `packages/shared` imports nothing from the workspace. It is the leaf.
-- `packages/config` may import `packages/shared` types only.
-- `packages/db` may import `packages/config` and `packages/shared`.
-- `apps/stage` imports `packages/shared` only. It must never pull in `packages/db`,
-  `packages/config`, `drizzle-orm`, `bullmq`, or `ioredis` — those carry Node built-ins
-  that do not exist in a browser.
+- `packages/config` imports nothing from the workspace. It is the leaf: constants, config
+  data and palette JSON at `@chronicle/config`; the Zod-validated environment loader at
+  `@chronicle/config/env`; OS user-directory path resolution at `@chronicle/config/paths`.
+  The `/env` and `/paths` entries touch `node:*` and `Bun.*` and are Bun/Node-only.
+- `packages/utils` may import `@chronicle/config` (the main entry only, never `/env` or
+  `/paths`) for the data its functions operate on. It holds the functions themselves —
+  `mergeThemeTokens`, `mergeRuntimeSettings`, the turn DAG, the WS protocol, point-buy —
+  so a value that is tunable lives in `config`, and the logic that touches it lives here.
+- `packages/db` may import `packages/config` (all three entries) and `packages/utils`.
+- `apps/stage` imports `packages/utils` and the main `@chronicle/config` entry only. It
+  must never pull in `packages/db`, `@chronicle/config/env`, `@chronicle/config/paths`,
+  `drizzle-orm`, `bullmq`, or `ioredis` — those carry Node built-ins that do not exist in
+  a browser.
 
 ## Runtime split
 
@@ -158,8 +165,9 @@ Path versioning rules are global, in `~/.claude/rules/api.md`. Chronicle mounts:
   SDXL-Lightning workflow template lives in `apps/crew/src/processors/diffusion/`.
 - `TTS_ENDPOINT` — Kokoro-FastAPI, OpenAI-compatible `POST /v1/audio/speech`.
   No in-process ONNX. `onnxruntime-node` is not a dependency.
-- Queue payloads are typed in `@chronicle/shared/jobs`. Director enqueues, crew consumes,
-  neither redefines a shape.
+- Queue payloads are typed in `@chronicle/utils` (`jobs.ts`); the queue names themselves
+  (`QUEUE_DIFFUSION`, `QUEUE_PREFIX`, ...) are constants in `@chronicle/config`. Director
+  enqueues, crew consumes, neither redefines a shape.
 
 ## WebSocket authentication
 
@@ -170,10 +178,11 @@ send them on a WS upgrade. Never log the token.
 
 ## Admin access
 
-One owner per installation, resolved by `requireOwner` in `apps/director/src/auth.ts`:
-`AUTH_OWNER_EMAIL` when set, otherwise the earliest-registered account. Everyone else
-gets 403. There is no role column — a roles table for a single-operator local-first app
-is speculation, and the email is the whole rule.
+Roles, not a single owner. `users.role` is `"user" | "admin"`, guarded by `requireAdmin`
+in `apps/director/src/auth.ts`, which checks `roleOf(userId)` and 403s anyone who is not
+an admin. The first account ever created is promoted automatically at startup
+(`promoteFirstAccount` in `packages/db/src/accounts.ts`) if no admin exists yet.
+`setRole` refuses to demote the last remaining admin — promote a replacement first.
 
 Client screens sit behind `AdminScreen`, which calls `GET /api/v1/admin` once and shows a
 locked state on 403. That is cosmetic; the guard on the director is the real gate.
@@ -184,11 +193,17 @@ Tier rules are global, in `~/.claude/rules/config.md`. Chronicle places them as:
 
 | Tier | Home | Examples |
 | --- | --- | --- |
-| Constants | `@chronicle/shared/rules` | `D20_SIDES`, `CRITICAL_SUCCESS`, rank bounds, cost curve |
-| Environment | `@chronicle/config` | ports, `DATABASE_PATH`, `STAGE_DIST`, `AUTH_SECRET`, `AUTH_OWNER_EMAIL`, the four endpoints |
-| Runtime | `@chronicle/shared/settings` schema, stored by `@chronicle/db` | `image.*`, `tts.*`, `narrative.*`, `prompt.*`, `turn.*`, `dice.*` |
+| Constants | `@chronicle/config` | `DICE`, `STATS`, `API` routes, theme defaults, queue names |
+| Environment | `@chronicle/config/env`, `@chronicle/config/paths` | ports, `DATABASE_PATH`, `STAGE_DIST`, `AUTH_SECRET`, the four endpoints |
+| Runtime | `@chronicle/config` schema (`runtimeSettingsSchema`), merged in `@chronicle/utils`, stored by `@chronicle/db` | `image.*`, `tts.*`, `narrative.*`, `prompt.*`, `turn.*`, `dice.*` |
 
-- Constants live in `shared` because `apps/stage` needs them and may not import `config`.
+- Constants and runtime-settings schemas are plain data, so they live at the main
+  `@chronicle/config` entry, importable by `apps/stage`. The environment loader touches
+  `process.env`, `node:os` and `Bun.file`, so it is Bun/Node-only and lives behind the
+  separate `/env` and `/paths` entries that `apps/stage` never imports.
+- A function that operates on that data (`mergeThemeTokens`, `mergeRuntimeSettings`, the
+  palette-assembly in `presets/index.ts`) lives in `@chronicle/utils`, not `config` —
+  `config` holds values, `utils` holds the logic that touches them.
 - Runtime settings are one row (`settings.id = "runtime"`) holding the whole nested object.
 - `loadSettings()` caches; `updateSettings()` writes, updates the cache, and notifies.
   The director then publishes `SETTINGS_CHANNEL` so crew invalidates too.
@@ -241,7 +256,7 @@ Kokoro-FastAPI is not installed yet, so `TTS_ENDPOINT` will fail until it is.
 in `tsconfig.json` for the typechecker and in `vite.config.ts` for the bundler, and the
 two must agree. `packages/*` use relative imports —
 an alias defined in a package's tsconfig is not honoured when another workspace compiles
-it, so `~/client` inside `packages/db` resolves against the *consuming* app and fails.
+it, so `~/db` inside `packages/db` resolves against the *consuming* app and fails.
 
 ## Running the AI stack
 
@@ -312,7 +327,7 @@ worlds/<worldId>/characters/<characterId>/turns/<turnId>/scene-<variant>.png
 worlds/<worldId>/characters/<characterId>/turns/<turnId>/audio/<sentenceIndex>.mp3
 ```
 
-Builders live in `@chronicle/shared/assets`. Never concatenate a key at a call site.
+Builders live in `@chronicle/utils` (`assets.ts`). Never concatenate a key at a call site.
 
 `REGENERATE` writes a new numbered variant (`scene-2.png`) rather than overwriting, so a
 cached client never serves stale bytes and earlier renders stay comparable.

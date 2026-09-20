@@ -12,9 +12,9 @@ gate, before the commit.
 | `apps/stage` | `@chronicle/stage` | Vite + React 19 PWA client (browser) |
 | `apps/director` | `@chronicle/director` | Bun + Hono HTTP/WSS gateway, auth, turn DAG, dice adjudicator |
 | `apps/crew` | `@chronicle/crew` | BullMQ worker: diffusion, TTS, vector memory |
-| `packages/config` | `@chronicle/config` | Zod-validated env + OS user-directory path resolution |
+| `packages/config` | `@chronicle/config` | Constants and config data (`.`); environment/paths (`/env`, `/paths`) |
 | `packages/db` | `@chronicle/db` | Drizzle SQLite schema, client, Better Auth wiring |
-| `packages/shared` | `@chronicle/shared` | Domain types, turn DAG, WS protocol, theme tokens, point-buy |
+| `packages/utils` | `@chronicle/utils` | Domain functions, turn DAG, WS protocol, point-buy, theme merge |
 
 ## CLI
 
@@ -39,7 +39,8 @@ General code style is global, in `~/.claude/rules/code.md`. Chronicle rules live
 
 - `architecture.md` — Bun first, import boundaries, runtime split, storage, model access,
   dependencies, validation, where to split, audit enforcement
-- `ui-animations.md` — Motion, CSS, CanvasKit, R3F, HTML audio, reduced motion
+- `ui-animations.md` — Motion, press and lift, motion levels, CanvasKit, R3F, audio
+- `theming.md` — tokens, radius, hard shadow, overlay legibility, palettes and saved themes
 
 `bun run audit` enforces the 300-line ceiling and the zero-comment rule, and fails the build.
 
