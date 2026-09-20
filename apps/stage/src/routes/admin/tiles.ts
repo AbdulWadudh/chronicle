@@ -30,7 +30,7 @@ export const ADMIN_TILES: readonly AdminTile[] = [
     title: "Health",
     blurb: "Reachability and latency for the LLM, diffusion, TTS, cache and storage.",
     icon: Pulse01Icon,
-    ready: false,
+    ready: true,
   },
   {
     href: "/admin/queues",
@@ -54,11 +54,11 @@ export const ADMIN_TILES: readonly AdminTile[] = [
     ready: false,
   },
   {
-    href: "/admin/users",
+    href: "/admin/accounts",
     title: "Accounts",
-    blurb: "Who can sign in, and who owns what.",
+    blurb: "Who can sign in, and who holds the admin role.",
     icon: UserGroupIcon,
-    ready: false,
+    ready: true,
   },
   {
     href: "/admin/audit",

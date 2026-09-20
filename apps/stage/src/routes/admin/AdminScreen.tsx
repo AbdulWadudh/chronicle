@@ -7,7 +7,7 @@ import { PageHeader } from "~/components/common/PageHeader";
 import { Screen } from "~/components/common/Screen";
 import { Spinner } from "~/components/common/Spinner";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { useOwner } from "./useOwner";
+import { useAdmin } from "./useAdmin";
 
 export interface AdminScreenProps {
   title: string;
@@ -27,7 +27,7 @@ export function AdminScreen({
   children,
 }: AdminScreenProps) {
   const navigate = useNavigate();
-  const owner = useOwner();
+  const admin = useAdmin();
 
   const header = (
     <PageHeader
@@ -37,21 +37,21 @@ export function AdminScreen({
     />
   );
 
-  if (owner !== "owner") {
+  if (admin !== "admin") {
     return (
       <Screen width="wide">
         {header}
-        {owner === "checking" ? (
+        {admin === "checking" ? (
           <div className="flex flex-1 items-center justify-center text-text-muted">
             <Spinner size={22} label="Checking access" />
           </div>
         ) : (
           <EmptyState
             icon={ShieldKeyIcon}
-            title={owner === "denied" ? "Not your installation" : "The director is unreachable"}
+            title={admin === "denied" ? "Not an admin account" : "The director is unreachable"}
             body={
-              owner === "denied"
-                ? "Only the owner account can open these controls. Set AUTH_OWNER_EMAIL on the director, or sign in as the first account that was registered."
+              admin === "denied"
+                ? "These controls need the admin role. Ask an existing admin to promote this account from Admin → Accounts, or sign in with one that already has it."
                 : "Admin needs the director running. Start it and reload."
             }
           />
@@ -71,7 +71,7 @@ export function AdminScreen({
       {error === null ? null : (
         <p
           role="alert"
-          className="mb-3 shrink-0 rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-danger/30 bg-danger/10 px-3 py-2 text-[0.75rem] text-danger"
+          className="mb-3 shrink-0 rounded-(--radius-control) border-(length:--border-width-card) border-danger/30 bg-danger/10 px-3 py-2 text-[0.75rem] text-danger"
         >
           {error}
         </p>
@@ -83,7 +83,9 @@ export function AdminScreen({
         </div>
       ) : (
         <ScrollArea className="-mr-3 min-h-0 flex-1 pr-3">
-          <div className="flex flex-col gap-4 pb-8">{children}</div>
+          <div className="flex flex-col gap-4 pr-[calc(var(--shadow-offset)+0.25rem)] pb-8">
+            {children}
+          </div>
         </ScrollArea>
       )}
     </Screen>

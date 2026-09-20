@@ -1,4 +1,4 @@
-import type { RuntimeSettings, RuntimeSettingsGroup } from "@chronicle/shared";
+import type { RuntimeSettings, RuntimeSettingsGroup } from "@chronicle/config";
 import {
   DiceFaces05Icon,
   FlashIcon,
