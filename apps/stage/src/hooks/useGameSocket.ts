@@ -3,7 +3,7 @@ import {
   PROTOCOL_VERSION,
   parseServerMessage,
   type ServerMessage,
-} from "@chronicle/shared";
+} from "@chronicle/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { websocketUrl } from "~/lib/api";
 import { readToken } from "~/lib/session";

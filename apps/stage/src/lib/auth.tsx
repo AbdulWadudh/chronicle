@@ -1,4 +1,4 @@
-import { API } from "@chronicle/shared";
+import { API } from "@chronicle/config";
 import {
   createContext,
   type ReactNode,

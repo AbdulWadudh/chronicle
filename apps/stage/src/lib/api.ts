@@ -1,4 +1,5 @@
-import { API, websocketPath } from "@chronicle/shared";
+import { API } from "@chronicle/config";
+import { websocketPath } from "@chronicle/utils";
 import { readToken } from "./session";
 
 export { API };

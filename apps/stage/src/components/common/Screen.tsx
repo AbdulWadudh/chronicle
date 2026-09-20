@@ -32,7 +32,7 @@ export function Screen({
   );
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-canvas pt-[var(--safe-top)] pr-[var(--safe-right)] pb-[var(--safe-bottom)] pl-[var(--safe-left)]">
+    <div className="relative flex h-full flex-col overflow-hidden bg-canvas pt-(--safe-top) pr-(--safe-right) pb-(--safe-bottom) pl-(--safe-left)">
       <GlowBackdrop />
       {scroll ? (
         <div className="scrollbar-none relative flex flex-1 flex-col overflow-y-auto px-5 py-6">

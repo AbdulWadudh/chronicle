@@ -55,9 +55,9 @@ export function AppModal({ visible, title, icon, onClose, children, actions }: A
       ref={ref}
       aria-label={title}
       onClose={onClose}
-      className="app-modal mx-auto mt-auto mb-0 max-h-[88%] w-full max-w-[640px] overflow-hidden rounded-t-3xl border-[length:var(--border-width-card)] border-card-border bg-card p-0 text-text-primary backdrop:bg-scrim sm:mb-6 sm:rounded-3xl"
+      className="app-modal mx-auto mt-auto mb-0 max-h-[88%] w-full max-w-160 overflow-hidden rounded-(--radius-card) border-(length:--border-width-card) border-card-border bg-card p-0 text-text-primary backdrop:bg-scrim sm:mb-6 sm:rounded-(--radius-card)"
     >
-      <div className="flex max-h-[inherit] flex-col pb-[var(--safe-bottom)]">
+      <div className="flex max-h-[inherit] flex-col pb-(--safe-bottom)">
         <div className="flex items-center gap-3 border-b border-card-border px-5 py-4">
           {icon}
           <h2 className="flex-1 truncate text-lg font-semibold text-text-primary">{title}</h2>
@@ -65,7 +65,7 @@ export function AppModal({ visible, title, icon, onClose, children, actions }: A
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-text-secondary"
+            className="flex h-9 w-9 items-center justify-center rounded-(--radius-control) bg-secondary text-text-secondary"
           >
             <HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={1.5} />
           </button>
@@ -81,7 +81,7 @@ export function AppModal({ visible, title, icon, onClose, children, actions }: A
                 key={action.label}
                 onClick={action.onPress}
                 disabled={action.disabled}
-                className={`rounded-[var(--radius-control)] px-4 py-2.5 font-medium ${
+                className={`rounded-(--radius-control) px-4 py-2.5 font-medium ${
                   action.disabled === true
                     ? "bg-sunken text-text-muted"
                     : `${TONE_CLASS[action.tone ?? "secondary"]} ${TONE_TEXT[action.tone ?? "secondary"]}`

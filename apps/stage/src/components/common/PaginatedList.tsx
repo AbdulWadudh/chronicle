@@ -10,7 +10,7 @@ export type { Page, PageLoader } from "./usePaginatedData";
 export interface PaginatedListProps<T> {
   loadPage: PageLoader<T>;
   keyExtractor: (item: T) => string;
-  renderItem: (item: T) => ReactElement;
+  renderItem: (item: T, index: number) => ReactElement;
   emptyLabel: string;
   emptyBody?: string;
   emptyIcon?: IconSvgElement;
@@ -76,8 +76,8 @@ export function PaginatedList<T>({
     <div className="scrollbar-none flex flex-1 flex-col overflow-y-auto">
       {header}
       <ul className="m-0 flex list-none flex-col gap-3 p-0" style={columns}>
-        {data.items.map((item) => (
-          <li key={keyExtractor(item)}>{renderItem(item)}</li>
+        {data.items.map((item, index) => (
+          <li key={keyExtractor(item)}>{renderItem(item, index)}</li>
         ))}
       </ul>
 
@@ -87,7 +87,7 @@ export function PaginatedList<T>({
           <button
             type="button"
             onClick={data.loadMore}
-            className="rounded-[var(--radius-control)] bg-secondary px-5 py-2.5 font-medium text-secondary-foreground"
+            className="rounded-(--radius-control) bg-secondary px-5 py-2.5 font-medium text-secondary-foreground"
           >
             Load more
           </button>

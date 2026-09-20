@@ -1,4 +1,5 @@
-import { API, type ServerMessage, type TurnNode } from "@chronicle/shared";
+import { API } from "@chronicle/config";
+import type { ServerMessage, TurnNode } from "@chronicle/utils";
 import { useCallback, useEffect, useState } from "react";
 import { get } from "~/lib/api";
 import { useAudioQueue } from "./useAudioQueue";
