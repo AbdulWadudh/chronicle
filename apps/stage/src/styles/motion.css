@@ -1,0 +1,120 @@
+@layer components {
+  .pressable {
+    box-shadow: var(--shadow-hard, none);
+    transition:
+      transform 140ms cubic-bezier(0.2, 0, 0, 1),
+      box-shadow 140ms cubic-bezier(0.2, 0, 0, 1),
+      background-color 160ms ease-out,
+      border-color 160ms ease-out;
+  }
+
+  .pressable:hover {
+    transform: translate(
+      var(--shadow-offset, 0px),
+      calc(var(--shadow-offset, 0px) + var(--hover-lift, 0px))
+    );
+    box-shadow: none;
+  }
+
+  .pressable:active {
+    transform: translate(var(--shadow-offset, 0px), var(--shadow-offset, 0px))
+      scale(var(--press-scale, 1));
+    box-shadow: none;
+  }
+
+  .pressable:disabled {
+    transform: none;
+    box-shadow: var(--shadow-hard, none);
+  }
+
+  .raise {
+    box-shadow: var(--shadow-hard, none);
+    transition:
+      transform 180ms cubic-bezier(0.2, 0, 0, 1),
+      box-shadow 180ms cubic-bezier(0.2, 0, 0, 1),
+      background-color 160ms ease-out,
+      border-color 180ms ease-out;
+  }
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .rise-in {
+    animation: rise-in 320ms cubic-bezier(0.2, 0, 0, 1) backwards;
+    animation-delay: calc(var(--rise-index, 0) * 45ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pressable,
+    .raise {
+      transition:
+        background-color 120ms ease-out,
+        border-color 120ms ease-out;
+    }
+
+    .pressable:hover,
+    .pressable:active {
+      transform: none;
+    }
+
+    .rise-in {
+      animation: none;
+    }
+  }
+
+  [data-motion="off"] .pressable,
+  [data-motion="off"] .raise {
+    transition:
+      background-color 120ms ease-out,
+      border-color 120ms ease-out;
+  }
+
+  [data-motion="off"] .pressable:hover,
+  [data-motion="off"] .pressable:active {
+    transform: none;
+    box-shadow: var(--shadow-hard, none);
+  }
+
+  [data-motion="off"] .rise-in {
+    animation: none;
+  }
+
+  [data-motion="subtle"] .pressable,
+  [data-motion="subtle"] .raise {
+    transition-duration: 90ms;
+  }
+
+  [data-motion="subtle"] .rise-in {
+    animation-duration: 160ms;
+    animation-delay: 0ms;
+  }
+
+  .settings-panel {
+    height: var(--collapsible-panel-height);
+    overflow: hidden;
+    transition: height 220ms ease-out;
+  }
+
+  .settings-panel[data-starting-style],
+  .settings-panel[data-ending-style] {
+    height: 0;
+  }
+
+  [data-motion="off"] .settings-panel {
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .settings-panel {
+      transition: none;
+    }
+  }
+}

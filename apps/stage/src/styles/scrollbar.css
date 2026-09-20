@@ -1,0 +1,29 @@
+@layer components {
+  :root {
+    --scrollbar-width: 0.5rem;
+  }
+
+  [data-scrollbar="thin"] {
+    --scrollbar-width: 0.25rem;
+  }
+
+  [data-scrollbar="hidden"] {
+    --scrollbar-width: 0px;
+  }
+
+  [data-scrollbar="hidden"] [data-slot="scroll-area-scrollbar"] {
+    display: none;
+  }
+
+  [data-scrollbar="thin"] * {
+    scrollbar-width: thin;
+  }
+
+  [data-scrollbar="hidden"] * {
+    scrollbar-width: none;
+  }
+
+  [data-scrollbar="hidden"] *::-webkit-scrollbar {
+    display: none;
+  }
+}
