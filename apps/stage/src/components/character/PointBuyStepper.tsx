@@ -1,13 +1,13 @@
+import { STATS } from "@chronicle/config";
 import {
   canLower,
   canRaise,
   clampStatRank,
   costOfNextRank,
   remainingPoints,
-  STATS,
   type StatBlock,
   type StatDefinition,
-} from "@chronicle/shared";
+} from "@chronicle/utils";
 
 export interface PointBuyStepperProps {
   definitions: readonly StatDefinition[];
@@ -33,7 +33,7 @@ function Step({
       onClick={onPress}
       disabled={disabled}
       aria-label={`${label === "−" ? "Decrease" : "Increase"} ${statLabel}`}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-lg text-secondary-foreground disabled:opacity-30"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-(--radius-control) bg-secondary text-lg text-secondary-foreground disabled:opacity-30"
     >
       {label}
     </button>
@@ -62,7 +62,7 @@ export function PointBuyStepper({ definitions, stats, budget, onChange }: PointB
         return (
           <div
             key={definition.id}
-            className="flex items-center gap-3 rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-card p-3"
+            className="flex items-center gap-3 rounded-(--radius-control) border-(length:--border-width-card) border-card-border bg-card p-3"
           >
             <div className="min-w-0 flex-1">
               <p className="font-medium text-text-primary">{definition.label}</p>

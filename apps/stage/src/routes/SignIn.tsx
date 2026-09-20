@@ -5,7 +5,6 @@ import { Button } from "~/components/common/Button";
 import { Field } from "~/components/common/Field";
 import { Screen } from "~/components/common/Screen";
 import { useReducedMotion } from "~/hooks/useReducedMotion";
-import { useResponsiveLayout } from "~/hooks/useResponsiveLayout";
 import { useAuth } from "~/lib/auth";
 
 type Mode = "sign-in" | "sign-up";
@@ -15,7 +14,6 @@ const MIN_PASSWORD = 8;
 export function SignIn() {
   const { signIn, signUp } = useAuth();
   const reduceMotion = useReducedMotion();
-  const { isSplit } = useResponsiveLayout();
 
   const [mode, setMode] = useState<Mode>("sign-in");
   const [name, setName] = useState("");
@@ -50,38 +48,32 @@ export function SignIn() {
     setError(null);
   }
 
-  const brand = (
-    <div className={`flex flex-col gap-3 ${isSplit ? "items-start gap-4" : "items-center"}`}>
-      <img src="/logo.png" alt="" width={52} height={52} className="object-contain" />
-      <div className={`flex flex-col gap-2 ${isSplit ? "" : "items-center"}`}>
-        <span className="self-start rounded-full border-[length:var(--border-width-card)] border-hairline bg-raised-hover px-2.5 py-0.5 text-[0.5625rem] font-medium uppercase tracking-[0.18em] text-text-accent">
-          Interactive Worlds
-        </span>
-        <h1 className="text-[1.625rem] font-semibold leading-tight tracking-[-0.03em] text-text-primary">
-          Chronicle
-        </h1>
-        <p
-          className={`text-[0.8125rem] leading-relaxed text-text-muted ${isSplit ? "" : "text-center"}`}
-        >
-          {isSignUp
-            ? "Create an account to begin your first world."
-            : "Sign in to continue your story."}
-        </p>
-      </div>
-    </div>
-  );
-
   return (
-    <Screen scroll center width={isSplit ? "wide" : "narrow"}>
+    <Screen scroll center width="narrow">
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className={isSplit ? "flex flex-row items-center gap-14" : "flex flex-col gap-6"}
+        className="flex w-full flex-col items-center gap-7"
       >
-        {isSplit ? <div className="flex-1">{brand}</div> : brand}
+        <div className="flex flex-col items-center gap-3.5">
+          <img src="/logo.png" alt="" width={64} height={64} className="object-contain" />
+          <span className="rounded-(--radius-control) border-(length:--border-width-card) border-hairline bg-raised-hover px-2.5 py-0.5 text-[0.5625rem] font-medium tracking-[0.18em] text-text-accent uppercase">
+            Interactive Worlds
+          </span>
+          <div className="flex flex-col items-center gap-1.5">
+            <h1 className="text-[2rem] leading-none font-semibold tracking-[-0.03em] text-text-primary">
+              Chronicle
+            </h1>
+            <p className="text-center text-[0.8125rem] leading-relaxed text-balance text-text-muted">
+              {isSignUp
+                ? "Create an account to begin your first world."
+                : "Sign in to continue your story."}
+            </p>
+          </div>
+        </div>
 
-        <div className="flex flex-col gap-4" style={isSplit ? { width: 380 } : undefined}>
+        <div className="flex w-full flex-col gap-4">
           <Bezel tone="raised">
             <form className="flex flex-col gap-3.5 px-5 py-6" onSubmit={(e) => void submit(e)}>
               {isSignUp ? (
@@ -119,7 +111,7 @@ export function SignIn() {
               {error !== null ? (
                 <p
                   role="alert"
-                  className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-1.5 text-[0.8125rem] text-danger"
+                  className="rounded-(--radius-control) border border-danger/40 bg-danger/10 px-3 py-1.5 text-[0.8125rem] text-danger"
                 >
                   {error}
                 </p>

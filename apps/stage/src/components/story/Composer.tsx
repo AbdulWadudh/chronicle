@@ -1,4 +1,4 @@
-import type { TurnChoice } from "@chronicle/shared";
+import type { TurnChoice } from "@chronicle/utils";
 import { ArrowUp02Icon, MagicWand01Icon, SparklesIcon, StopIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { type KeyboardEvent, useState } from "react";
@@ -42,7 +42,7 @@ export function Composer({
   }
 
   return (
-    <div className="flex w-full max-w-[680px] flex-col gap-3 self-center border-t border-hairline bg-canvas/95 px-4 pt-3 pb-4">
+    <div className="flex w-full max-w-170 flex-col gap-3 self-center border-t border-hairline bg-canvas/95 px-4 pt-3 pb-4">
       {choices.length > 0 && !busy ? (
         <div className="flex flex-col gap-2">
           {choices.slice(0, 3).map((choice, index) => (
@@ -50,7 +50,7 @@ export function Composer({
               type="button"
               key={choice.label}
               onClick={() => onSelectChoice(index as 0 | 1 | 2)}
-              className="flex items-center gap-3 rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-hairline bg-raised px-4 py-3 text-left"
+              className="flex items-center gap-3 rounded-(--radius-card) border-(length:--border-width-card) border-hairline bg-raised px-4 py-3 text-left"
             >
               <span className="text-[0.6875rem] font-semibold text-text-muted">{index + 1}</span>
               <span className="flex-1 text-[0.875rem] leading-snug text-text-secondary">
@@ -89,7 +89,7 @@ export function Composer({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           style={DRAFT_STYLE}
-          className={`flex-1 resize-none rounded-[var(--radius-card)] border bg-input-surface px-5 py-3.5 text-[0.9375rem] leading-[22px] text-text-primary outline-none placeholder:text-text-muted ${
+          className={`flex-1 resize-none rounded-(--radius-card) border bg-input-surface px-5 py-3.5 text-[0.9375rem] leading-[22px] text-text-primary outline-none placeholder:text-text-muted ${
             focused ? "border-primary" : "border-card-border"
           }`}
         />
@@ -98,7 +98,7 @@ export function Composer({
             type="button"
             onClick={onAbort}
             aria-label="Stop generating"
-            className="flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-secondary"
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-(--radius-control) bg-secondary"
           >
             <HugeiconsIcon icon={StopIcon} size={18} strokeWidth={2} color={tokens.textSecondary} />
           </button>
@@ -108,7 +108,7 @@ export function Composer({
             onClick={submit}
             disabled={!ready}
             aria-label="Send action"
-            className={`flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full transition active:scale-95 ${
+            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-(--radius-control) transition active:scale-95 ${
               ready ? "bg-primary" : "bg-sunken"
             }`}
           >
@@ -136,8 +136,8 @@ function ModeChip({ label, icon, active, onSelect }: ModeChipProps) {
   const tokens = useThemeTokens();
   return (
     <label
-      className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 focus-within:outline focus-within:outline-2 focus-within:outline-primary ${
-        active ? "bg-primary" : "border-[length:var(--border-width-card)] border-hairline bg-raised"
+      className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-(--radius-control) px-3 focus-within:outline focus-within:outline-2 focus-within:outline-primary ${
+        active ? "bg-primary" : "border-(length:--border-width-card) border-hairline bg-raised"
       }`}
     >
       <input

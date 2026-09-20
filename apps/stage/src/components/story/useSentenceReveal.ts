@@ -1,4 +1,4 @@
-import { splitIntoSentences } from "@chronicle/shared";
+import { splitIntoSentences } from "@chronicle/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const TIMED_SENTENCE_MS = 1400;

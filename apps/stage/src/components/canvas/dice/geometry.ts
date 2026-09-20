@@ -1,4 +1,4 @@
-import { DICE } from "@chronicle/shared";
+import { DICE } from "@chronicle/config";
 import { IcosahedronGeometry, Quaternion, Vector3 } from "three";
 
 export const DIE_RADIUS = 1;

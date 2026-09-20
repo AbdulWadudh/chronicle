@@ -1,4 +1,4 @@
-import type { TurnNode } from "@chronicle/shared";
+import type { TurnNode } from "@chronicle/utils";
 
 export const NODE_WIDTH = 168;
 export const NODE_HEIGHT = 84;

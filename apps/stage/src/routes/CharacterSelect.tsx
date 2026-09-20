@@ -1,10 +1,5 @@
-import {
-  API,
-  baselineStats,
-  isValidBuild,
-  type StatBlock,
-  type StatDefinition,
-} from "@chronicle/shared";
+import { API } from "@chronicle/config";
+import { baselineStats, isValidBuild, type StatBlock, type StatDefinition } from "@chronicle/utils";
 import { UserMultipleIcon } from "@hugeicons/core-free-icons";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
@@ -96,7 +91,7 @@ export function CharacterSelect() {
             type="button"
             onClick={() => setCreating(true)}
             disabled={world === null}
-            className="rounded-full bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-40"
+            className="rounded-(--radius-control) bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-40"
           >
             New
           </button>
@@ -123,7 +118,7 @@ export function CharacterSelect() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
             onClick={() => void navigate(`/play/${character.id}`)}
-            className="flex w-full flex-col gap-1 rounded-[var(--radius-card)] border-[length:var(--border-width-card)] border-card-border bg-card p-4 text-left"
+            className="flex w-full flex-col gap-1 rounded-(--radius-card) border-(length:--border-width-card) border-card-border bg-card p-4 text-left"
           >
             <h2 className="text-lg font-semibold text-text-primary">{character.name}</h2>
             <p className="line-clamp-2 text-sm text-text-secondary">{character.bio}</p>
@@ -150,7 +145,7 @@ export function CharacterSelect() {
           onChange={(event) => setName(event.target.value)}
           placeholder="Name"
           aria-label="Character name"
-          className="rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
+          className="rounded-(--radius-control) border-(length:--border-width-card) border-card-border bg-input-surface px-4 py-3 text-text-primary outline-none placeholder:text-text-muted"
         />
         {world !== null ? (
           <PointBuyStepper
