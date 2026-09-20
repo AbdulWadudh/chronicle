@@ -1,4 +1,4 @@
-import { RUNTIME_SETTING_GROUPS, SETTING_BOUNDS, type SettingBound } from "@chronicle/shared";
+import { RUNTIME_SETTING_GROUPS, SETTING_BOUNDS, type SettingBound } from "@chronicle/config";
 import { CheckmarkCircle02Icon, RefreshIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "motion/react";
@@ -28,7 +28,7 @@ function SaveStatus({ status }: { status: ReturnType<typeof useSettings>["status
           exit={{ opacity: 0, y: 4 }}
           transition={{ duration: 0.18 }}
           aria-live="polite"
-          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.6875rem] ${
+          className={`flex items-center gap-1.5 rounded-(--radius-control) border px-2.5 py-1 text-[0.6875rem] ${
             status === "failed"
               ? "border-danger/30 bg-danger/10 text-danger"
               : "border-success/25 bg-success/10 text-success"
@@ -70,7 +70,7 @@ export function Runtime() {
       {settings === null
         ? null
         : RUNTIME_SETTING_GROUPS.map((group, index) => (
-            <SettingsGroup key={group} meta={GROUP_META[group]} index={index}>
+            <SettingsGroup key={group} meta={GROUP_META[group]} index={index} defaultOpen={false}>
               {group === "image" ? (
                 <DiffusionPresets
                   image={settings.image}

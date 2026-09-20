@@ -1,9 +1,5 @@
-import {
-  API,
-  mergeRuntimeSettings,
-  type RuntimeSettings,
-  type RuntimeSettingsPatch,
-} from "@chronicle/shared";
+import { API, type RuntimeSettings, type RuntimeSettingsPatch } from "@chronicle/config";
+import { mergeRuntimeSettings } from "@chronicle/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { get, patch, post } from "~/lib/api";
