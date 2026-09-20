@@ -33,6 +33,28 @@ Animate `transform` and `opacity`. Never animate `width`, `height`, `top`, `left
 - **GSAP** only for an imperative timeline that Motion cannot express. If a change would
   be the first GSAP use in the codebase, it probably does not need GSAP.
 
+## Press and lift
+
+One mechanism, driven by tokens, no per-component branching. See `theming.md` for the tokens.
+
+- `.pressable` for anything clickable, `.raise` for static surfaces, `rise-in` for entrance.
+- Hover **seats** the element into its own shadow: `translate(--shadow-offset)`, shadow to none.
+  Never scale outward on hover — 2% of a full-width row is 20px and it escapes its container.
+- At `shadowOffset: 0` the same rule yields a 2px `--hover-lift` and a `scale(0.97)` press.
+  Shrinking inward is always safe; growing never is.
+- `rise-in` uses `animation-fill-mode: backwards`, never `both`. `both` leaves the `to` keyframe
+  (`transform: none`) filled forever and silently kills every hover and press on that element.
+- A scroll container holding `.raise` or `.pressable` rows reserves
+  `pr-[calc(var(--shadow-offset)+0.25rem)]`, or the hard shadow clips at the edge.
+
+## Motion levels
+
+`data-motion` on `<html>` is `off | subtle | full`, set from the store by `ThemeEngine`.
+
+- `off` removes transforms and the stagger, and keeps every colour and shadow.
+- `prefers-reduced-motion` is honoured separately and always wins.
+- Rules live in `styles/motion.css`, not `global.css`.
+
 ## Skia
 
 `canvaskit-wasm` draws the flowchart canvas. See `architecture.md` for the loading rules —

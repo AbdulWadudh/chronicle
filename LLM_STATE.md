@@ -2,10 +2,10 @@
 
 Build progress tracker. Read this first. Update it at every wave gate, before the commit.
 
-**Status:** All waves complete. Wave 5 replaced the Expo client with a Vite + React PWA,
-verified in a real browser at mobile and desktop across empty, loading, error and filled,
-with a live LLM streaming a turn end to end.
-**Updated:** 2026-09-19
+**Status:** All waves complete. Wave 6 turned appearance settings into a theme studio, moved
+admin onto roles, and put every surface on theme tokens. Verified in a real browser at 375px and
+1440px, with token values measured over CDP rather than inferred.
+**Updated:** 2026-09-20
 
 ## Waves
 
@@ -17,6 +17,24 @@ with a live LLM streaming a turn end to end.
 | 4a | `@chronicle/stage` foundation: theme, hooks, DRY components, screens | done |
 | 4b | Skia flowchart, R3F dice, NarrativeStream, ChoicePills, Director console, settings UI | done |
 | 5 | `@chronicle/stage` rewritten as a Vite + React 19 PWA; director serves the build | done |
+| 6 | Theme studio, saved themes, role-based admin, Base UI primitive layer | done |
+
+## Wave 6
+
+- `packages/shared` renamed to `packages/utils`; values moved to `@chronicle/config`
+- Ten palette JSON documents, seeded at director startup, assembled in `utils/presets`
+- `/api/v1/themes` CRUD and `/api/v1/account` for display name and avatar
+- `components/ui`: dialog, alert-dialog, tooltip, menu, avatar, editable-number; segmented on
+  Base UI radio, select on Base UI combobox
+- Motion levels (`data-motion`) and scrollbar style (`data-scrollbar`) as device settings
+- `.claude/rules/theming.md` and the `changelog/` directory
+
+### Open
+
+- Profile screen for name, password and avatar — endpoints exist, UI does not
+- Saved themes have no owner column; per-user themes need a migration
+- `/admin/queues`, `/admin/storage`, `/admin/worlds`, `/admin/audit` still marked Soon
+- `overlayVignette` token is emitted and editable but unread
 
 ## Built
 
