@@ -14,14 +14,14 @@ export function NumberField({ label, value, min, max, step = 1, onChange }: Numb
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-[var(--radius-control)] border-[length:var(--border-width-card)] border-card-border bg-card px-3 py-2">
+    <div className="flex items-center gap-3 rounded-(--radius-control) border-(length:--border-width-card) border-card-border bg-card px-3 py-2">
       <span className="flex-1 truncate text-text-primary">{label}</span>
       <button
         type="button"
         onClick={() => nudge(-1)}
         disabled={value <= min}
         aria-label={`Decrease ${label}`}
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground disabled:opacity-30"
+        className="flex h-8 w-8 items-center justify-center rounded-(--radius-control) bg-secondary text-secondary-foreground disabled:opacity-30"
       >
         −
       </button>
@@ -31,7 +31,7 @@ export function NumberField({ label, value, min, max, step = 1, onChange }: Numb
         onClick={() => nudge(1)}
         disabled={value >= max}
         aria-label={`Increase ${label}`}
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground disabled:opacity-30"
+        className="flex h-8 w-8 items-center justify-center rounded-(--radius-control) bg-secondary text-secondary-foreground disabled:opacity-30"
       >
         +
       </button>

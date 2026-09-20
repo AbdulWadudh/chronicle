@@ -1,4 +1,5 @@
-import { API, type StatBlock, type StatDefinition } from "@chronicle/shared";
+import { API } from "@chronicle/config";
+import type { StatBlock, StatDefinition } from "@chronicle/utils";
 import { useEffect, useState } from "react";
 import { get } from "~/lib/api";
 

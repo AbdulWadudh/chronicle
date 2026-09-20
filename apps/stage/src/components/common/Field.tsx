@@ -42,7 +42,7 @@ export function Field({ label, hint, error, secure = false, ...input }: FieldPro
             setFocused(false);
             input.onBlur?.(event);
           }}
-          className={`min-h-[44px] rounded-[var(--radius-card)] border bg-input-surface px-3.5 py-2.5 text-[0.875rem] leading-5 text-text-primary outline-none placeholder:text-text-muted ${border} ${secure ? "pr-11" : ""}`}
+          className={`min-h-11 rounded-(--radius-card) border bg-input-surface px-3.5 py-2.5 text-[0.875rem] leading-5 text-text-primary outline-none placeholder:text-text-muted ${border} ${secure ? "pr-11" : ""}`}
         />
         {secure ? (
           <button
