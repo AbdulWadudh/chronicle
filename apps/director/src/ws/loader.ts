@@ -1,4 +1,4 @@
-import { database, schema } from "@chronicle/db";
+import { db, schema } from "@chronicle/db";
 import {
   characterSchema,
   indexTurns,
@@ -7,7 +7,7 @@ import {
   type TurnNode,
   turnNodeSchema,
   worldSchema,
-} from "@chronicle/shared";
+} from "@chronicle/utils";
 import { eq } from "drizzle-orm";
 import type { TurnContext } from "~/ws/context";
 
@@ -16,8 +16,6 @@ export async function loadTurnContext(
   userId: string,
   parentTurnId: string | null,
 ): Promise<TurnContext | null> {
-  const db = await database();
-
   const characterRow = await db
     .select()
     .from(schema.characters)

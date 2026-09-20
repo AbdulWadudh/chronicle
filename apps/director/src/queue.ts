@@ -1,14 +1,12 @@
-import { env } from "@chronicle/config";
 import {
-  type DiffusionJob,
-  type MemoryJob,
   QUEUE_DIFFUSION,
   QUEUE_MEMORY,
   QUEUE_PREFIX,
   QUEUE_TTS,
   SETTINGS_CHANNEL,
-  type TtsJob,
-} from "@chronicle/shared";
+} from "@chronicle/config";
+import { env } from "@chronicle/config/env";
+import type { DiffusionJob, MemoryJob, TtsJob } from "@chronicle/utils";
 import { Queue } from "bullmq";
 import { Redis } from "ioredis";
 

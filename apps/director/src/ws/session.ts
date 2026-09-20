@@ -1,4 +1,4 @@
-import { type ErrorCode, PROTOCOL_VERSION, type ServerMessage } from "@chronicle/shared";
+import { type ErrorCode, PROTOCOL_VERSION, type ServerMessage } from "@chronicle/utils";
 import type { ServerWebSocket } from "bun";
 import { record } from "~/ws/buffer";
 

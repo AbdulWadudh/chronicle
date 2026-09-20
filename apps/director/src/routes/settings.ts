@@ -1,9 +1,9 @@
-import { loadSettings, resetSettings, updateSettings } from "@chronicle/db";
 import {
   DEFAULT_RUNTIME_SETTINGS,
   RUNTIME_SETTING_GROUPS,
   runtimeSettingsPatchSchema,
-} from "@chronicle/shared";
+} from "@chronicle/config";
+import { loadSettings, resetSettings, updateSettings } from "@chronicle/db";
 import { Hono } from "hono";
 import { type AuthEnv, requireSession } from "~/auth";
 import { publishSettingsChange } from "~/queue";

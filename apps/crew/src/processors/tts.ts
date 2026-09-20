@@ -1,4 +1,4 @@
-import { env } from "@chronicle/config";
+import { env } from "@chronicle/config/env";
 import {
   AUDIO_CONTENT_TYPE,
   audioChannel,
@@ -6,7 +6,7 @@ import {
   sentenceAudioKey,
   type TtsJob,
   ttsJobSchema,
-} from "@chronicle/shared";
+} from "@chronicle/utils";
 import type { Job } from "bullmq";
 import { publisher } from "~/redis";
 import { upload } from "~/storage";

@@ -1,4 +1,4 @@
-import { env } from "@chronicle/config";
+import { env } from "@chronicle/config/env";
 import { loadSettings } from "@chronicle/db";
 
 export interface ChatMessage {

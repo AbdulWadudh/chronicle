@@ -1,4 +1,4 @@
-import { database, newId, schema, toTurnNode } from "@chronicle/db";
+import { db, newId, schema, toTurnNode } from "@chronicle/db";
 import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -10,7 +10,6 @@ const checkpointSchema = z.object({
 });
 
 async function ownsCharacter(characterId: string, userId: string): Promise<boolean> {
-  const db = await database();
   const row = await db
     .select({ id: schema.characters.id })
     .from(schema.characters)
@@ -28,7 +27,6 @@ export const turnRoutes = new Hono<AuthEnv>()
     if (!(await ownsCharacter(characterId, user.id))) {
       return context.json({ error: "Not found." }, 404);
     }
-    const db = await database();
     const items = await db
       .select()
       .from(schema.turns)
@@ -41,7 +39,6 @@ export const turnRoutes = new Hono<AuthEnv>()
     const body = checkpointSchema.safeParse(await context.req.json().catch(() => null));
     if (!body.success) return context.json({ error: "Invalid checkpoint." }, 400);
 
-    const db = await database();
     const user = context.get("user");
     const turn = await db
       .select()
@@ -84,7 +81,6 @@ export const turnRoutes = new Hono<AuthEnv>()
     if (!(await ownsCharacter(characterId, user.id))) {
       return context.json({ error: "Not found." }, 404);
     }
-    const db = await database();
     const items = await db
       .select()
       .from(schema.checkpoints)

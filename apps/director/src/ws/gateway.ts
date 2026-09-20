@@ -1,4 +1,4 @@
-import { type ClientMessage, PROTOCOL_VERSION, parseClientMessage } from "@chronicle/shared";
+import { type ClientMessage, PROTOCOL_VERSION, parseClientMessage } from "@chronicle/utils";
 import { replayFrom } from "~/ws/buffer";
 import { loadTurnContext } from "~/ws/loader";
 import { disownSocket, startMediaRelay } from "~/ws/media";

@@ -1,5 +1,5 @@
 import { loadSettings, newId, schema, toTurnNode } from "@chronicle/db";
-import { PROTOCOL_VERSION, splitIntoSentences, type TurnNode } from "@chronicle/shared";
+import { PROTOCOL_VERSION, splitIntoSentences, type TurnNode } from "@chronicle/utils";
 import {
   CHECK_PROPOSAL_SCHEMA,
   type CheckProposal,

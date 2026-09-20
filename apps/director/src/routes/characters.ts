@@ -1,5 +1,5 @@
-import { database, newId, schema } from "@chronicle/db";
-import { inventorySchema, isValidBuild, statBlockSchema } from "@chronicle/shared";
+import { db, schema } from "@chronicle/db";
+import { inventorySchema, isValidBuild, statBlockSchema } from "@chronicle/utils";
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -17,7 +17,6 @@ const createCharacterSchema = z.object({
 export const characterRoutes = new Hono<AuthEnv>()
   .use("*", requireSession)
   .get("/", async (context) => {
-    const db = await database();
     const user = context.get("user");
     const worldId = new URL(context.req.url).searchParams.get("worldId");
     const filter =
@@ -36,7 +35,6 @@ export const characterRoutes = new Hono<AuthEnv>()
     const body = createCharacterSchema.safeParse(await context.req.json().catch(() => null));
     if (!body.success) return context.json({ error: "Invalid character." }, 400);
 
-    const db = await database();
     const user = context.get("user");
     const world = await db
       .select()
@@ -51,22 +49,24 @@ export const characterRoutes = new Hono<AuthEnv>()
       return context.json({ error: "Stat build exceeds the point budget." }, 400);
     }
 
-    const character = {
-      id: newId(),
-      worldId: body.data.worldId,
-      userId: user.id,
-      name: body.data.name,
-      bio: body.data.bio,
-      portraitUrl: body.data.portraitUrl,
-      statsJson: body.data.stats,
-      inventoryJson: body.data.inventory,
-      createdAt: new Date(),
-    };
-    await db.insert(schema.characters).values(character);
+    const [character] = await db
+      .insert(schema.characters)
+      .values({
+        worldId: body.data.worldId,
+        userId: user.id,
+        name: body.data.name,
+        bio: body.data.bio,
+        portraitUrl: body.data.portraitUrl,
+        statsJson: body.data.stats,
+        inventoryJson: body.data.inventory,
+      })
+      .returning();
+    if (character === undefined) {
+      return context.json({ error: "The character was not written." }, 500);
+    }
     return context.json(character, 201);
   })
   .get("/:id", async (context) => {
-    const db = await database();
     const user = context.get("user");
     const row = await db
       .select()

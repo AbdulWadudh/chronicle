@@ -1,5 +1,5 @@
 import { join, relative, resolve, sep } from "node:path";
-import { env } from "@chronicle/config";
+import { env } from "@chronicle/config/env";
 import type { Context } from "hono";
 
 const INDEX = "index.html";

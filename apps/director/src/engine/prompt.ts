@@ -1,4 +1,4 @@
-import type { Character, TurnNode, World, WorldState } from "@chronicle/shared";
+import type { Character, TurnNode, World, WorldState } from "@chronicle/utils";
 import type { ChatMessage } from "~/engine/llm";
 
 const NARRATOR_SYSTEM = [

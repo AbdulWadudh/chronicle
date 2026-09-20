@@ -1,11 +1,11 @@
-import { database, schema } from "@chronicle/db";
+import { db, schema } from "@chronicle/db";
 import {
   type DiffusionJob,
   diffusionJobSchema,
   imageChannel,
   SCENE_CONTENT_TYPE,
   sceneKey,
-} from "@chronicle/shared";
+} from "@chronicle/utils";
 import type { Job } from "bullmq";
 import { eq } from "drizzle-orm";
 import {
@@ -36,7 +36,6 @@ export async function renderScene(job: Job<DiffusionJob>): Promise<string> {
     SCENE_CONTENT_TYPE,
   );
 
-  const db = await database();
   await db
     .update(schema.turns)
     .set({ sceneImageUrl: imageUrl })
