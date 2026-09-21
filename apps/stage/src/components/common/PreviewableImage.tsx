@@ -6,6 +6,7 @@ import { cn } from "~/lib/utils";
 export interface PreviewableImageProps {
   imageUrl: string;
   alt: string;
+  downloadName?: string;
   className?: string;
   imageClassName?: string;
 }
@@ -13,6 +14,7 @@ export interface PreviewableImageProps {
 export function PreviewableImage({
   imageUrl,
   alt,
+  downloadName,
   className,
   imageClassName,
 }: PreviewableImageProps) {
@@ -38,7 +40,13 @@ export function PreviewableImage({
         />
       </button>
 
-      <ImageViewer imageUrl={imageUrl} alt={alt} open={open} onClose={() => setOpen(false)} />
+      <ImageViewer
+        imageUrl={imageUrl}
+        alt={alt}
+        open={open}
+        {...(downloadName === undefined ? {} : { downloadName })}
+        onClose={() => setOpen(false)}
+      />
     </>
   );
 }

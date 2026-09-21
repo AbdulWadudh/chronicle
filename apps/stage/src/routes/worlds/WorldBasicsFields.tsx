@@ -1,15 +1,28 @@
-import type { ComposeMode, ComposeTarget } from "@chronicle/utils";
+import type { ComposeMode, ComposeTarget, RenderStyle, ShotSize } from "@chronicle/utils";
 import { ComposableField } from "~/components/common/ComposableField";
+import { WorldLookFields } from "~/components/world/WorldLookFields";
 import type { WorldDraft } from "./useWorldDraft";
 
 export interface WorldBasicsFieldsProps {
   draft: WorldDraft;
   modeFor: (target: ComposeTarget) => ComposeMode | null;
-  onChange: (key: "title" | "genre" | "description" | "opening", value: string) => void;
+  onChange: (
+    key: "title" | "genre" | "description" | "opening" | "visualStyle",
+    value: string,
+  ) => void;
+  onShotSizeChange: (value: ShotSize) => void;
+  onArtStyleChange: (value: RenderStyle) => void;
   onCompose: (target: ComposeTarget, mode: ComposeMode) => void;
 }
 
-export function WorldBasicsFields({ draft, modeFor, onChange, onCompose }: WorldBasicsFieldsProps) {
+export function WorldBasicsFields({
+  draft,
+  modeFor,
+  onChange,
+  onShotSizeChange,
+  onArtStyleChange,
+  onCompose,
+}: WorldBasicsFieldsProps) {
   return (
     <>
       <ComposableField
@@ -57,6 +70,17 @@ export function WorldBasicsFields({ draft, modeFor, onChange, onCompose }: World
         busyMode={modeFor("world.opening")}
         onChange={(value) => onChange("opening", value)}
         onCompose={(mode) => onCompose("world.opening", mode)}
+      />
+
+      <WorldLookFields
+        visualStyle={draft.visualStyle}
+        shotSize={draft.shotSize}
+        artStyle={draft.artStyle}
+        busyMode={modeFor("world.visualStyle")}
+        onVisualStyleChange={(value) => onChange("visualStyle", value)}
+        onShotSizeChange={onShotSizeChange}
+        onArtStyleChange={onArtStyleChange}
+        onCompose={(mode) => onCompose("world.visualStyle", mode)}
       />
     </>
   );

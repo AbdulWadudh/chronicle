@@ -33,6 +33,10 @@ export const SETTING_BOUNDS = {
     cfg: { min: 1, max: 20, step: 0.5 },
     upscale: { min: 1, max: 2, step: 0.25 },
     upscaleDenoise: { min: 0.1, max: 0.8, step: 0.05 },
+    identityWeight: { min: 0, max: 1.5, step: 0.05 },
+    identityCastWeight: { min: 0, max: 1, step: 0.05 },
+    identityStart: { min: 0, max: 0.5, step: 0.01 },
+    identityEnd: { min: 0.3, max: 1, step: 0.05 },
   },
   tts: {
     speed: { min: 0.25, max: 4, step: 0.25 },
@@ -58,10 +62,10 @@ const structuredSchema = z.object({
 });
 
 const promptSchema = z.object({
-  historyDepth: wholeBound(SETTING_BOUNDS.prompt.historyDepth).default(8),
-  recentFacts: wholeBound(SETTING_BOUNDS.prompt.recentFacts).default(6),
-  sceneChars: wholeBound(SETTING_BOUNDS.prompt.sceneChars).default(320),
-  sentences: wholeBound(SETTING_BOUNDS.prompt.sentences).default(2),
+  historyDepth: wholeBound(SETTING_BOUNDS.prompt.historyDepth).default(12),
+  recentFacts: wholeBound(SETTING_BOUNDS.prompt.recentFacts).default(8),
+  sceneChars: wholeBound(SETTING_BOUNDS.prompt.sceneChars).default(600),
+  sentences: wholeBound(SETTING_BOUNDS.prompt.sentences).default(3),
 });
 
 const turnSchema = z.object({
@@ -89,11 +93,20 @@ export const SAMPLERS = [
   "euler",
   "euler_ancestral",
   "heun",
+  "lms",
   "ddim",
   "uni_pc",
 ] as const;
 
-export const SCHEDULERS = ["karras", "normal", "exponential", "sgm_uniform", "simple"] as const;
+export const SCHEDULERS = [
+  "karras",
+  "exponential",
+  "normal",
+  "simple",
+  "sgm_uniform",
+  "beta",
+  "turbo",
+] as const;
 
 export interface DiffusionPreset {
   id: string;
@@ -107,7 +120,7 @@ export const DIFFUSION_PRESETS: DiffusionPreset[] = [
     id: "lightning",
     label: "Lightning model",
     summary: "Few steps, low guidance. For SDXL-Lightning and Turbo checkpoints.",
-    values: { steps: 6, cfg: 2, sampler: "dpmpp_sde", scheduler: "karras" },
+    values: { steps: 8, cfg: 2.5, sampler: "dpmpp_sde", scheduler: "karras" },
   },
   {
     id: "full",
@@ -118,13 +131,19 @@ export const DIFFUSION_PRESETS: DiffusionPreset[] = [
 ];
 
 const imageSchema = z.object({
-  checkpoint: checkpointSchema.prefault("DreamShaperXL_Lightning.safetensors"),
+  checkpoint: checkpointSchema.prefault("RealVisXL_V5.0_Lightning_fp16.safetensors"),
+  stylisedCheckpoint: checkpointSchema.prefault("DreamShaperXL_Lightning.safetensors"),
   steps: wholeBound(SETTING_BOUNDS.image.steps).default(8),
-  cfg: bound(SETTING_BOUNDS.image.cfg).default(2),
+  cfg: bound(SETTING_BOUNDS.image.cfg).default(2.5),
   sampler: z.string().min(1).default("dpmpp_sde"),
   scheduler: z.string().min(1).default("karras"),
-  upscale: bound(SETTING_BOUNDS.image.upscale).default(1.5),
-  upscaleDenoise: bound(SETTING_BOUNDS.image.upscaleDenoise).default(0.4),
+  upscale: bound(SETTING_BOUNDS.image.upscale).default(1),
+  upscaleDenoise: bound(SETTING_BOUNDS.image.upscaleDenoise).default(0.3),
+  identityMethod: z.enum(["fidelity", "style", "neutral"]).default("style"),
+  identityWeight: bound(SETTING_BOUNDS.image.identityWeight).default(0.65),
+  identityCastWeight: bound(SETTING_BOUNDS.image.identityCastWeight).default(0.35),
+  identityStart: bound(SETTING_BOUNDS.image.identityStart).default(0.15),
+  identityEnd: bound(SETTING_BOUNDS.image.identityEnd).default(0.7),
   negativePrompt: z
     .string()
     .default(

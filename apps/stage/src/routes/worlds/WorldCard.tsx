@@ -1,8 +1,9 @@
 import { API } from "@chronicle/config";
-import { PaintBrush01Icon } from "@hugeicons/core-free-icons";
+import { PaintBrush01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback } from "react";
 import { PreviewableImage } from "~/components/common/PreviewableImage";
+import { Tooltip } from "~/components/ui/tooltip";
 import { useImagePoll } from "~/hooks/useImagePoll";
 import type { WorldSummary } from "~/lib/entities";
 
@@ -10,9 +11,10 @@ export interface WorldCardProps {
   world: WorldSummary;
   index: number;
   onOpen: () => void;
+  onEdit?: (() => void) | undefined;
 }
 
-export function WorldCard({ world, index, onOpen }: WorldCardProps) {
+export function WorldCard({ world, index, onOpen, onEdit }: WorldCardProps) {
   const selectCover = useCallback((entity: WorldSummary) => entity.coverImageUrl, []);
   const poll = useImagePoll<WorldSummary>(
     world.coverImageUrl === null ? `${API.worlds}/${world.id}` : null,
@@ -23,7 +25,7 @@ export function WorldCard({ world, index, onOpen }: WorldCardProps) {
   return (
     <article
       style={{ ["--rise-index" as string]: index }}
-      className="raise rise-in flex flex-col overflow-hidden rounded-card border-(length:--border-width-card) border-card-border bg-card"
+      className="raise rise-in relative flex flex-col overflow-hidden rounded-card border-(length:--border-width-card) border-card-border bg-card"
     >
       {cover === null ? (
         <div className="flex h-40 w-full animate-pulse items-center justify-center gap-2 bg-secondary text-text-muted">
@@ -34,8 +36,22 @@ export function WorldCard({ world, index, onOpen }: WorldCardProps) {
         <PreviewableImage
           imageUrl={cover}
           alt={`the cover of ${world.title}`}
+          downloadName={`${world.title} cover`}
           className="h-40 w-full"
         />
+      )}
+
+      {onEdit === undefined ? null : (
+        <Tooltip content="Edit world">
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-label={`Edit ${world.title}`}
+            className="pressable absolute top-2 right-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-control border-(length:--border-width-card) border-card-border bg-card/80 text-text-secondary backdrop-blur-sm"
+          >
+            <HugeiconsIcon icon={PencilEdit02Icon} size={16} strokeWidth={1.5} />
+          </button>
+        </Tooltip>
       )}
 
       <button

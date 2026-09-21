@@ -74,6 +74,7 @@ export function CharacterCard({ character, index, onPlay, onEdit, onDelete }: Ch
                 <PreviewableImage
                   imageUrl={portrait}
                   alt={`the portrait of ${character.name}`}
+                  downloadName={`${character.name} portrait`}
                   className="h-full w-full rounded-none border-0"
                 />
               )}

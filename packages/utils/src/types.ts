@@ -1,3 +1,4 @@
+import { RENDER_STYLES, type RenderStyleName } from "@chronicle/config";
 import { z } from "zod";
 
 export const statRankSchema = z.union([
@@ -46,6 +47,12 @@ export function pronounPhrase(pronouns: z.infer<typeof pronounsSchema>): string 
   return PRONOUN_PHRASE[pronouns];
 }
 
+export const shotSizeSchema = z.enum(["closeUp", "waistUp", "threeQuarter", "fullBody"]);
+
+export const renderStyleSchema = z.enum(
+  Object.keys(RENDER_STYLES) as [RenderStyleName, ...RenderStyleName[]],
+);
+
 export const worldSchema = z.object({
   id: z.string(),
   userId: z.string(),
@@ -53,6 +60,9 @@ export const worldSchema = z.object({
   description: z.string().default(""),
   coverImageUrl: z.string().nullable(),
   genre: z.string().default(""),
+  visualStyle: z.string().default(""),
+  shotSize: shotSizeSchema.default("waistUp"),
+  artStyle: renderStyleSchema.default("photoreal"),
   visibility: worldVisibilitySchema,
   statDefinitions: z.array(statDefinitionSchema),
   pointBudget: z.number().int().positive(),
@@ -66,8 +76,12 @@ export const characterSchema = z.object({
   userId: z.string(),
   name: z.string().min(1),
   bio: z.string().default(""),
+  appearance: z.string().default(""),
+  outfit: z.string().default(""),
+  outfitLocked: z.boolean().default(true),
   pronouns: pronounsSchema.default("they"),
   portraitUrl: z.string().nullable(),
+  draftPortraitUrl: z.string().nullable().default(null),
   stats: statBlockSchema,
   inventory: inventorySchema,
   createdAt: z.coerce.date(),
@@ -93,6 +107,8 @@ export type WorldVisibility = z.infer<typeof worldVisibilitySchema>;
 export type Pronouns = z.infer<typeof pronounsSchema>;
 export type World = z.infer<typeof worldSchema>;
 export type Character = z.infer<typeof characterSchema>;
+export type ShotSize = z.infer<typeof shotSizeSchema>;
+export type RenderStyle = z.infer<typeof renderStyleSchema>;
 export type StatePatch = z.infer<typeof statePatchSchema>;
 
 export function applyStatePatch(state: WorldState, patch: StatePatch): WorldState {

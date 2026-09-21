@@ -259,14 +259,20 @@
   }
 
   .settings-panel {
-    height: var(--collapsible-panel-height);
+    --settings-panel-max: 30rem;
+    display: grid;
+    grid-template-rows: 1fr;
     overflow: hidden;
-    transition: height 220ms ease-out;
+    transition: grid-template-rows 220ms ease-out;
+  }
+
+  .settings-panel > * {
+    min-height: 0;
   }
 
   .settings-panel[data-starting-style],
   .settings-panel[data-ending-style] {
-    height: 0;
+    grid-template-rows: 0fr;
   }
 
   [data-motion="off"] .settings-panel {

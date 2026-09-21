@@ -8,6 +8,13 @@ export interface CheckProposal {
   reason: string;
 }
 
+export interface AdjudicationDecision {
+  requiresCheck: boolean;
+  stat?: string;
+  dc?: number;
+  reason?: string;
+}
+
 export interface ResolvedCheck extends DiceCheck {
   total: number;
   critical: "success" | "failure" | null;

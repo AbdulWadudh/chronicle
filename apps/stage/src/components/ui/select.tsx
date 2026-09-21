@@ -2,6 +2,7 @@ import { Combobox } from "@base-ui/react/combobox";
 import { ArrowDown01Icon, Search01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMemo } from "react";
+import { useTopLayer } from "~/hooks/useTopLayer";
 import { cn } from "~/lib/utils";
 
 export interface SelectOptionGroup {
@@ -45,6 +46,8 @@ function Select({
     [groups],
   );
 
+  const { anchorRef, container } = useTopLayer<HTMLButtonElement>();
+
   return (
     <Combobox.Root
       items={items}
@@ -54,6 +57,7 @@ function Select({
       }}
     >
       <Combobox.Trigger
+        ref={anchorRef}
         id={id}
         aria-label={ariaLabel}
         aria-describedby={describedBy}
@@ -71,7 +75,7 @@ function Select({
         </Combobox.Icon>
       </Combobox.Trigger>
 
-      <Combobox.Portal>
+      <Combobox.Portal container={container}>
         <Combobox.Positioner sideOffset={6} className="z-50 outline-none">
           <Combobox.Popup
             data-slot="select-content"

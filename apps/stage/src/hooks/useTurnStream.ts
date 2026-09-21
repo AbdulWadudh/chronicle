@@ -33,13 +33,18 @@ export interface TurnStream {
   pendingCheck: PendingDiceCheck | null;
   playingSentenceIndex: number | null;
   error: string | null;
-  submitAction: (action: string, directorWhisper: string | null) => void;
+  isRerollingChoices: boolean;
+  submitAction: (
+    action: string,
+    directorWhisper: string | null,
+    mentionedCharacterIds?: string[],
+  ) => void;
   selectChoice: (choiceIndex: 0 | 1 | 2, directorWhisper: string | null) => void;
   progressOf: (turnId: string) => SceneProgress | null;
   abort: () => void;
   endCinematic: () => void;
   endReplay: () => void;
-  regenerate: (turnId: string, target: "narrative" | "audio") => void;
+  regenerate: (turnId: string, target: "narrative" | "audio" | "choices") => void;
   repaintScene: (turnId: string, prompt: string | null) => void;
   isPainting: (turnId: string) => boolean;
   replayTurn: (turn: TurnNode) => void;
@@ -59,6 +64,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
   const [cinematicTurnId, setCinematicTurnId] = useState<string | null>(null);
   const [replayTurnId, setReplayTurnId] = useState<string | null>(null);
   const [replayKey, setReplayKey] = useState(0);
+  const [isRerollingChoices, setIsRerollingChoices] = useState(false);
   const painting = useScenePainting();
 
   const latest = committedTurns.at(-1);
@@ -156,6 +162,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
           });
           break;
         case "TURN_COMMITTED":
+          setIsRerollingChoices(false);
           setCommittedTurns((previous) =>
             previous.some((turn) => turn.id === message.turn.id)
               ? previous.map((turn) => (turn.id === message.turn.id ? message.turn : turn))
@@ -165,6 +172,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
           setActiveTurnId(null);
           break;
         case "ERROR":
+          setIsRerollingChoices(false);
           setError(message.message);
           setActiveTurnId(null);
           if (message.turnId !== null) painting.stop(message.turnId);
@@ -179,7 +187,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
   const socket = useGameSocket(characterId, handleMessage);
 
   const submitAction = useCallback(
-    (action: string, directorWhisper: string | null) => {
+    (action: string, directorWhisper: string | null, mentionedCharacterIds?: string[]) => {
       const parentTurnId = committedTurns.at(-1)?.id ?? null;
       socket.send({
         type: "SUBMIT_ACTION",
@@ -187,6 +195,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
         action,
         mode: "scratch",
         directorWhisper,
+        mentionedCharacterIds,
       });
     },
     [committedTurns, socket],
@@ -202,10 +211,11 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
   );
 
   const regenerate = useCallback(
-    (turnId: string, target: "narrative" | "audio") => {
+    (turnId: string, target: "narrative" | "audio" | "choices") => {
       socket.send({ type: "REGENERATE", turnId, target });
       if (target === "narrative") painting.start(turnId);
-      else audio.reset();
+      else if (target === "audio") audio.reset();
+      else if (target === "choices") setIsRerollingChoices(true);
     },
     [socket, painting, audio],
   );
@@ -240,6 +250,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
   );
 
   const abort = useCallback(() => {
+    setIsRerollingChoices(false);
     if (activeTurnId === null) return;
     socket.send({ type: "ABORT_TURN", turnId: activeTurnId });
   }, [activeTurnId, socket]);
@@ -263,6 +274,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
     pendingCheck,
     playingSentenceIndex: audio.playingSentenceIndex,
     error: error ?? socket.lastError,
+    isRerollingChoices,
     submitAction,
     selectChoice,
     progressOf: painting.progressOf,

@@ -72,6 +72,7 @@ async function dispatch(socket: ChronicleSocket, message: ClientMessage): Promis
         message.action,
         message.mode,
         message.directorWhisper,
+        message.mentionedCharacterIds,
       );
       return;
 
@@ -104,6 +105,7 @@ async function startTurn(
   action: string,
   mode: "scratch" | "enhanced",
   directorWhisper: string | null,
+  mentionedCharacterIds?: string[],
 ): Promise<void> {
   const characterId = socket.data.characterId;
   if (characterId === null) {
@@ -115,7 +117,16 @@ async function startTurn(
     sendError(socket, replyTo, "NOT_FOUND", "Character or world not found.");
     return;
   }
-  await runTurn({ socket, replyTo, context, parentTurnId, action, mode, directorWhisper });
+  await runTurn({
+    socket,
+    replyTo,
+    context,
+    parentTurnId,
+    action,
+    mode,
+    directorWhisper,
+    mentionedCharacterIds,
+  });
 }
 
 async function choiceLabel(parentTurnId: string, choiceIndex: number): Promise<string | null> {

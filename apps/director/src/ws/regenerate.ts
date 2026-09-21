@@ -1,6 +1,7 @@
 import { db, schema, toTurnNode } from "@chronicle/db";
 import { PROTOCOL_VERSION } from "@chronicle/utils";
 import { eq } from "drizzle-orm";
+import { resolveInteractingCharacters } from "~/engine/castResolution";
 import { planTurn } from "~/engine/choices";
 import { enqueueScene } from "~/engine/imagery";
 import { loadTurnContext } from "~/ws/loader";
@@ -15,7 +16,7 @@ import {
 
 const FIRST_VARIANT = 1;
 
-export type RegenerateTarget = "narrative" | "visual" | "audio";
+export type RegenerateTarget = "narrative" | "visual" | "audio" | "choices";
 
 export function nextVariant(sceneImageUrl: string | null): number {
   if (sceneImageUrl === null) return FIRST_VARIANT;
@@ -51,7 +52,40 @@ export async function regenerateTurn(
     return;
   }
 
+  if (target === "choices") {
+    const signal = beginTurn(turnId);
+    try {
+      const cast = await resolveInteractingCharacters(
+        context.db,
+        context.world.id,
+        context.character.id,
+        row.narrativeText,
+      );
+      const plan = await planTurn(row.narrativeText, signal, cast, row.playerAction);
+      await db
+        .update(schema.turns)
+        .set({ choicesJson: plan.choices })
+        .where(eq(schema.turns.id, turnId));
+      const updated = await db.select().from(schema.turns).where(eq(schema.turns.id, turnId)).get();
+      send(socket, {
+        v: PROTOCOL_VERSION,
+        replyTo,
+        type: "TURN_COMMITTED",
+        turn: toTurnNode(updated ?? row),
+      });
+    } finally {
+      finishTurn(turnId);
+    }
+    return;
+  }
+
   if (target === "visual") {
+    const cast = await resolveInteractingCharacters(
+      context.db,
+      context.world.id,
+      context.character.id,
+      row.narrativeText,
+    );
     await enqueueScene(
       context.world,
       context.character,
@@ -59,6 +93,8 @@ export async function regenerateTurn(
       row.narrativeText,
       row.sceneShape,
       nextVariant(row.sceneImageUrl),
+      undefined,
+      cast,
     );
     send(socket, { v: PROTOCOL_VERSION, replyTo, type: "TURN_COMMITTED", turn: toTurnNode(row) });
     return;
@@ -104,7 +140,7 @@ export async function regenerateTurn(
       .set({ narrativeText: narrative, audioUrlsJson: [], sceneImageUrl: null })
       .where(eq(schema.turns.id, turnId));
     await dispatchAudio(context, turnId, narrative);
-    const plan = await planTurn(narrative, signal);
+    const plan = await planTurn(narrative, signal, [], row.playerAction);
     const [updated] = await db
       .update(schema.turns)
       .set({ choicesJson: plan.choices, sceneShape: plan.sceneShape })

@@ -2,11 +2,10 @@
 
 Build progress tracker. Read this first. Update it at every wave gate, before the commit.
 
-**Status:** Wave 7A (authoring) complete and verified live. Worlds and characters can now be
-created from the client, with premise-assisted drafting, generated covers and portraits, and a
-backstory that reaches the narrator. Waves 7B-7D (playable turn, immersive delivery, memory and
-progression) are planned and approved, not yet built.
-**Updated:** 2026-09-20
+**Status:** Wave 7E (image identity and world art direction) complete and verified live against
+ComfyUI. Characters carry a stored look, worlds carry an art bible, a shot size and a render
+style, and PuLID holds faces across scenes. Waves 7B-7D still have the open items listed below.
+**Updated:** 2026-09-22
 
 ## Waves
 
@@ -23,6 +22,35 @@ progression) are planned and approved, not yet built.
 | 7B | Playable turn: choices, dice ordering, state fold, Director's Console | choices, whisper and the dice overlay done; dice ordering and state fold open |
 | 7C | Immersive delivery: per-sentence audio, scene skeletons, REGENERATE, degraded paths | audio persistence, REGENERATE, live render progress and the painting state done; Cinema Mode gating open |
 | 7D | Memory and progression: branching, checkpoints, nomic-embed recall | planned |
+| 7E | Image identity, world art direction, render styles, world and portrait editing | done |
+
+## Wave 7E
+
+- `characters.appearance`, `outfit`, `outfitLocked`, `draftPortraitUrl`; `worlds.visualStyle`,
+  `shotSize`, `artStyle`. Migrations `0006`-`0011`.
+- `engine/appearance.ts` and `engine/worldStyle.ts` draft a look and an art bible once from the
+  backstory and the world description, through structured sub-fields so clothing cannot land in
+  the appearance field. Each part is capped separately — capping the joined string dropped the
+  hair and face fields and cost a day of swapped-gender renders.
+- `engine/prompt.ts` split into `prompt/{narrative,scene}.ts`.
+- `RENDER_STYLES` (photoreal, anime, painterly, comic, render3d) drive the medium, the style tail,
+  the negative and, through `image.stylisedCheckpoint`, the model.
+- PuLID face locking: masked per subject, protagonist applied last, and a separate
+  `image.identityCastWeight` (0.35) for two-portrait scenes. At the single-subject weight the
+  last-applied identity imposes its gender on both figures.
+- Portrait regeneration and upload write to a draft slot; saving the character promotes it.
+- World editing (`PATCH /api/v1/worlds/:id`), cover regeneration with a composable prompt, and
+  an `Imagery` section in Story settings.
+- `useTopLayer` portals Select, Tooltip and AlertDialog into the nearest `<dialog>`; Base UI
+  portals to `document.body`, which sits under a `showModal()` top layer.
+
+### Open
+
+- Shot size is a prompt lever, not a guarantee. A scene description implying a wide view beats
+  the framing token.
+- Images are stored as lossless PNG at 2-3 MB. `SaveImageAdvanced` offers AVIF with a CRF knob
+  and is accepted by the API; no size comparison measured yet.
+- `promotePortrait` overwrites the portrait key, so the previous committed portrait is lost.
 
 ## Wave 6
 
@@ -36,25 +64,11 @@ progression) are planned and approved, not yet built.
 
 ### Open
 
-- Face identity does not persist between renders. ComfyUI has no IPAdapter, InstantID, PuLID or
-  ReActor installed — checked against all 1037 nodes. The achievable fix is a stored
-  `characters.appearance` line injected into every portrait and scene prompt, which needs a
-  migration.
-- `image.steps` and `cfg` sit at the Lightning preset's 6 and 2. Measured better at 10 and 3.
-- Three ESRGAN upscalers exist in `Data/Models/ESRGAN` but ComfyUI maps no `upscale_models` path,
-  so the detail pass upscales in latent space rather than through a real upscaler.
 - `bun --watch` does not reload an app when only a workspace package changes. Touch the app's
   `src/index.ts` or the fix will look dead.
-
 - `SUBMIT_ACTION` carries no `directorWhisper`, so the composer's whisper card sets a direction
   the director never receives. Closing it is a two-line additive field on the client schema and
   is **waiting on approval** — the WS protocol shape is gated.
-- Image fidelity: `image.checkpoint` is `DreamShaperXL_Lightning` at 6 steps / cfg 2, which reads
-  soft. The full-SDXL preset (epicrealismXL, 26 steps, cfg 7, `dpmpp_2m`) is already selectable in
-  admin, and switching is a settings change, not a code change.
-- Face consistency across scenes is prompt-level only — `buildScenePrompt` leads with the
-  character's name, pronoun subject and a bio slice. True consistency needs an IP-Adapter
-  reference pass in the ComfyUI workflow.
 - Narration still streams while the die tumbles; the dice-first ordering is unbuilt.
 - `loader.ts` still passes `world.initialState`; the state fold is unbuilt.
 

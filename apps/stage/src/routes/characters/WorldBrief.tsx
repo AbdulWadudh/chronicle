@@ -22,6 +22,7 @@ export function WorldBrief({ world }: WorldBriefProps) {
           <PreviewableImage
             imageUrl={world.coverImageUrl}
             alt={`the cover of ${world.title}`}
+            downloadName={`${world.title} cover`}
             className="h-full w-full"
           />
         )}

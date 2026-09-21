@@ -1,6 +1,11 @@
 import { API } from "@chronicle/config";
 import type { ComposeContext, ComposeMode } from "@chronicle/utils";
-import { PaintBrush01Icon, Upload04Icon, UserIcon } from "@hugeicons/core-free-icons";
+import {
+  ArrowTurnBackwardIcon,
+  PaintBrush01Icon,
+  Upload04Icon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { type ChangeEvent, useCallback, useRef, useState } from "react";
 import { ComposableField } from "~/components/common/ComposableField";
@@ -11,7 +16,7 @@ import { GroupLabel } from "~/components/ui/label";
 import { Tooltip } from "~/components/ui/tooltip";
 import type { Compose } from "~/hooks/useCompose";
 import { useImagePoll } from "~/hooks/useImagePoll";
-import { post, putBytes } from "~/lib/api";
+import { post, putBytes, remove } from "~/lib/api";
 import type { CharacterSummary } from "~/lib/entities";
 
 export interface PortraitPanelProps {
@@ -27,19 +32,26 @@ export function PortraitPanel({ existing, worldId, compose, describe }: Portrait
   const [uploaded, setUploaded] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [discarded, setDiscarded] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const selectPortrait = useCallback((entity: CharacterSummary) => entity.portraitUrl, []);
+  const selectDraft = useCallback(
+    (entity: CharacterSummary) => entity.draftPortraitUrl ?? entity.portraitUrl,
+    [],
+  );
   const known = existing?.portraitUrl ?? null;
   const watching = existing !== null && (known === null || awaiting !== null);
   const poll = useImagePoll<CharacterSummary>(
     watching ? `${API.characters}/${existing.id}` : null,
-    selectPortrait,
+    selectDraft,
     awaiting?.since ?? null,
   );
 
-  const portrait = uploaded ?? poll.url ?? known;
+  const stored = discarded ? null : (existing?.draftPortraitUrl ?? null);
+  const drafted = discarded ? null : (uploaded ?? poll.url);
+  const portrait = drafted ?? stored ?? known;
   const painting = poll.pending;
+  const unsaved = drafted !== null || stored !== null;
 
   async function fill(mode: ComposeMode): Promise<void> {
     const value = await compose.run(
@@ -58,15 +70,29 @@ export function PortraitPanel({ existing, worldId, compose, describe }: Portrait
     setError(null);
     setUploading(true);
     try {
-      const saved = await putBytes<{ portraitUrl: string }>(
+      const saved = await putBytes<{ draftPortraitUrl: string }>(
         `${API.characters}/${existing.id}/portrait`,
         file,
       );
-      setUploaded(saved.portraitUrl);
+      setUploaded(saved.draftPortraitUrl);
+      setDiscarded(false);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "That portrait could not be uploaded.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function discardDraft(): Promise<void> {
+    if (existing === null) return;
+    setError(null);
+    try {
+      await remove(`${API.characters}/${existing.id}/portrait/draft`);
+      setUploaded(null);
+      setAwaiting(null);
+      setDiscarded(true);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "That draft could not be discarded.");
     }
   }
 
@@ -79,7 +105,8 @@ export function PortraitPanel({ existing, worldId, compose, describe }: Portrait
         `${API.characters}/${existing.id}/portrait`,
         trimmed.length > 0 ? { prompt: trimmed } : {},
       );
-      setAwaiting({ since: known });
+      setAwaiting({ since: portrait });
+      setDiscarded(false);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The portrait could not be requested.");
     }
@@ -99,11 +126,19 @@ export function PortraitPanel({ existing, worldId, compose, describe }: Portrait
             />
           </span>
         ) : (
-          <PreviewableImage
-            imageUrl={portrait}
-            alt="the portrait"
-            className="w-24 shrink-0 self-stretch rounded-control"
-          />
+          <span className="relative w-24 shrink-0 self-stretch">
+            <PreviewableImage
+              imageUrl={portrait}
+              alt="the portrait"
+              downloadName={`${existing?.name ?? "character"} portrait`}
+              className="h-full w-full rounded-control"
+            />
+            {painting ? (
+              <span className="absolute inset-0 flex items-center justify-center rounded-control bg-scrim/70 backdrop-blur-sm">
+                <Spinner size={16} label="Painting the portrait" />
+              </span>
+            ) : null}
+          </span>
         )}
 
         <div className="flex min-w-0 flex-1 flex-col gap-2.5">
@@ -169,6 +204,23 @@ export function PortraitPanel({ existing, worldId, compose, describe }: Portrait
           )}
         </div>
       </div>
+
+      {unsaved && !painting ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="min-w-0 text-[0.6875rem] leading-relaxed text-text-muted">
+            This portrait is a draft. Save the character to keep it.
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void discardDraft()}
+            className="shrink-0 gap-1.5 text-text-muted hover:text-text-primary"
+          >
+            <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={14} strokeWidth={1.5} />
+            Discard
+          </Button>
+        </div>
+      ) : null}
 
       {error === null ? null : (
         <p role="alert" className="text-[0.75rem] text-danger">

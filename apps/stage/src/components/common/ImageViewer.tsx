@@ -15,12 +15,27 @@ export interface ImageViewerProps {
   imageUrl: string | null;
   alt: string;
   open: boolean;
+  downloadName?: string;
   onClose: () => void;
 }
 
-function filenameOf(imageUrl: string): string {
+function extensionOf(imageUrl: string): string {
   const path = imageUrl.split("?")[0] ?? imageUrl;
-  return path.split("/").pop() ?? "chronicle.png";
+  return path.split(".").pop()?.toLowerCase() ?? "png";
+}
+
+export function filenameOf(imageUrl: string, downloadName?: string): string {
+  if (downloadName === undefined || downloadName.trim().length === 0) {
+    const path = imageUrl.split("?")[0] ?? imageUrl;
+    return path.split("/").pop() ?? "chronicle.png";
+  }
+  const slug = downloadName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, "_")
+    .replace(/^_+|_+$/gu, "")
+    .slice(0, 60)
+    .replace(/_+$/u, "");
+  return `${slug.length > 0 ? slug : "chronicle"}.${extensionOf(imageUrl)}`;
 }
 
 type OverlayTone = "accent" | "danger";
@@ -52,7 +67,7 @@ function OverlayAction({ icon, label, tone, onPress }: OverlayActionProps) {
   );
 }
 
-export function ImageViewer({ imageUrl, alt, open, onClose }: ImageViewerProps) {
+export function ImageViewer({ imageUrl, alt, open, downloadName, onClose }: ImageViewerProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const frame = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +136,7 @@ export function ImageViewer({ imageUrl, alt, open, onClose }: ImageViewerProps) 
       const href = URL.createObjectURL(await response.blob());
       const anchor = document.createElement("a");
       anchor.href = href;
-      anchor.download = filenameOf(imageUrl);
+      anchor.download = filenameOf(imageUrl, downloadName);
       anchor.click();
       URL.revokeObjectURL(href);
     } catch (cause) {

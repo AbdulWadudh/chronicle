@@ -36,6 +36,10 @@ export function characterPortraitKey(worldId: string, characterId: string): stri
   return `${characterPrefix(worldId, characterId)}/portrait.png`;
 }
 
+export function characterDraftPortraitKey(worldId: string, characterId: string): string {
+  return `${characterPrefix(worldId, characterId)}/portrait-draft.png`;
+}
+
 export function sceneKey(
   worldId: string,
   characterId: string,

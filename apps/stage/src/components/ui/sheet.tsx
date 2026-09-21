@@ -122,7 +122,7 @@ export function Sheet({
           </header>
 
           <div className="scrollbar-none flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
-            {children}
+            {open ? children : null}
           </div>
 
           {actions !== undefined && actions.length > 0 ? (

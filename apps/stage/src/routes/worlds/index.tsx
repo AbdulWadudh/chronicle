@@ -11,6 +11,7 @@ import { Segmented, type SegmentedOption } from "~/components/ui/segmented";
 import { get } from "~/lib/api";
 import type { WorldSummary } from "~/lib/entities";
 import { CreateWorldDialog } from "./CreateWorldDialog";
+import { EditWorldDialog } from "./EditWorldDialog";
 import { WorldCard } from "./WorldCard";
 
 type Scope = "mine" | "community";
@@ -24,6 +25,8 @@ export function Worlds() {
   const navigate = useNavigate();
   const [scope, setScope] = useState<Scope>("mine");
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<WorldSummary | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const loadPage = useCallback(
     async (cursor: string | null, signal: AbortSignal): Promise<Page<WorldSummary>> => {
@@ -68,7 +71,7 @@ export function Worlds() {
       </div>
 
       <PaginatedList
-        key={scope}
+        key={`${scope}-${reloadKey}`}
         loadPage={loadPage}
         keyExtractor={(world) => world.id}
         listClassName="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
@@ -80,8 +83,22 @@ export function Worlds() {
             : "Nobody has published a public world yet. Anything you mark Community will show up here."
         }
         renderItem={(world, index) => (
-          <WorldCard world={world} index={index} onOpen={() => openWorld(world.id)} />
+          <WorldCard
+            world={world}
+            index={index}
+            onOpen={() => openWorld(world.id)}
+            onEdit={scope === "mine" ? () => setEditing(world) : undefined}
+          />
         )}
+      />
+
+      <EditWorldDialog
+        world={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => {
+          setEditing(null);
+          setReloadKey((previous) => previous + 1);
+        }}
       />
 
       <CreateWorldDialog

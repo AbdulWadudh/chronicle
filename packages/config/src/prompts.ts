@@ -26,17 +26,97 @@ export const CHECK_RULES = [
 export const SUBJECT_BY_PRONOUN = {
   he: "a man",
   she: "a woman",
-  they: "a man or women",
+  they: "a person",
 } as const;
+
+export const SHOT_SIZES = {
+  closeUp: {
+    prefix: "close-up",
+    clause: "(head and shoulders only:1.4), faces filling the frame",
+  },
+  waistUp: {
+    prefix: "medium",
+    clause: "(cropped at the waist:1.4), head and torso only",
+  },
+  threeQuarter: {
+    prefix: "",
+    clause: "(cropped at the knees:1.3), head to knees",
+  },
+  fullBody: {
+    prefix: "full-body",
+    clause: "head to feet inside the frame",
+  },
+} as const;
+
+export const RENDER_STYLES = {
+  photoreal: {
+    stylised: false,
+    label: "Photoreal",
+    medium: "cinematic photo",
+    portraitMedium: "character portrait photo",
+    tail: "sharp facial features, natural skin texture, photorealistic, dramatic lighting",
+    negative: "cartoon, anime, illustration, painting, sketch, 3d render, doll",
+  },
+  anime: {
+    stylised: true,
+    label: "Anime",
+    medium: "anime illustration",
+    portraitMedium: "anime character portrait",
+    tail: "clean line art, cel shading, expressive eyes, vibrant colour, crisp detail",
+    negative: "photograph, photorealistic, live action, 3d render, muddy colour",
+  },
+  painterly: {
+    stylised: true,
+    label: "Painterly",
+    medium: "digital painting",
+    portraitMedium: "painted character portrait",
+    tail: "visible brushwork, rich colour, dramatic lighting, concept art finish",
+    negative: "photograph, photorealistic, 3d render, flat vector, harsh outline",
+  },
+  comic: {
+    stylised: true,
+    label: "Comic",
+    medium: "graphic novel panel",
+    portraitMedium: "graphic novel character portrait",
+    tail: "bold ink lines, halftone shading, high contrast, limited palette",
+    negative: "photograph, photorealistic, 3d render, soft focus, muted palette",
+  },
+  render3d: {
+    stylised: true,
+    label: "3D render",
+    medium: "stylised 3d animated film still",
+    portraitMedium: "stylised 3d character portrait",
+    tail: "subsurface scattering, global illumination, soft key light, polished finish",
+    negative: "photograph, flat illustration, sketch, harsh grain",
+  },
+} as const;
+
+export type RenderStyleName = keyof typeof RENDER_STYLES;
+
+export const SHOT_NEGATIVES = {
+  closeUp: "full body, whole body, legs, feet, knees, waist, wide shot, distant subject",
+  waistUp: "full body, whole body, legs, feet, knees, wide shot, distant subject",
+  threeQuarter: "full body, feet, wide shot, distant subject",
+  fullBody: "cropped legs, cropped feet",
+} as const;
+
+export type ShotSize = keyof typeof SHOT_SIZES;
 
 export const IMAGERY = {
   scene: {
-    lead: "cinematic film still",
-    framing:
-      "medium wide shot, the whole head and torso inside the frame with clear space above the head, the place around them clearly visible, subject off-centre and turned into what is happening, candid unposed moment",
-    style: "single subject in focus, background softly blurred, dramatic lighting, highly detailed",
-    negative:
-      "extreme close-up, face filling the frame, headshot, beauty shot, macro portrait, cropped head, top of head cut off, chin cropped, character sheet, centered symmetrical composition, posed, looking at viewer, studio backdrop, full body reference, crowd of sharp background faces, deformed background figures, malformed distant faces, fused limbs, extra limbs, distorted anatomy, gaunt sunken cheeks, elongated face, deformed face",
+    lead: "cinematic photo",
+    framing: "natural depth of field",
+    expression:
+      "(expressive faces:1.2), facial expression and body language reacting to this exact moment, natural candid gesture, eyes alive",
+    style: "sharp facial features, natural skin texture, photorealistic, dramatic lighting",
+    negativeBase:
+      "bad anatomy, deformed limbs, fused limbs, extra arms, extra legs, malformed hands, extra fingers, mutated, distorted body, blurry, formal business suit, necktie, looking at camera, staring at viewer, posed photo, deadpan, blank stare, neutral expression, expressionless, passport photo",
+    negativeSolo:
+      "2 people, two people, second person, duplicate person, cloned faces, crowd, group",
+    negativeCast:
+      "3 people, three people, trio, group, crowd, extra figures, multiple people, background characters, duplicate person, cloned faces, swapped bodies, mismatched head and body",
+    negativeSameGender:
+      "two women, two female subjects, all-female, two men, two male subjects, all-male, same gender pair, androgynous, ambiguous gender",
   },
   portrait: {
     lead: "character portrait",

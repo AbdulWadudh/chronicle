@@ -11,7 +11,10 @@ import { TurnActions } from "./TurnActions";
 import { aspectOf, PlayerActionLine, TURN_GRID } from "./TurnEntry";
 
 const FADE = { duration: 0.5, ease: "easeOut" } as const;
-const STAGE_LABEL = { sketch: "Sketching the scene", detail: "Adding the fine detail" } as const;
+const STAGE_LABEL: Record<string, string> = {
+  sketch: "Sketching the scene",
+  detail: "Adding the fine detail",
+};
 
 export interface SceneStageProps {
   phase: PlayPhase;
@@ -126,34 +129,32 @@ export function SceneStage({
       </div>
 
       {cinematic ? (
-        <>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 bg-linear-to-t from-scrim to-transparent px-6 pt-20 pb-[max(1.5rem,var(--safe-bottom))]">
+          {reveal.visible.length === 0 ? null : (
+            <div className="pointer-events-auto w-full max-w-130 rounded-card border-(length:--border-width-card) border-primary/40 bg-card/80 px-5 py-4 shadow-(--shadow-overlay) backdrop-blur-md">
+              {narration}
+            </div>
+          )}
           <button
             type="button"
             onClick={onEndCinematic}
-            aria-label="Continue to your choices"
-            className="absolute inset-0 cursor-pointer"
-          />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 bg-linear-to-t from-scrim to-transparent px-6 pt-20 pb-[max(1.5rem,var(--safe-bottom))]">
-            {reveal.visible.length === 0 ? null : (
-              <div className="w-full max-w-130 rounded-card border-(length:--border-width-card) border-primary/40 bg-card/80 px-5 py-4 shadow-(--shadow-overlay) backdrop-blur-md">
-                {narration}
-              </div>
-            )}
-            <p className="rounded-control bg-card/70 px-3 py-1 text-[0.6875rem] tracking-[0.12em] text-text-secondary uppercase backdrop-blur-sm">
-              {hint ?? (stream.sceneReady ? "Tap to continue" : "Tap to skip the wait")}
+            className="pressable pointer-events-auto cursor-pointer rounded-control border-(length:--border-width-card) border-primary/35 bg-card/85 px-3.5 py-1.5 text-[0.6875rem] font-medium tracking-[0.12em] text-text-primary uppercase shadow-md backdrop-blur-md transition-colors hover:border-primary/60 hover:bg-card"
+          >
+            {hint ?? (stream.sceneReady ? "Tap to continue" : "Tap to skip the wait")}
+          </button>
+          {stream.sceneReady ? null : (
+            <p className="text-[0.75rem] text-text-secondary italic">
+              {progress === null
+                ? "Preparing the scene…"
+                : `${STAGE_LABEL[progress.stage] ?? "Painting the scene"}…`}
+              {progress === null ? null : (
+                <span className="ml-2 tabular-nums text-text-accent not-italic">
+                  {progress.percent}%
+                </span>
+              )}
             </p>
-            {stream.sceneReady ? null : (
-              <p className="text-[0.75rem] text-text-secondary italic">
-                {progress === null ? "Preparing the scene…" : `${STAGE_LABEL[progress.stage]}…`}
-                {progress === null ? null : (
-                  <span className="ml-2 tabular-nums text-text-accent not-italic">
-                    {progress.percent}%
-                  </span>
-                )}
-              </p>
-            )}
-          </div>
-        </>
+          )}
+        </div>
       ) : (
         <div className="flex min-w-0 flex-col gap-3 md:col-start-1 md:row-start-1">
           {turn === null ? null : <PlayerActionLine action={turn.playerAction} focal />}
@@ -164,7 +165,7 @@ export function SceneStage({
               busy={busy}
               onReplayAudio={stream.replayAudio}
               onRegenerate={stream.regenerate}
-              canRewrite
+              canRewrite={!busy}
             />
           )}
         </div>

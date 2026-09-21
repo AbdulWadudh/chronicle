@@ -132,6 +132,11 @@ const image: FieldMetaFor<"image"> = {
     mono: true,
     hint: "Model filename, relative to the ComfyUI checkpoints folder. No absolute paths.",
   },
+  stylisedCheckpoint: {
+    label: "Stylised checkpoint",
+    mono: true,
+    hint: "Used instead of the checkpoint above when a world's art style is anime, painterly, comic or 3D. A photoreal model renders those styles badly.",
+  },
   steps: {
     label: "Steps",
     hint: "Denoising passes. Lightning checkpoints want about 6; full SDXL wants about 26.",
@@ -141,6 +146,27 @@ const image: FieldMetaFor<"image"> = {
     hint: "How hard to push toward the prompt. Lightning wants about 2; full SDXL about 7.",
   },
   sampler: { label: "Sampler", mono: true, hint: "The solver ComfyUI uses to denoise." },
+  identityMethod: {
+    label: "Face lock",
+    mono: true,
+    hint: "How hard a portrait pins the face: fidelity, style or neutral. Fidelity also copies the portrait's pose and expression, so style is the default.",
+  },
+  identityWeight: {
+    label: "Face strength",
+    hint: "How strongly the portrait steers the face. Above about 0.8 the scene's own expression stops coming through.",
+  },
+  identityCastWeight: {
+    label: "Face strength, two people",
+    hint: "Used when a scene has two portraits. Chained face locks bleed into each other, so this must stay well below the single-subject strength or one person's gender takes over both.",
+  },
+  identityStart: {
+    label: "Face starts at",
+    hint: "How far into denoising the face is injected. Later leaves the prompt free to set the pose first.",
+  },
+  identityEnd: {
+    label: "Face ends at",
+    hint: "When the portrait stops steering. Earlier lets the scene finish the expression.",
+  },
   scheduler: {
     label: "Scheduler",
     mono: true,

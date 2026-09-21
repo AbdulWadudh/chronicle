@@ -60,6 +60,18 @@ const TARGETS: Record<ComposeTarget, TargetSpec> = {
       "One sentence saying when this ability is tested. Specific to this setting, never a generic attribute gloss.",
     maxTokens: 120,
   },
+  "world.visualStyle": {
+    noun: "art direction",
+    instruction:
+      "Comma-separated fragments naming the era, architecture, recurring materials, dominant palette, characteristic light and usual weather. Every illustration of this world reuses it. No people, no events, no camera terms.",
+    maxTokens: 200,
+  },
+  "world.cover": {
+    noun: "cover prompt",
+    instruction:
+      "A comma-separated image prompt for this world's key art. Describe only what is visible: the place, the structures, the light, the weather, the mood. No people, no faces, no story, no camera brand or lens terms.",
+    maxTokens: 200,
+  },
   "character.name": {
     noun: "character name",
     instruction: "A given name and a surname that suit the setting. Nothing else.",
@@ -86,8 +98,20 @@ const TARGETS: Record<ComposeTarget, TargetSpec> = {
   "turn.action": {
     noun: "action",
     instruction:
-      "One sentence in first person describing what the protagonist does next. Concrete and physical. Never decide whether it works, and never write the world's reply.",
+      "One sentence in first person describing what the protagonist does next. Concrete and physical. Never decide whether it works, and never write the world's reply. If interacting with another character referenced with '@Name', keep their exact '@Name' notation.",
     maxTokens: 140,
+  },
+  "character.appearance": {
+    noun: "appearance",
+    instruction:
+      "At most eight comma-separated fragments naming only the body: apparent age, build, height, skin, hair colour and length, facial hair, distinguishing marks. Under twelve words, no full stops. Never clothing, never a place, never an activity.",
+    maxTokens: 120,
+  },
+  "character.outfit": {
+    noun: "outfit",
+    instruction:
+      "At most six comma-separated fragments naming only worn items: garments, materials, colours, armour, gear carried on the body. Under twelve words, no full stops. Never a body trait, never a place, never an activity.",
+    maxTokens: 120,
   },
   "character.bio": {
     noun: "backstory",
@@ -143,8 +167,7 @@ function targetLines(
         ? `Your strongest abilities: ${context.strengths}`
         : "",
       context.situation.length > 0
-        ? `${SITUATION_LABEL[target] ?? "What just happened"}:
-${context.situation}`
+        ? `${SITUATION_LABEL[target] ?? "What just happened"}:\n${context.situation}`
         : "",
       context.avoid.length > 0
         ? [
@@ -162,10 +185,30 @@ ${context.situation}`
   ];
 }
 
-function directive(mode: ComposeMode, noun: string): string {
-  return mode === "enhance"
-    ? `Rewrite the existing ${noun} below. Keep its meaning and every proper noun, sharpen the language, and do not lengthen it by more than half.`
-    : `Write a new ${noun} that fits the material below.`;
+function directive(mode: ComposeMode, noun: string, hasMention: boolean): string {
+  if (mode === "enhance") {
+    const mentionRule = hasMention
+      ? " Crucially, keep every character '@Name' mention notation intact (e.g. '@Elara Voss')."
+      : "";
+    return `Rewrite the existing ${noun} below. Keep its meaning and every proper noun, sharpen the language, and do not lengthen it by more than half.${mentionRule}`;
+  }
+  return `Write a new ${noun} that fits the material below.`;
+}
+
+function preserveMentions(original: string, rewritten: string): string {
+  const mentions = Array.from(original.matchAll(/@([a-zA-Z0-9_ ]+)/gu)).map((match) =>
+    (match[1] ?? "").trim(),
+  );
+  let result = rewritten;
+  for (const name of mentions) {
+    if (name.length === 0) continue;
+    const bareRegex = new RegExp(
+      `(?<!@)\\b${name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\b`,
+      "gu",
+    );
+    result = result.replace(bareRegex, `@${name}`);
+  }
+  return result;
 }
 
 function buildMessages(
@@ -175,6 +218,7 @@ function buildMessages(
 ): ChatMessage[] {
   const omit = COMPOSE_FIELD[request.target];
   const existing = request.context[omit];
+  const hasMention = existing.includes("@");
   const material = [
     ...worldLines(request.context, world, omit),
     ...targetLines(request.target, request.context, omit),
@@ -199,7 +243,7 @@ function buildMessages(
       content: [
         `You write one field of an interactive story: the ${spec.noun}.`,
         spec.instruction,
-        directive(request.mode, spec.noun),
+        directive(request.mode, spec.noun, hasMention),
         "Return only that field's text. No preamble, no quotation marks, no markdown.",
       ].join(" "),
     },
@@ -220,5 +264,8 @@ export async function composeField(
     temperature: COMPOSE_TEMPERATURE,
     signal,
   });
-  return drafted.value.trim().replace(/^["']|["']$/gu, "");
+  const cleaned = drafted.value.trim().replace(/^["']|["']$/gu, "");
+  const omit = COMPOSE_FIELD[request.target];
+  const existing = request.context[omit];
+  return existing.includes("@") ? preserveMentions(existing, cleaned) : cleaned;
 }

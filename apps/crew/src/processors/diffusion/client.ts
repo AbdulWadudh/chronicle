@@ -26,6 +26,19 @@ export async function submit(workflow: Record<string, unknown>, clientId: string
   return body.prompt_id;
 }
 
+export async function uploadImage(bytes: Uint8Array, filename: string): Promise<string> {
+  const form = new FormData();
+  form.append("image", new Blob([bytes.buffer as ArrayBuffer]), filename);
+  form.append("overwrite", "true");
+  const response = await fetch(`${env().DIFFUSION_ENDPOINT}/upload/image`, {
+    method: "POST",
+    body: form,
+  });
+  if (!response.ok) throw new Error(`Failed to upload image to ComfyUI: ${response.statusText}`);
+  const result = (await response.json()) as { name?: string };
+  return result.name ?? filename;
+}
+
 export async function waitForImages(promptId: string): Promise<ComfyImage[]> {
   const deadline = Date.now() + POLL_TIMEOUT_MS;
   while (Date.now() < deadline) {

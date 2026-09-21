@@ -1,35 +1,26 @@
-import { loadSettings, newId, schema, toTurnNode } from "@chronicle/db";
+import { loadSettings, newId } from "@chronicle/db";
+import { type Character, type ImageShape, PROTOCOL_VERSION } from "@chronicle/utils";
 import {
-  type ImageShape,
-  PROTOCOL_VERSION,
-  splitIntoSentences,
-  type TurnNode,
-} from "@chronicle/utils";
-import { takeEarlyAudio } from "~/assets";
-import {
+  type AdjudicationDecision,
   CHECK_PROPOSAL_SCHEMA,
   type CheckProposal,
   type ResolvedCheck,
   resolveCheck,
 } from "~/engine/adjudicator";
-import { planTurn, type TurnPlan } from "~/engine/choices";
+import { resolveInteractingCharacters, summarizeWorldCast } from "~/engine/castResolution";
+import { planTurn } from "~/engine/choices";
 import { enqueueScene } from "~/engine/imagery";
 import { completeStructured, streamChat } from "~/engine/llm";
 import { buildCheckPrompt, buildNarrativePrompt } from "~/engine/prompt";
-import { memoryQueue, ttsQueue } from "~/queue";
-import { closeBuffer, openBuffer } from "~/ws/buffer";
+import { closeBuffer } from "~/ws/buffer";
 import type { TurnContext } from "~/ws/context";
 import { ownTurn } from "~/ws/media";
 import { beginTurn, type ChronicleSocket, finishTurn, send } from "~/ws/session";
+import { commitTurn, dispatchAudio, enqueueSentenceAudio } from "~/ws/turnOutput";
+
+export { commitTurn, dispatchAudio, enqueueSentenceAudio };
 
 const FIRST_VARIANT = 1;
-
-interface CheckDecision {
-  requiresCheck: boolean;
-  stat?: string;
-  dc?: number;
-  reason?: string;
-}
 
 export interface StartTurnInput {
   socket: ChronicleSocket;
@@ -39,14 +30,14 @@ export interface StartTurnInput {
   action: string;
   mode: "scratch" | "enhanced";
   directorWhisper: string | null;
+  mentionedCharacterIds?: readonly string[];
 }
 
 export async function runTurn(input: StartTurnInput): Promise<void> {
   const { socket, replyTo, context } = input;
   const turnId = newId();
-  const signal = beginTurn(turnId);
-  openBuffer(turnId);
   ownTurn(turnId, socket);
+  const signal = beginTurn(turnId);
 
   send(socket, {
     v: PROTOCOL_VERSION,
@@ -57,11 +48,39 @@ export async function runTurn(input: StartTurnInput): Promise<void> {
   });
 
   try {
+    const recentContext = [
+      input.action,
+      context.ancestry.at(-1)?.playerAction ?? "",
+      context.ancestry.at(-1)?.narrativeText ?? "",
+    ].join(" ");
+
+    const cast = await resolveInteractingCharacters(
+      context.db,
+      context.world.id,
+      context.character.id,
+      recentContext,
+      input.mentionedCharacterIds,
+    );
+    const castSummary = await summarizeWorldCast(
+      context.db,
+      context.world.id,
+      context.character.id,
+    );
     const check = await adjudicate(input, turnId, signal);
-    const narrative = await streamNarrative(input, turnId, check, signal);
+    const narrative = await streamNarrative(input, turnId, check, signal, cast, castSummary);
     await dispatchAudio(context, turnId, narrative);
-    const plan = await planTurn(narrative, signal);
-    await dispatchScene(socket, replyTo, context, turnId, narrative, plan.sceneShape);
+    const plan = await planTurn(narrative, signal, cast, input.action);
+    await dispatchScene(
+      socket,
+      replyTo,
+      context,
+      turnId,
+      narrative,
+      plan.sceneShape,
+      FIRST_VARIANT,
+      cast,
+      plan.sceneVisual,
+    );
     const turn = await commitTurn(input, turnId, narrative, check, plan);
     send(socket, { v: PROTOCOL_VERSION, replyTo, type: "TURN_COMMITTED", turn });
   } catch (error) {
@@ -81,7 +100,7 @@ export async function runTurn(input: StartTurnInput): Promise<void> {
         type: "ERROR",
         code: "UPSTREAM",
         turnId,
-        message: error instanceof Error ? error.message : "Turn failed.",
+        message: error instanceof Error ? error.message : "Turn generation failed.",
       });
     }
   } finally {
@@ -90,14 +109,14 @@ export async function runTurn(input: StartTurnInput): Promise<void> {
   }
 }
 
-async function adjudicate(
+export async function adjudicate(
   input: StartTurnInput,
   turnId: string,
   signal: AbortSignal,
 ): Promise<ResolvedCheck | null> {
-  const request = toNarrativeRequest(input, null);
   const settings = await loadSettings();
-  const decision = await completeStructured<CheckDecision>(buildCheckPrompt(request), {
+  const messages = buildCheckPrompt(toNarrativeRequest(input, null));
+  const decision = await completeStructured<AdjudicationDecision>(messages, {
     schemaName: "check_proposal",
     schema: CHECK_PROPOSAL_SCHEMA,
     signal,
@@ -134,11 +153,14 @@ export async function streamNarrative(
   turnId: string,
   check: ResolvedCheck | null,
   signal: AbortSignal,
+  interactingCharacters: readonly Character[] = [],
+  castSummary: string | null = null,
 ): Promise<string> {
   const outcome =
     check === null ? null : `${check.stat} check ${check.succeeded ? "succeeded" : "failed"}`;
   const settings = await loadSettings();
-  const messages = buildNarrativePrompt(toNarrativeRequest(input, outcome), settings.prompt);
+  const request = toNarrativeRequest(input, outcome, interactingCharacters, castSummary);
+  const messages = buildNarrativePrompt(request, settings.prompt);
 
   let narrative = "";
   for await (const token of streamChat(messages, {
@@ -157,27 +179,6 @@ export async function streamNarrative(
   return narrative.trim();
 }
 
-export async function enqueueSentenceAudio(
-  context: TurnContext,
-  turnId: string,
-  narrative: string,
-): Promise<void> {
-  const settings = await loadSettings();
-  await Promise.all(
-    splitIntoSentences(narrative).map((text, sentenceIndex) =>
-      ttsQueue.add("sentence", {
-        turnId,
-        worldId: context.world.id,
-        characterId: context.character.id,
-        sentenceIndex,
-        text,
-        voice: settings.tts.voice,
-        speed: settings.tts.speed,
-      }),
-    ),
-  );
-}
-
 export async function dispatchScene(
   socket: ChronicleSocket,
   replyTo: string,
@@ -186,54 +187,28 @@ export async function dispatchScene(
   narrative: string,
   shape: ImageShape,
   variant: number = FIRST_VARIANT,
+  interactingCharacters: readonly Character[] = [],
+  subject?: string,
 ): Promise<void> {
-  await enqueueScene(context.world, context.character, turnId, narrative, shape, variant);
+  await enqueueScene(
+    context.world,
+    context.character,
+    turnId,
+    narrative,
+    shape,
+    variant,
+    subject,
+    interactingCharacters,
+  );
   send(socket, { v: PROTOCOL_VERSION, replyTo, type: "SCENE_PLANNED", turnId, shape });
 }
 
-export async function dispatchAudio(
-  context: TurnContext,
-  turnId: string,
-  narrative: string,
-): Promise<void> {
-  await enqueueSentenceAudio(context, turnId, narrative);
-  await memoryQueue.add("episode", {
-    turnId,
-    characterId: context.character.id,
-    worldId: context.world.id,
-    narrativeText: narrative,
-  });
-}
-
-async function commitTurn(
+export function toNarrativeRequest(
   input: StartTurnInput,
-  turnId: string,
-  narrative: string,
-  check: ResolvedCheck | null,
-  plan: TurnPlan,
-): Promise<TurnNode> {
-  const { context } = input;
-  const createdAt = new Date();
-  const row = {
-    id: turnId,
-    parentId: input.parentTurnId,
-    characterId: context.character.id,
-    playerAction: input.action,
-    narrativeText: narrative,
-    choicesJson: plan.choices,
-    sceneImageUrl: null,
-    sceneShape: plan.sceneShape,
-    audioUrlsJson: takeEarlyAudio(turnId),
-    stateDiffJson: null,
-    diceCheckJson: check,
-    branchIndex: context.branchIndex,
-    createdAt,
-  };
-  await context.db.insert(schema.turns).values(row);
-  return toTurnNode(row);
-}
-
-export function toNarrativeRequest(input: StartTurnInput, checkOutcome: string | null) {
+  checkOutcome: string | null,
+  interactingCharacters: readonly Character[] = [],
+  castSummary: string | null = null,
+) {
   return {
     world: input.context.world,
     character: input.context.character,
@@ -243,5 +218,7 @@ export function toNarrativeRequest(input: StartTurnInput, checkOutcome: string |
     mode: input.mode,
     checkOutcome,
     directorWhisper: input.directorWhisper,
+    interactingCharacters,
+    castSummary,
   };
 }

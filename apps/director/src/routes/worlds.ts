@@ -1,6 +1,11 @@
 import { STATS } from "@chronicle/config";
 import { db, schema, toWorld } from "@chronicle/db";
-import { statDefinitionSchema, worldStateSchema } from "@chronicle/utils";
+import {
+  renderStyleSchema,
+  shotSizeSchema,
+  statDefinitionSchema,
+  worldStateSchema,
+} from "@chronicle/utils";
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -13,12 +18,27 @@ const createWorldSchema = z.object({
   title: z.string().min(1),
   description: z.string().default(""),
   genre: z.string().default(""),
+  visualStyle: z.string().max(600).default(""),
+  shotSize: shotSizeSchema.default("waistUp"),
+  artStyle: renderStyleSchema.default("photoreal"),
   coverImageUrl: z.string().nullable().default(null),
   visibility: z.enum(["private", "public"]).default("private"),
   statDefinitions: z.array(statDefinitionSchema).min(1),
   pointBudget: z.number().int().positive().default(STATS.defaultPointBudget),
   initialState: worldStateSchema,
 });
+
+const patchWorldSchema = z.object({
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
+  genre: z.string().optional(),
+  visualStyle: z.string().max(600).optional(),
+  shotSize: shotSizeSchema.optional(),
+  artStyle: renderStyleSchema.optional(),
+  visibility: z.enum(["private", "public"]).optional(),
+});
+
+const coverSchema = z.object({ prompt: z.string().min(1).max(600).optional() });
 
 const assistSchema = z.object({ premise: z.string().min(8).max(600) });
 
@@ -81,6 +101,9 @@ export const worldRoutes = new Hono<AuthEnv>()
         description: body.data.description,
         coverImageUrl: body.data.coverImageUrl,
         genre: body.data.genre,
+        visualStyle: body.data.visualStyle,
+        shotSize: body.data.shotSize,
+        artStyle: body.data.artStyle,
         visibility: body.data.visibility,
         statDefinitionsJson: body.data.statDefinitions,
         pointBudget: body.data.pointBudget,
@@ -93,6 +116,34 @@ export const worldRoutes = new Hono<AuthEnv>()
     if (row.coverImageUrl === null) await enqueueCover(world);
     populateCast(world);
     return context.json(row, 201);
+  })
+  .patch("/:id", async (context) => {
+    const body = patchWorldSchema.safeParse(await context.req.json().catch(() => null));
+    if (!body.success) return context.json({ error: "Invalid world." }, 400);
+
+    const user = context.get("user");
+    const row = await db
+      .select()
+      .from(schema.worlds)
+      .where(and(eq(schema.worlds.id, context.req.param("id")), eq(schema.worlds.userId, user.id)))
+      .get();
+    if (row === undefined) return context.json({ error: "Not found." }, 404);
+
+    const [updated] = await db
+      .update(schema.worlds)
+      .set({
+        title: body.data.title ?? row.title,
+        description: body.data.description ?? row.description,
+        genre: body.data.genre ?? row.genre,
+        visualStyle: body.data.visualStyle ?? row.visualStyle,
+        shotSize: body.data.shotSize ?? row.shotSize,
+        artStyle: body.data.artStyle ?? row.artStyle,
+        visibility: body.data.visibility ?? row.visibility,
+      })
+      .where(eq(schema.worlds.id, row.id))
+      .returning();
+    if (updated === undefined) return context.json({ error: "The change was not saved." }, 500);
+    return context.json(updated);
   })
   .get("/:id", async (context) => {
     const user = context.get("user");
@@ -115,7 +166,8 @@ export const worldRoutes = new Hono<AuthEnv>()
       .where(and(eq(schema.worlds.id, context.req.param("id")), eq(schema.worlds.userId, user.id)))
       .get();
     if (row === undefined) return context.json({ error: "Not found." }, 404);
-    await enqueueCover(toWorld(row));
+    const override = coverSchema.safeParse(await context.req.json().catch(() => null));
+    await enqueueCover(toWorld(row), override.success ? override.data.prompt : undefined);
     return context.json({ status: "queued" }, 202);
   })
   .delete("/:id", async (context) => {

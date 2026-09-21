@@ -78,8 +78,12 @@ export function Play() {
   const choices =
     phase === "decision" && stageTurn !== null && reveal.isComplete ? stageTurn.choices : [];
 
-  function submitAction(action: string): void {
-    stream.submitAction(action, whisper.trim().length > 0 ? whisper.trim() : null);
+  function submitAction(action: string, mentionedCharacterIds?: string[]): void {
+    stream.submitAction(
+      action,
+      whisper.trim().length > 0 ? whisper.trim() : null,
+      mentionedCharacterIds,
+    );
     setWhisper("");
   }
 
@@ -189,12 +193,15 @@ export function Play() {
           composing={compose.modeFor("turn.action")}
           whisper={whisper}
           composingWhisper={compose.modeFor("turn.whisper")}
+          cast={sheet.cast}
+          isRerollingChoices={stream.isRerollingChoices}
           onWhisperChange={setWhisper}
           onComposeWhisper={composeWhisper}
           onSelectChoice={selectChoice}
           onSubmitAction={submitAction}
           onCompose={composeAction}
           onAbort={stream.abort}
+          onRerollChoices={stageTurn ? () => stream.regenerate(stageTurn.id, "choices") : undefined}
         />
       </div>
 
@@ -226,6 +233,7 @@ export function Play() {
 
       <DirectorConsoleModal
         visible={consoleOpen}
+        worldId={sheet.worldId}
         onClose={() => setConsoleOpen(false)}
         statDefinitions={sheet.statDefinitions}
         stats={sheet.stats}
