@@ -11,6 +11,7 @@ export interface TurnActionsProps {
   busy: boolean;
   onReplayAudio: (turn: TurnNode) => void;
   onRegenerate: (turnId: string, target: RegenerateTarget) => void;
+  canRewrite: boolean;
 }
 
 const TONE = {
@@ -44,24 +45,23 @@ function Action({ icon, label, tone, disabled, onPress }: ActionProps) {
   );
 }
 
-export function TurnActions({ turn, busy, onReplayAudio, onRegenerate }: TurnActionsProps) {
+export function TurnActions({
+  turn,
+  busy,
+  onReplayAudio,
+  onRegenerate,
+  canRewrite,
+}: TurnActionsProps) {
   const hasAudio = turn.audioUrls.length > 0;
 
   return (
     <div className="flex items-center gap-2 self-end opacity-70 transition-opacity duration-150 focus-within:opacity-100 hover:opacity-100 motion-reduce:transition-none">
       <Action
         icon={VolumeHighIcon}
-        label={hasAudio ? "Replay the narration" : "No narration audio yet"}
+        label={hasAudio ? "Play the narration" : "No narration audio yet"}
         tone="success"
         disabled={busy || !hasAudio}
         onPress={() => onReplayAudio(turn)}
-      />
-      <Action
-        icon={RefreshIcon}
-        label="Write this turn again"
-        tone="accent"
-        disabled={busy}
-        onPress={() => onRegenerate(turn.id, "narrative")}
       />
       <Action
         icon={MusicNote01Icon}
@@ -70,6 +70,15 @@ export function TurnActions({ turn, busy, onReplayAudio, onRegenerate }: TurnAct
         disabled={busy}
         onPress={() => onRegenerate(turn.id, "audio")}
       />
+      {canRewrite ? (
+        <Action
+          icon={RefreshIcon}
+          label="Write this turn again"
+          tone="accent"
+          disabled={busy}
+          onPress={() => onRegenerate(turn.id, "narrative")}
+        />
+      ) : null}
     </div>
   );
 }

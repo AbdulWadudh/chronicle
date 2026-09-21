@@ -23,7 +23,7 @@ function release(element: HTMLAudioElement | null): void {
   element.load();
 }
 
-export function useAudioQueue(enabled: boolean): AudioQueue {
+export function useAudioQueue(held: boolean): AudioQueue {
   const [playingSentenceIndex, setPlayingSentenceIndex] = useState<number | null>(null);
 
   const pending = useRef(new Map<number, string>());
@@ -43,7 +43,7 @@ export function useAudioQueue(enabled: boolean): AudioQueue {
   }, []);
 
   const drain = useCallback(async (): Promise<void> => {
-    if (draining.current || !enabled) return;
+    if (draining.current || held) return;
     draining.current = true;
     const run = generation.current;
 
@@ -75,7 +75,11 @@ export function useAudioQueue(enabled: boolean): AudioQueue {
     if (run !== generation.current) return;
     setPlayingSentenceIndex(null);
     draining.current = false;
-  }, [enabled, releaseVoice]);
+  }, [held, releaseVoice]);
+
+  useEffect(() => {
+    if (!held) void drain();
+  }, [held, drain]);
 
   const enqueueSentence = useCallback(
     (sentenceIndex: number, url: string) => {

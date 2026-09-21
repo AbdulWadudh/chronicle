@@ -29,8 +29,6 @@ export const SETTING_BOUNDS = {
     bufferSize: { min: 1, max: 512, step: 8 },
   },
   image: {
-    width: { min: 256, max: 2048, step: 64 },
-    height: { min: 256, max: 2048, step: 64 },
     steps: { min: 1, max: 60, step: 1 },
     cfg: { min: 1, max: 20, step: 0.5 },
     upscale: { min: 1, max: 2, step: 0.25 },
@@ -121,8 +119,6 @@ export const DIFFUSION_PRESETS: DiffusionPreset[] = [
 
 const imageSchema = z.object({
   checkpoint: checkpointSchema.prefault("DreamShaperXL_Lightning.safetensors"),
-  width: wholeBound(SETTING_BOUNDS.image.width).default(1024),
-  height: wholeBound(SETTING_BOUNDS.image.height).default(1024),
   steps: wholeBound(SETTING_BOUNDS.image.steps).default(8),
   cfg: bound(SETTING_BOUNDS.image.cfg).default(2),
   sampler: z.string().min(1).default("dpmpp_sde"),

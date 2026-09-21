@@ -1,10 +1,11 @@
 import { env } from "@chronicle/config/env";
-import { progressChannel } from "@chronicle/utils";
+import { type ImageStage, progressChannel } from "@chronicle/utils";
+import { NODE_HIRES_SAMPLER } from "~/processors/diffusion/workflow";
 import { publisher } from "~/redis";
 
 interface ComfyProgress {
   type: string;
-  data?: { prompt_id?: string; value?: number; max?: number };
+  data?: { prompt_id?: string; value?: number; max?: number; node?: string | null };
 }
 
 const turnOfPrompt = new Map<string, string>();
@@ -20,13 +21,14 @@ function relay(raw: string): void {
   const message = JSON.parse(raw) as ComfyProgress;
   if (message.type !== "progress") return;
 
-  const { prompt_id: promptId, value, max } = message.data ?? {};
+  const { prompt_id: promptId, value, max, node } = message.data ?? {};
   if (promptId === undefined || value === undefined || max === undefined || max <= 0) return;
 
   const turnId = turnOfPrompt.get(promptId);
   if (turnId === undefined) return;
 
-  void publisher().publish(progressChannel(turnId), JSON.stringify({ turnId, value, max }));
+  const stage: ImageStage = node === NODE_HIRES_SAMPLER ? "detail" : "sketch";
+  void publisher().publish(progressChannel(turnId), JSON.stringify({ turnId, value, max, stage }));
 }
 
 export function listenForProgress(clientId: string): void {

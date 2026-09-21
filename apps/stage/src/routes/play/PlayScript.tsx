@@ -1,53 +1,38 @@
 import type { ComposeMode, TurnNode } from "@chronicle/utils";
-import { BookOpen01Icon } from "@hugeicons/core-free-icons";
-import { EmptyState } from "~/components/common/EmptyState";
-import { NarrativeStream } from "~/components/story/NarrativeStream";
 import type { TurnStream } from "~/hooks/useTurnStream";
-import { SceneFrame } from "./SceneFrame";
+import { useThemeStore } from "~/theme/store";
+import { ReplaySceneButton } from "./ReplaySceneButton";
 import { ScenePromptCard } from "./ScenePromptCard";
 import { TurnActions } from "./TurnActions";
 import { TurnEntry } from "./TurnEntry";
 
 export interface PlayScriptProps {
+  turns: readonly TurnNode[];
   stream: TurnStream;
-  aspect: number;
   busy: boolean;
-  cinemaMode: boolean;
   composingScene: ComposeMode | null;
   onComposeScene: (turn: TurnNode, mode: ComposeMode, draft: string) => Promise<string | null>;
 }
 
 export function PlayScript({
+  turns,
   stream,
-  aspect,
   busy,
-  cinemaMode,
   composingScene,
   onComposeScene,
 }: PlayScriptProps) {
-  const latest = stream.committedTurns.at(-1);
-  const streaming = stream.streamingText.length > 0;
-
-  if (stream.committedTurns.length === 0 && !streaming) {
-    return (
-      <EmptyState
-        icon={BookOpen01Icon}
-        title="Your story has not begun"
-        body="Describe what your character does and the world will answer."
-      />
-    );
-  }
+  const historyActions = useThemeStore((state) => state.historyActions);
+  if (turns.length === 0) return null;
 
   return (
-    <div className="flex w-full max-w-170 flex-col gap-8 self-center">
-      {stream.committedTurns.map((turn) => (
+    <div className="flex w-full max-w-170 flex-col gap-8 self-center pt-5 pb-10">
+      {turns.map((turn) => (
         <TurnEntry
           key={turn.id}
           turn={turn}
-          aspect={aspect}
           painting={stream.isPainting(turn.id)}
-          percent={stream.progressOf(turn.id)}
-          focal={turn.id === latest?.id}
+          percent={stream.progressOf(turn.id)?.percent ?? null}
+          focal={false}
           sceneActions={
             <ScenePromptCard
               seed={turn.narrativeText}
@@ -57,39 +42,19 @@ export function PlayScript({
               onPaint={(prompt) => stream.repaintScene(turn.id, prompt)}
             />
           }
+          sceneCorner={<ReplaySceneButton turn={turn} busy={busy} onReplay={stream.replayTurn} />}
         >
-          {turn.id === latest?.id ? (
+          {historyActions ? (
             <TurnActions
               turn={turn}
               busy={busy}
               onReplayAudio={stream.replayAudio}
               onRegenerate={stream.regenerate}
+              canRewrite={false}
             />
           ) : null}
         </TurnEntry>
       ))}
-
-      {streaming ? (
-        <article className="flex flex-col gap-4 md:grid md:grid-cols-[minmax(0,1fr)_17rem] md:items-start md:gap-6">
-          <div className="md:col-start-2 md:row-start-1">
-            <SceneFrame
-              imageUrl={stream.sceneImageUrl}
-              alt="The scene being illustrated"
-              aspect={aspect}
-              painting={stream.sceneImageUrl === null}
-              percent={stream.activeTurnId === null ? null : stream.progressOf(stream.activeTurnId)}
-            />
-          </div>
-          <div className="min-w-0 md:col-start-1 md:row-start-1">
-            <NarrativeStream
-              text={stream.streamingText}
-              cinemaMode={cinemaMode}
-              playingSentenceIndex={stream.playingSentenceIndex}
-              onSkip={stream.skipAudio}
-            />
-          </div>
-        </article>
-      ) : null}
     </div>
   );
 }

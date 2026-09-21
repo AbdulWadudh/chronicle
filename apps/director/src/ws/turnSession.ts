@@ -1,17 +1,18 @@
 import { loadSettings, newId, schema, toTurnNode } from "@chronicle/db";
 import {
+  type ImageShape,
   PROTOCOL_VERSION,
   splitIntoSentences,
-  type TurnChoice,
   type TurnNode,
 } from "@chronicle/utils";
+import { takeEarlyAudio } from "~/assets";
 import {
   CHECK_PROPOSAL_SCHEMA,
   type CheckProposal,
   type ResolvedCheck,
   resolveCheck,
 } from "~/engine/adjudicator";
-import { proposeChoices } from "~/engine/choices";
+import { planTurn, type TurnPlan } from "~/engine/choices";
 import { enqueueScene } from "~/engine/imagery";
 import { completeStructured, streamChat } from "~/engine/llm";
 import { buildCheckPrompt, buildNarrativePrompt } from "~/engine/prompt";
@@ -58,9 +59,10 @@ export async function runTurn(input: StartTurnInput): Promise<void> {
   try {
     const check = await adjudicate(input, turnId, signal);
     const narrative = await streamNarrative(input, turnId, check, signal);
-    await dispatchMedia(context, turnId, narrative);
-    const choices = await proposeChoices(narrative, signal);
-    const turn = await commitTurn(input, turnId, narrative, check, choices);
+    await dispatchAudio(context, turnId, narrative);
+    const plan = await planTurn(narrative, signal);
+    await dispatchScene(socket, replyTo, context, turnId, narrative, plan.sceneShape);
+    const turn = await commitTurn(input, turnId, narrative, check, plan);
     send(socket, { v: PROTOCOL_VERSION, replyTo, type: "TURN_COMMITTED", turn });
   } catch (error) {
     if (signal.aborted) {
@@ -176,13 +178,24 @@ export async function enqueueSentenceAudio(
   );
 }
 
-export async function dispatchMedia(
+export async function dispatchScene(
+  socket: ChronicleSocket,
+  replyTo: string,
   context: TurnContext,
   turnId: string,
   narrative: string,
+  shape: ImageShape,
   variant: number = FIRST_VARIANT,
 ): Promise<void> {
-  await enqueueScene(context.world, context.character, turnId, narrative, variant);
+  await enqueueScene(context.world, context.character, turnId, narrative, shape, variant);
+  send(socket, { v: PROTOCOL_VERSION, replyTo, type: "SCENE_PLANNED", turnId, shape });
+}
+
+export async function dispatchAudio(
+  context: TurnContext,
+  turnId: string,
+  narrative: string,
+): Promise<void> {
   await enqueueSentenceAudio(context, turnId, narrative);
   await memoryQueue.add("episode", {
     turnId,
@@ -197,7 +210,7 @@ async function commitTurn(
   turnId: string,
   narrative: string,
   check: ResolvedCheck | null,
-  choices: TurnChoice[],
+  plan: TurnPlan,
 ): Promise<TurnNode> {
   const { context } = input;
   const createdAt = new Date();
@@ -207,9 +220,10 @@ async function commitTurn(
     characterId: context.character.id,
     playerAction: input.action,
     narrativeText: narrative,
-    choicesJson: choices,
+    choicesJson: plan.choices,
     sceneImageUrl: null,
-    audioUrlsJson: [],
+    sceneShape: plan.sceneShape,
+    audioUrlsJson: takeEarlyAudio(turnId),
     stateDiffJson: null,
     diceCheckJson: check,
     branchIndex: context.branchIndex,

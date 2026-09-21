@@ -38,6 +38,8 @@ interface ThemeState {
   storyOverrides: Record<string, Partial<ThemeTokens>>;
   activeStoryId: string | null;
   cinemaMode: boolean;
+  immersive: boolean;
+  historyActions: boolean;
   toastPosition: ToastPosition;
   motionLevel: MotionLevel;
   scrollbar: ScrollbarStyle;
@@ -53,6 +55,8 @@ interface ThemeState {
   clearStoryOverride: (storyId: string) => void;
   setActiveStory: (storyId: string | null) => void;
   toggleCinemaMode: () => void;
+  toggleImmersive: () => void;
+  toggleHistoryActions: () => void;
   setToastPosition: (position: ToastPosition) => void;
   setMotionLevel: (level: MotionLevel) => void;
   setScrollbar: (style: ScrollbarStyle) => void;
@@ -87,6 +91,8 @@ export const useThemeStore = create<ThemeState>()(
       storyOverrides: {},
       activeStoryId: null,
       cinemaMode: true,
+      immersive: true,
+      historyActions: false,
       toastPosition: "bottom-right",
       motionLevel: "full",
       scrollbar: "thin",
@@ -151,6 +157,8 @@ export const useThemeStore = create<ThemeState>()(
         }),
       setActiveStory: (activeStoryId) => set({ activeStoryId }),
       toggleCinemaMode: () => set((state) => ({ cinemaMode: !state.cinemaMode })),
+      toggleImmersive: () => set((state) => ({ immersive: !state.immersive })),
+      toggleHistoryActions: () => set((state) => ({ historyActions: !state.historyActions })),
       setToastPosition: (toastPosition) => set({ toastPosition }),
       setMotionLevel: (motionLevel) => set({ motionLevel }),
       setScrollbar: (scrollbar) => set({ scrollbar }),
@@ -166,6 +174,8 @@ export const useThemeStore = create<ThemeState>()(
         customOverrides: state.customOverrides,
         storyOverrides: state.storyOverrides,
         cinemaMode: state.cinemaMode,
+        immersive: state.immersive,
+        historyActions: state.historyActions,
         toastPosition: state.toastPosition,
         motionLevel: state.motionLevel,
         scrollbar: state.scrollbar,

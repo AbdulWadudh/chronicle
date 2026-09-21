@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defaultDatabasePath, defaultStageDistPath, defaultVectorDatabasePath } from "./paths";
+import { defaultDatabasePath, defaultVectorDatabasePath } from "./paths";
 import { BASE_URL, DIRECTOR } from "./routes";
 
 const endpoint = z.url().transform((value) => value.replace(/\/+$/u, ""));
@@ -14,7 +14,7 @@ export const environmentSchema = z.object({
   STORAGE_REGION: z.string().min(1).default("auto"),
   DATABASE_PATH: z.string().min(1).default(defaultDatabasePath()),
   VECTOR_DB_PATH: z.string().min(1).default(defaultVectorDatabasePath()),
-  STAGE_DIST: z.string().min(1).default(defaultStageDistPath()),
+  STAGE_DIST: z.string().min(1).optional(),
   REDIS_URL: z.url(),
   LLM_ENDPOINT: endpoint,
   LLM_MODEL: z.string().min(1).default("local"),

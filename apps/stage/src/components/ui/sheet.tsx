@@ -79,7 +79,7 @@ export function Sheet({
       }`}
       style={frame}
     >
-      <div className={`flex w-full ${docked ? "flex-row" : "flex-col"}`}>
+      <div className={`flex h-full min-h-0 w-full ${docked ? "flex-row" : "flex-col"}`}>
         <button
           type="button"
           aria-label={docked ? "Resize the panel width" : "Resize the panel height"}
@@ -95,7 +95,7 @@ export function Sheet({
           />
         </button>
 
-        <div className="flex min-w-0 flex-1 flex-col pb-(--safe-bottom)">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col pb-(--safe-bottom)">
           <header className="flex shrink-0 items-center gap-2.5 border-b border-card-border px-4 py-3.5">
             {icon === undefined ? null : (
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-primary/15 text-text-accent">

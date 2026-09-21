@@ -4,7 +4,7 @@ export const NODE_SAVE = "9";
 
 const NODE_BASE_SAMPLER = "5";
 const NODE_UPSCALE_LATENT = "6";
-const NODE_HIRES_SAMPLER = "7";
+export const NODE_HIRES_SAMPLER = "7";
 
 function roundToEight(value: number): number {
   return Math.round(value / 8) * 8;

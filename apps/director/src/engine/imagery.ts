@@ -1,6 +1,6 @@
 import { IMAGE_SHAPES, IMAGERY, JOB_PRIORITY } from "@chronicle/config";
 import { loadSettings } from "@chronicle/db";
-import type { Character, ImageParams, World } from "@chronicle/utils";
+import type { Character, ImageParams, ImageShape, World } from "@chronicle/utils";
 import { buildCoverPrompt, buildPortraitPrompt, buildScenePrompt } from "~/engine/prompt";
 import { diffusionQueue } from "~/queue";
 
@@ -13,7 +13,7 @@ interface Shape {
 
 async function imageParams(
   prompt: string,
-  shape?: Shape,
+  shape: Shape,
   negativeExtra?: string,
 ): Promise<ImageParams> {
   const { image } = await loadSettings();
@@ -25,8 +25,8 @@ async function imageParams(
         : `${image.negativePrompt}, ${negativeExtra}`,
     seed: Math.floor(Math.random() * MAX_SEED),
     checkpoint: image.checkpoint,
-    width: shape?.width ?? image.width,
-    height: shape?.height ?? image.height,
+    width: shape.width,
+    height: shape.height,
     steps: image.steps,
     cfg: image.cfg,
     sampler: image.sampler,
@@ -71,13 +71,14 @@ export async function enqueueScene(
   character: Character,
   turnId: string,
   narrative: string,
+  shape: ImageShape,
   variant: number,
   subject?: string,
 ): Promise<void> {
   const { prompt } = await loadSettings();
   const params = await imageParams(
     buildScenePrompt(world, character, subject ?? narrative, prompt.sceneChars),
-    undefined,
+    IMAGE_SHAPES[shape],
     IMAGERY.scene.negative,
   );
   await diffusionQueue.add(

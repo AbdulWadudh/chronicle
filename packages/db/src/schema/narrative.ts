@@ -1,5 +1,6 @@
 import type {
   DiceCheck,
+  ImageShape,
   SentenceAudio,
   StatePatch,
   TurnChoice,
@@ -29,6 +30,7 @@ export const turns = sqliteTable(
     narrativeText: text("narrative_text").notNull(),
     choicesJson: text("choices_json", { mode: "json" }).$type<TurnChoice[]>().notNull(),
     sceneImageUrl: text("scene_image_url"),
+    sceneShape: text("scene_shape").$type<ImageShape>().notNull().default("square"),
     audioUrlsJson: text("audio_urls_json", { mode: "json" }).$type<SentenceAudio[]>(),
     stateDiffJson: text("state_diff_json", { mode: "json" }).$type<StatePatch>(),
     diceCheckJson: text("dice_check_json", { mode: "json" }).$type<DiceCheck>(),

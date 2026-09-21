@@ -63,6 +63,7 @@ export const turnRoutes = new Hono<AuthEnv>()
       loaded.character,
       turnId,
       turn.narrativeText,
+      turn.sceneShape,
       nextVariant(turn.sceneImageUrl),
       subject === null || subject.length === 0 ? undefined : subject,
     );

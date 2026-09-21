@@ -14,6 +14,7 @@ export const CHOICE_RULES = [
   "Each label is one short first-person sentence, concrete and physical.",
   "Each hint is at most six words naming what it risks or reaches for.",
   "The three must pull in genuinely different directions. Never decide whether any of them works.",
+  "Also pick the frame for this moment's illustration: portrait for a single figure, a face, a doorway or anything tall; landscape for a vista, a crowd, a room or travel; square when neither dominates.",
 ] as const;
 
 export const CHECK_RULES = [

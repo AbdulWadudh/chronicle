@@ -6,6 +6,8 @@ import { PreviewableImage } from "~/components/common/PreviewableImage";
 import { ScenePainting } from "./ScenePainting";
 
 const ARRIVAL = { duration: 0.55, ease: "easeOut" } as const;
+const DISSOLVE = { duration: 1.4, ease: "easeInOut" } as const;
+const MORPH = { layout: { type: "spring", stiffness: 150, damping: 26 } } as const;
 
 export interface SceneFrameProps {
   imageUrl: string | null;
@@ -14,6 +16,10 @@ export interface SceneFrameProps {
   painting: boolean;
   percent: number | null;
   actions?: ReactNode;
+  corner?: ReactNode;
+  layoutId?: string;
+  animateLayout?: boolean;
+  drift?: boolean;
 }
 
 function Badge({ children, muted }: { children: ReactNode; muted?: boolean }) {
@@ -30,11 +36,25 @@ function Badge({ children, muted }: { children: ReactNode; muted?: boolean }) {
   );
 }
 
-export function SceneFrame({ imageUrl, alt, aspect, painting, percent, actions }: SceneFrameProps) {
+export function SceneFrame({
+  imageUrl,
+  alt,
+  aspect,
+  painting,
+  percent,
+  actions,
+  corner,
+  layoutId,
+  animateLayout = false,
+  drift = false,
+}: SceneFrameProps) {
   const blank = imageUrl === null;
 
   return (
-    <div
+    <motion.div
+      layout={animateLayout}
+      layoutId={layoutId}
+      transition={MORPH}
       style={{ aspectRatio: aspect }}
       className="group relative w-full overflow-hidden rounded-card border-(length:--border-width-card) border-card-border bg-secondary shadow-(--shadow-overlay)"
     >
@@ -48,23 +68,27 @@ export function SceneFrame({ imageUrl, alt, aspect, painting, percent, actions }
         {blank ? null : (
           <motion.div
             key={imageUrl}
-            initial={{ opacity: 0, scale: 0.98 }}
+            initial={drift ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={ARRIVAL}
+            transition={drift ? DISSOLVE : ARRIVAL}
             className="absolute inset-0"
           >
             <PreviewableImage
               imageUrl={imageUrl}
               alt={alt}
-              className="absolute inset-0 h-full w-full rounded-none border-0"
+              className={`absolute inset-0 h-full w-full rounded-none border-0 ${drift ? "stage-drift" : ""}`}
               imageClassName="h-full w-full object-contain"
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {painting ? <ScenePainting over={!blank} percent={percent} /> : null}
+      <AnimatePresence>
+        {painting ? (
+          <ScenePainting key="painting" over={!blank} percent={percent} veil={drift} />
+        ) : null}
+      </AnimatePresence>
 
       {blank && !painting ? (
         <div className="absolute inset-0 flex items-center justify-center p-3">
@@ -86,6 +110,8 @@ export function SceneFrame({ imageUrl, alt, aspect, painting, percent, actions }
           {actions}
         </div>
       )}
-    </div>
+
+      {corner === undefined || blank ? null : corner}
+    </motion.div>
   );
 }

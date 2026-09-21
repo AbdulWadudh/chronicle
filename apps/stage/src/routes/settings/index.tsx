@@ -66,6 +66,8 @@ export function Settings() {
   const navigate = useNavigate();
   const cinemaMode = useThemeStore((state) => state.cinemaMode);
   const toggleCinemaMode = useThemeStore((state) => state.toggleCinemaMode);
+  const immersive = useThemeStore((state) => state.immersive);
+  const toggleImmersive = useThemeStore((state) => state.toggleImmersive);
   const toastPosition = useThemeStore((state) => state.toastPosition);
   const setToastPosition = useThemeStore((state) => state.setToastPosition);
   const toastSpot = TOAST_SPOTS.find((spot) => spot.value === toastPosition) ?? TOAST_SPOTS[0];
@@ -98,6 +100,24 @@ export function Settings() {
               icon: PuzzleIcon,
             }}
           >
+            <div className={`${PANEL} ${SPLIT}`}>
+              <div className="min-w-0">
+                <Label htmlFor="immersive">Infinite Worlds experience</Label>
+                <p className="mt-0.5 text-[0.75rem] leading-relaxed text-text-muted">
+                  Each scene opens full screen, types its opening line, then folds into a card while
+                  the story and your choices type in. Off shows the plain card at once.
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <Switch
+                  id="immersive"
+                  checked={immersive}
+                  onCheckedChange={toggleImmersive}
+                  aria-label="Infinite Worlds experience"
+                />
+              </div>
+            </div>
+
             <div className={`${PANEL} ${SPLIT}`}>
               <div className="min-w-0">
                 <Label htmlFor="cinema-mode">Cinema Mode</Label>

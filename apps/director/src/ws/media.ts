@@ -5,7 +5,7 @@ import {
   PROTOCOL_VERSION,
 } from "@chronicle/utils";
 import type { Redis } from "ioredis";
-import { recordSentenceAudio } from "~/assets";
+import { recordSentenceAudio, versioned } from "~/assets";
 import { createRedis } from "~/queue";
 import { type ChronicleSocket, send, socketsFor } from "~/ws/session";
 
@@ -68,6 +68,7 @@ function relay(pattern: string, raw: string): void {
         turnId: progress.turnId,
         value: progress.value,
         max: progress.max,
+        stage: progress.stage,
       });
     }
     return;
@@ -87,7 +88,8 @@ function relay(pattern: string, raw: string): void {
     return;
   }
 
-  const audio = audioReadySchema.parse(payload);
+  const parsed = audioReadySchema.parse(payload);
+  const audio = { ...parsed, audioUrl: versioned(parsed.audioUrl) };
   recordSentenceAudio(audio).catch((error: unknown) => {
     console.error(`[director] could not record audio for ${audio.turnId}:`, error);
   });

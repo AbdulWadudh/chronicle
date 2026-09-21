@@ -71,10 +71,13 @@ export const imageReadySchema = z.object({
   imageUrl: z.string(),
 });
 
+export const imageStageSchema = z.enum(["sketch", "detail"]);
+
 export const imageProgressSchema = z.object({
   turnId: z.string(),
   value: z.number().int().nonnegative(),
   max: z.number().int().positive(),
+  stage: imageStageSchema,
 });
 
 export const assetReadySchema = z.discriminatedUnion("kind", [
@@ -90,5 +93,6 @@ export type TtsJob = z.infer<typeof ttsJobSchema>;
 export type MemoryJob = z.infer<typeof memoryJobSchema>;
 export type AudioReady = z.infer<typeof audioReadySchema>;
 export type ImageReady = z.infer<typeof imageReadySchema>;
+export type ImageStage = z.infer<typeof imageStageSchema>;
 export type ImageProgress = z.infer<typeof imageProgressSchema>;
 export type AssetReady = z.infer<typeof assetReadySchema>;

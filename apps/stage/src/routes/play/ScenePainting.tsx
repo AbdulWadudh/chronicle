@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 
 const STAGES = ["The scene is forming", "Light finds the edges", "The last details settle"];
@@ -8,10 +9,12 @@ const DOT_GRID = {
 } as const;
 
 const TICK_MS = 1000;
+const VEIL = { duration: 0.9, ease: "easeOut" } as const;
 
 export interface ScenePaintingProps {
   over: boolean;
   percent: number | null;
+  veil?: boolean;
 }
 
 function useElapsedSeconds(): number {
@@ -28,8 +31,40 @@ function useElapsedSeconds(): number {
   return seconds;
 }
 
-export function ScenePainting({ over, percent }: ScenePaintingProps) {
+function Counter({ percent, seconds }: { percent: number | null; seconds: number }) {
+  return (
+    <span className="absolute right-3 bottom-3 rounded-control bg-card/80 px-2 py-0.5 text-[0.6875rem] tabular-nums text-text-accent backdrop-blur-sm">
+      {percent === null ? `${seconds}s` : `${percent}%`}
+    </span>
+  );
+}
+
+export function ScenePainting({ over, percent, veil = false }: ScenePaintingProps) {
   const seconds = useElapsedSeconds();
+
+  if (veil) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={VEIL}
+        className="absolute inset-0 overflow-hidden bg-scrim"
+      >
+        <div aria-hidden="true" className="absolute inset-0 text-text-muted/15" style={DOT_GRID} />
+        <div
+          aria-hidden="true"
+          className="dot-bloom absolute inset-0 text-primary"
+          style={DOT_GRID}
+        />
+        <div
+          aria-hidden="true"
+          className="dot-bloom dot-bloom-offset absolute inset-0 text-primary"
+          style={DOT_GRID}
+        />
+      </motion.div>
+    );
+  }
 
   return (
     <div
@@ -60,9 +95,7 @@ export function ScenePainting({ over, percent }: ScenePaintingProps) {
         ))}
       </span>
 
-      <span className="absolute right-3 bottom-3 rounded-control bg-card/80 px-2 py-0.5 text-[0.6875rem] tabular-nums text-text-accent backdrop-blur-sm">
-        {percent === null ? `${seconds}s` : `${percent}%`}
-      </span>
+      <Counter percent={percent} seconds={seconds} />
     </div>
   );
 }

@@ -1,15 +1,19 @@
 import type { ComposeMode, TurnChoice } from "@chronicle/utils";
 import { ArrowRight02Icon, ArrowUp02Icon, Idea01Icon, StopIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { type CSSProperties, type KeyboardEvent, useState } from "react";
+import { type CSSProperties, type KeyboardEvent, useEffect, useState } from "react";
 import { FieldActions } from "~/components/common/FieldActions";
+import { useSentenceReveal } from "~/components/story/useSentenceReveal";
 import { WhisperCard } from "~/components/story/WhisperCard";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import { Tooltip } from "~/components/ui/tooltip";
+import { useReducedMotion } from "~/hooks/useReducedMotion";
+import { useThemeStore } from "~/theme/store";
 import { useThemeTokens } from "~/theme/ThemeEngine";
 
 const DRAFT_STYLE = { fieldSizing: "content", minHeight: 52, maxHeight: 132 } as const;
+const CHOICE_STAGGER_MS = 650;
 
 export interface ComposerProps {
   choices: readonly TurnChoice[];
@@ -28,10 +32,25 @@ export interface ComposerProps {
 interface ChoiceRowProps {
   choice: TurnChoice;
   index: number;
+  typing: boolean;
   onPress: () => void;
 }
 
-function ChoiceRow({ choice, index, onPress }: ChoiceRowProps) {
+function ChoiceRow({ choice, index, typing, onPress }: ChoiceRowProps) {
+  const [started, setStarted] = useState(!typing);
+  useEffect(() => {
+    if (!typing) return;
+    const timer = setTimeout(() => setStarted(true), index * CHOICE_STAGGER_MS);
+    return () => clearTimeout(timer);
+  }, [typing, index]);
+  const label = useSentenceReveal(choice.label, {
+    cinemaMode: false,
+    playingSentenceIndex: null,
+    typing,
+    held: !started,
+  });
+  const labelText = label.visible.map((sentence) => sentence.text).join("");
+
   return (
     <button
       type="button"
@@ -47,9 +66,14 @@ function ChoiceRow({ choice, index, onPress }: ChoiceRowProps) {
       />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-[0.9375rem] leading-snug font-medium text-text-primary">
-          {choice.label}
+          {labelText}
+          {label.isTyping ? (
+            <span aria-hidden="true" className="ml-0.5 inline-block w-0.5 animate-pulse bg-primary">
+              &nbsp;
+            </span>
+          ) : null}
         </span>
-        {choice.hint.length === 0 ? null : (
+        {choice.hint.length === 0 || !label.isComplete ? null : (
           <span className="text-[0.75rem] leading-snug text-text-muted">{choice.hint}</span>
         )}
       </span>
@@ -71,6 +95,10 @@ export function Composer({
   onAbort,
 }: ComposerProps) {
   const tokens = useThemeTokens();
+  const reduceMotion = useReducedMotion();
+  const motionLevel = useThemeStore((state) => state.motionLevel);
+  const immersive = useThemeStore((state) => state.immersive);
+  const typing = immersive && !reduceMotion && motionLevel !== "off";
   const [draft, setDraft] = useState("");
   const [showChoices, setShowChoices] = useState(false);
   const ready = draft.trim().length > 0 && !busy && composing === null;
@@ -110,6 +138,7 @@ export function Composer({
               key={choice.label}
               choice={choice}
               index={index}
+              typing={typing}
               onPress={() => choose(index as 0 | 1 | 2)}
             />
           ))}

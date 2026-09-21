@@ -1,32 +1,42 @@
 import { API } from "@chronicle/config";
 import type { ComposeMode, TurnNode } from "@chronicle/utils";
+import { BookOpen01Icon } from "@hugeicons/core-free-icons";
+import { AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { EmptyState } from "~/components/common/EmptyState";
 import { Composer } from "~/components/story/Composer";
 import { DirectorConsoleModal } from "~/components/story/DirectorConsoleModal";
 import { useFollowScroll } from "~/components/story/useFollowScroll";
+import { useSentenceReveal } from "~/components/story/useSentenceReveal";
 import { useCharacterSheet } from "~/hooks/useCharacterSheet";
 import { useCompose } from "~/hooks/useCompose";
-import { useSceneAspect } from "~/hooks/useSceneShape";
+import { useReducedMotion } from "~/hooks/useReducedMotion";
 import { useTurnStream } from "~/hooks/useTurnStream";
 import { post } from "~/lib/api";
 import { useThemeStore } from "~/theme/store";
 import { DiceOverlay } from "./DiceOverlay";
 import { PlayHeader } from "./PlayHeader";
 import { PlayScript } from "./PlayScript";
+import { ReplayOverlay } from "./ReplayOverlay";
 import { SceneBackdrop } from "./SceneBackdrop";
+import { SceneStage } from "./SceneStage";
 import { StoryMapModal } from "./StoryMapModal";
+
+const CINEMATIC_BEAT_MS = 900;
 
 export function Play() {
   const navigate = useNavigate();
   const { id = null } = useParams<{ id: string }>();
   const cinemaMode = useThemeStore((state) => state.cinemaMode);
+  const immersive = useThemeStore((state) => state.immersive);
   const setActiveStory = useThemeStore((state) => state.setActiveStory);
+  const motionLevel = useThemeStore((state) => state.motionLevel);
+  const reduceMotion = useReducedMotion() || motionLevel === "off";
 
-  const stream = useTurnStream(id, cinemaMode);
+  const stream = useTurnStream(id, immersive);
   const sheet = useCharacterSheet(id);
   const compose = useCompose();
-  const aspect = useSceneAspect();
   const [whisper, setWhisper] = useState("");
   const [mapOpen, setMapOpen] = useState(false);
   const [consoleOpen, setConsoleOpen] = useState(false);
@@ -39,6 +49,34 @@ export function Play() {
 
   const latest = stream.committedTurns.at(-1);
   const busy = stream.activeTurnId !== null;
+  const replaying = stream.committedTurns.find((turn) => turn.id === stream.replayTurnId) ?? null;
+  const stageTurn = busy ? null : (latest ?? null);
+  const previous = (busy ? latest : stream.committedTurns.at(-2)) ?? null;
+  const history = busy ? stream.committedTurns : stream.committedTurns.slice(0, -1);
+  const stageText = busy ? stream.streamingText : (stageTurn?.narrativeText ?? "");
+  const { phase, endCinematic } = stream;
+  const cinematic = phase === "cinematic";
+  const reveal = useSentenceReveal(stageText, {
+    cinemaMode: cinemaMode || cinematic,
+    playingSentenceIndex: replaying === null ? stream.playingSentenceIndex : null,
+    typing: immersive && !reduceMotion,
+    held: stream.holdNarration,
+  });
+  const cinematicDone =
+    cinematic &&
+    !busy &&
+    stream.sceneReady &&
+    reveal.isComplete &&
+    stream.playingSentenceIndex === null;
+
+  useEffect(() => {
+    if (!cinematicDone) return;
+    const timer = setTimeout(endCinematic, CINEMATIC_BEAT_MS);
+    return () => clearTimeout(timer);
+  }, [cinematicDone, endCinematic]);
+  const empty = latest === undefined && !busy;
+  const choices =
+    phase === "decision" && stageTurn !== null && reveal.isComplete ? stageTurn.choices : [];
 
   function submitAction(action: string): void {
     stream.submitAction(action, whisper.trim().length > 0 ? whisper.trim() : null);
@@ -108,21 +146,45 @@ export function Play() {
       <div
         ref={follow.ref}
         onScroll={follow.onScroll}
-        className="scrollbar-none relative flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5"
+        className={`scrollbar-none relative flex min-h-0 flex-1 flex-col px-4 ${
+          cinematic ? "overflow-hidden" : "overflow-y-auto"
+        }`}
       >
-        <PlayScript
-          stream={stream}
-          aspect={aspect}
-          busy={busy}
-          cinemaMode={cinemaMode}
-          composingScene={compose.modeFor("turn.scene")}
-          onComposeScene={composeScene}
-        />
+        {empty ? (
+          <EmptyState
+            icon={BookOpen01Icon}
+            title="Your story has not begun"
+            body="Describe what your character does and the world will answer."
+          />
+        ) : (
+          <>
+            <PlayScript
+              turns={history}
+              stream={stream}
+              busy={busy}
+              composingScene={compose.modeFor("turn.scene")}
+              onComposeScene={composeScene}
+            />
+            <SceneStage
+              phase={phase}
+              stream={stream}
+              turn={stageTurn}
+              previous={previous}
+              reveal={reveal}
+              busy={busy}
+              reduceMotion={reduceMotion}
+              cinemaMode={cinemaMode}
+              composingScene={compose.modeFor("turn.scene")}
+              onComposeScene={composeScene}
+              onEndCinematic={endCinematic}
+            />
+          </>
+        )}
       </div>
 
       <div className="relative flex flex-col">
         <Composer
-          choices={latest?.choices ?? []}
+          choices={choices}
           busy={busy}
           composing={compose.modeFor("turn.action")}
           whisper={whisper}
@@ -135,6 +197,19 @@ export function Play() {
           onAbort={stream.abort}
         />
       </div>
+
+      <AnimatePresence>
+        {replaying === null ? null : (
+          <ReplayOverlay
+            key={stream.replayKey}
+            turn={replaying}
+            stream={stream}
+            reduceMotion={reduceMotion}
+            typing={immersive && !reduceMotion}
+            onClose={stream.endReplay}
+          />
+        )}
+      </AnimatePresence>
 
       <DiceOverlay
         check={stream.pendingCheck}

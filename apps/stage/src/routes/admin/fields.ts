@@ -132,12 +132,6 @@ const image: FieldMetaFor<"image"> = {
     mono: true,
     hint: "Model filename, relative to the ComfyUI checkpoints folder. No absolute paths.",
   },
-  width: { label: "Width", unit: "px", hint: "SDXL is trained at 1024. Stay on multiples of 64." },
-  height: {
-    label: "Height",
-    unit: "px",
-    hint: "SDXL is trained at 1024. Stay on multiples of 64.",
-  },
   steps: {
     label: "Steps",
     hint: "Denoising passes. Lightning checkpoints want about 6; full SDXL wants about 26.",

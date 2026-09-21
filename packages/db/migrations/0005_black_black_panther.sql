@@ -1,0 +1,1 @@
+ALTER TABLE `turns` ADD `scene_shape` text DEFAULT 'square' NOT NULL;

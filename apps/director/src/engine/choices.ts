@@ -1,11 +1,16 @@
-import type { TurnChoice } from "@chronicle/utils";
+import type { ImageShape, TurnChoice } from "@chronicle/utils";
 import { completeStructured } from "~/engine/llm";
 import { buildChoicePrompt } from "~/engine/prompt";
 
 const CHOICE_COUNT = 3;
-const CHOICE_TOKENS = 320;
+const PLAN_TOKENS = 360;
 
-const CHOICES_SCHEMA = {
+export interface TurnPlan {
+  choices: TurnChoice[];
+  sceneShape: ImageShape;
+}
+
+const PLAN_SCHEMA = {
   type: "object",
   properties: {
     choices: {
@@ -19,31 +24,29 @@ const CHOICES_SCHEMA = {
         additionalProperties: false,
       },
     },
+    sceneShape: { type: "string", enum: ["square", "portrait", "landscape"] },
   },
-  required: ["choices"],
+  required: ["choices", "sceneShape"],
   additionalProperties: false,
 } as const;
 
-export async function proposeChoices(
-  narrative: string,
-  signal: AbortSignal,
-): Promise<TurnChoice[]> {
+export async function planTurn(narrative: string, signal: AbortSignal): Promise<TurnPlan> {
   try {
-    const drafted = await completeStructured<{ choices: TurnChoice[] }>(
-      buildChoicePrompt(narrative),
-      {
-        schemaName: "turn_choices",
-        schema: CHOICES_SCHEMA,
-        maxTokens: CHOICE_TOKENS,
-        signal,
-      },
-    );
-    return drafted.choices
-      .filter((choice) => choice.label.trim().length > 0)
-      .slice(0, CHOICE_COUNT);
+    const drafted = await completeStructured<TurnPlan>(buildChoicePrompt(narrative), {
+      schemaName: "turn_plan",
+      schema: PLAN_SCHEMA,
+      maxTokens: PLAN_TOKENS,
+      signal,
+    });
+    return {
+      choices: drafted.choices
+        .filter((choice) => choice.label.trim().length > 0)
+        .slice(0, CHOICE_COUNT),
+      sceneShape: drafted.sceneShape,
+    };
   } catch (error) {
     if (signal.aborted) throw error;
-    console.error("[director] could not draft choices:", error);
-    return [];
+    console.error("[director] could not plan the turn:", error);
+    return { choices: [], sceneShape: "square" };
   }
 }

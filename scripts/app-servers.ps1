@@ -85,6 +85,10 @@ function Start-Apps {
 
   Start-Process wt -ArgumentList $paneArgs
 
+  $deadline = (Get-Date).AddSeconds(90)
+  while (-not (Test-Port 8082) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 500 }
+  if (Test-Port 8082) { Start-Process 'http://localhost:8082' }
+
   "Started: $($names -join ', ')"
   'director 3000, crew has no port, stage 8082 (Vite; 8081 belongs to the embeddings server).'
   'Open http://localhost:8082 - Vite proxies /api and /health to the director. -Clear re-optimises deps.'

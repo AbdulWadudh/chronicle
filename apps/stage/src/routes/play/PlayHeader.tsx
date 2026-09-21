@@ -73,7 +73,7 @@ export function PlayHeader({
             variant="outline"
             size="icon"
             onClick={onOpenConsole}
-            aria-label="Open director console"
+            aria-label="Open story settings"
             className="text-accent hover:border-accent/50"
           >
             <HugeiconsIcon icon={PreferenceHorizontalIcon} size={16} strokeWidth={1.5} />

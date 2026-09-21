@@ -867,3 +867,120 @@ Two sockets on one account and character, one repaint: **client A 12 progress, 1
 12 progress, 1 ready**. Before the fix the second client received nothing.
 
 `bun run check` green: audit PASS, zero comments PASS, lint clean, typecheck 6/6.
+
+## Nineteenth pass: the first scene was not really full screen
+
+Infinite Worlds promises that each scene "opens full screen, types its opening line, then folds
+into a card". It opened across the whole column, and the column is not the screen: the composer
+is docked below it and the header above it, so the input box stayed lit under the art for the
+entire opening. A replay of that same scene does read as full screen, because `ReplayOverlay`
+renders its `SceneStage` inside `fixed inset-0 z-50 bg-canvas`, while the opening rendered one
+inline with `relative -mx-4 min-h-full`.
+
+The cinematic branch of `SceneStage` now uses that shell itself: `fixed inset-0 z-30
+overflow-hidden bg-canvas`. One presentation, two ways in. The section is still the element
+`useElementSize` measures and it still carries no padding, so `contentRect` and the cover maths
+that centre the art against the viewport stay exact.
+
+`z-30` rather than the replay's `z-50`, because the ladder in this client is 10 / 20 (sticky) /
+40 (dice) / 50 (dialogs, popups, replay) and the scene view has to sit under the dice. A check is
+adjudicated before the narrative streams — `turnSession.ts` sends `DICE_CHECK_REQUIRED` on its way
+into `streamNarrative` — so the D20 lands while the opening is still cinematic. At `z-50` the roll
+would have been behind the shell.
+
+The shell is a class swap on the element that was already there, not a second `SceneStage`, so
+the sentence reveal, the audio gate, the single `layoutId` and the `layout` animation that folds
+the art into its card at `endCinematic` are the ones that were there before.
+
+- **The caption moved to the viewport edge**, so it carries `pb-[max(1.5rem,var(--safe-bottom))]`
+  — the `AppModal` pattern — because `index.html` is `viewport-fit=cover` and the strip no longer
+  sits inside the root's safe-area padding.
+- **The transcript cannot scroll out from under the fold.** While cinematic the column is
+  `overflow-hidden`, not `overflow-y-auto`: a wheel over the overlay chains to it, and scrolling
+  there would unpin `useFollowScroll`, so the fold would land off screen.
+- **Replay moved with it.** `ReplayOverlay` passes `phase="cinematic"`, so its art bleeds to the
+  viewport edges too. The two are finally the same picture.
+
+### Evidence
+
+- `bun run check` green: audit PASS, zero comments PASS, lint clean, typecheck 6/6.
+- `bun run --filter @chronicle/stage build` green, and the emitted stylesheet carries the new
+  rule `.pb-[max(1.5rem,var(--safe-bottom))]{padding-bottom:max(1.5rem, var(--safe-bottom))}`
+  alongside the shell's `.fixed` and `.z-30`.
+- **No browser render yet.** The opening has not been watched at 390x844 or 1440x900; that needs
+  the director, crew and a model up.
+
+### Follow-ups
+
+- The covered column is not inert: focus stays in the composer's textarea through the opening and
+  a keystroke still reaches it. `inert` on the transcript and composer while cinematic is the fix
+  if that reads badly in the hand.
+
+## Twentieth pass: the loader told every node the same story
+
+The dot matrix over a painting frame ran one fixed loop whatever the render was doing: the only
+per-node thing on the whole card was the number in the corner pill. The first cut of this pass
+scaled that loop by the percent, and it failed the only test that matters — on screen the ripple
+was still the same ripple, a little wider. A loader that tracks progress has to change *character*
+when the render changes, not amplitude.
+
+`ScenePainting` now takes the node's whole `SceneProgress` — percent *and* stage — instead of a
+bare percent. The prop became `progress: SceneProgress | null` through `SceneFrame`, `TurnEntry`,
+`PlayScript` and `SceneStage`, because percent alone is not enough: `progress.ts` maps ComfyUI's
+`progress` message per sampler node, so the number runs 0 → 100 for the base sampler and
+**restarts** at 0 for the hires sampler. `stage` is the field that tells them apart.
+
+`ScenePainting` sets `data-stage` — `progress?.stage ?? "waiting"`, so no case falls through —
+plus a unitless `--render-progress` and `--matrix-elapsed`. `styles/scene-painting.css` holds the
+mapping, one rule per stage:
+
+- **Sketch is one ripple, churning.** A coarse lattice closing from 18px to 10px, one ripple on a
+  2.6s cycle.
+- **Detail is two ripples, settling.** The `dot-bloom-offset` layer wakes up (`animation: none` in
+  every other stage), so two ripples interleave at half-cycle offset on a 4.4s cycle, over a
+  lattice that carries on closing from 10px to 7px.
+- **The ripple's travel follows the pass.** 34% → 76% across the sketch, 62% → 128% across the
+  detail, as `var(--matrix-reach, 128%)` on the keyframe endpoint. At 10% the light stays near the
+  centre; at 95% it leaves the frame.
+- **Still frame.** `--matrix-still` gives `Motion: off` and `prefers-reduced-motion` the same
+  information without the travel: 17% → 38% across the sketch, 31% → 64% across the detail.
+- **Silence still moves.** With no report the elapsed seconds drive the lattice and the reach —
+  `clamp(9px, 14px - 0.06px * elapsed, 14px)` and `clamp(64%, 64% + 1% * elapsed, 112%)` — so a
+  ComfyUI that publishes no step progress still gets a matrix that tightens, and the pill's `37s`
+  means something.
+- **10px on both sides** of the pass boundary, so the lattice never snaps back when the sampler
+  restarts its counter.
+
+`SceneFrame` passes the object straight through, so a repainted history turn and the full-screen
+opening are driven by their own node's numbers, not by whichever render happened to be live.
+
+The file split was forced, not planned: adding the mapping took `motion.css` to 312 lines against
+the 300 ceiling and the audit failed the build. The dot matrix and the cycling captions left for
+`styles/scene-painting.css`, which is where the painting placeholder's motion belongs. `motion.css`
+is back to 175 lines and holds press, lift, drift and the disclosure panel.
+
+### Evidence
+
+- `bun run check` green: audit PASS (the line ceiling included), zero comments PASS, lint clean,
+  typecheck 6/6.
+- `bun run --filter @chronicle/stage build` green, and the minified sheet carries all three lanes:
+  `[data-stage=waiting]{--matrix-pitch:clamp(9px, 14px - .06px * var(--matrix-elapsed,0), 14px);…}`,
+  sketch's `calc(18px - 8px * …)` and `calc(34% + 42% * …)`, detail's `calc(10px - 3px * …)` and
+  `calc(62% + 66% * …)`, the detail overrides (`animation-duration:4.4s`, and its offset twin on
+  `-2.2s`), and `to{--bloom:var(--matrix-reach,128%);opacity:0}`.
+- **No browser render yet**, which is exactly how the first cut of this pass got through: the
+  numbers were right and the picture was wrong. The one-ripple sketch and the two-ripple detail
+  state have not been watched.
+
+### Follow-ups
+
+- The keyframe endpoint is `var(--matrix-reach, 128%)` inside `@property --bloom` (`<percentage>`).
+  Registered custom property plus `var()` in a keyframe is standard, but it has not been run on a
+  real browser, and the symptom of it failing would be a ripple that never leaves the centre. The
+  fallback keeps the sweep, so the way to test it is one repaint with progress coming in.
+- The card variant's three captions still cycle on a fixed 7.5s `stage-cycle`, so "The last details
+  settle" can appear while the sketch pass is still running. Only the cinematic caption reads the
+  real stage, from `STAGE_LABEL`.
+- The counter pill still names nothing when the server is silent — it shows `37s`. The matrix now
+  tightens on those seconds but the text does not say what they are.
+

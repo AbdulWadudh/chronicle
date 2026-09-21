@@ -1,5 +1,7 @@
 import { splitIntoSentences } from "@chronicle/utils";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const TYPE_MS = 26;
 
 export interface RevealedSentence {
   key: string;
@@ -8,16 +10,29 @@ export interface RevealedSentence {
 
 export interface SentenceReveal {
   sentences: RevealedSentence[];
-  revealedCount: number;
+  visible: RevealedSentence[];
+  isTyping: boolean;
   isComplete: boolean;
   revealAll: () => void;
 }
 
-export function useSentenceReveal(
-  text: string,
-  cinemaMode: boolean,
-  playingSentenceIndex: number | null,
-): SentenceReveal {
+export interface SentenceRevealOptions {
+  cinemaMode: boolean;
+  playingSentenceIndex: number | null;
+  typing: boolean;
+  held?: boolean;
+}
+
+interface Cursor {
+  index: number;
+  chars: number;
+}
+
+const START: Cursor = { index: 0, chars: 0 };
+
+export function useSentenceReveal(text: string, options: SentenceRevealOptions): SentenceReveal {
+  const { cinemaMode, playingSentenceIndex, typing, held = false } = options;
+
   const sentences = useMemo(() => {
     let offset = 0;
     return splitIntoSentences(text).map((sentence) => {
@@ -28,26 +43,60 @@ export function useSentenceReveal(
   }, [text]);
 
   const [skipped, setSkipped] = useState(false);
+  const [cursor, setCursor] = useState<Cursor>(START);
   const previousText = useRef(text);
 
   if (previousText.current !== text) {
+    const continues = text.startsWith(previousText.current);
     previousText.current = text;
     if (skipped) setSkipped(false);
+    if (!continues) setCursor(START);
   }
 
-  const revealAll = useCallback(() => setSkipped(true), []);
-
-  const gatedCount =
+  const gated =
     cinemaMode && playingSentenceIndex !== null
       ? Math.min(playingSentenceIndex + 1, sentences.length)
       : sentences.length;
+  const limit = held ? 0 : gated;
+  const instant = skipped || !typing;
+  const target = sentences[cursor.index]?.text ?? "";
+  const sentenceDone = cursor.chars >= target.length;
+  const canAdvance = sentenceDone && cursor.index + 1 < limit;
+  const typingActive = !instant && cursor.index < limit && (!sentenceDone || canAdvance);
 
-  const revealedCount = skipped ? sentences.length : gatedCount;
+  useEffect(() => {
+    if (!typingActive) return;
+    const timer = setInterval(() => {
+      setCursor((current) => {
+        const length = sentences[current.index]?.text.length ?? 0;
+        if (current.chars < length) return { index: current.index, chars: current.chars + 1 };
+        if (current.index + 1 < limit) return { index: current.index + 1, chars: 0 };
+        return current;
+      });
+    }, TYPE_MS);
+    return () => clearInterval(timer);
+  }, [typingActive, sentences, limit]);
+
+  const revealAll = useCallback(() => setSkipped(true), []);
+
+  const visible = useMemo(() => {
+    if (instant) return sentences.slice(0, limit);
+    const shown = sentences.slice(0, Math.min(cursor.index + 1, limit));
+    const last = shown.at(-1);
+    if (last === undefined) return shown;
+    return [...shown.slice(0, -1), { key: last.key, text: last.text.slice(0, cursor.chars) }];
+  }, [sentences, limit, instant, cursor]);
+
+  const lastIndex = sentences.length - 1;
+  const typedOut =
+    instant ||
+    (cursor.index >= lastIndex && cursor.chars >= (sentences[lastIndex]?.text.length ?? 0));
 
   return {
     sentences,
-    revealedCount,
-    isComplete: revealedCount >= sentences.length,
+    visible,
+    isTyping: typingActive,
+    isComplete: !held && gated >= sentences.length && typedOut,
     revealAll,
   };
 }

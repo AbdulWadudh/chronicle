@@ -12,6 +12,7 @@ export function toTurnNode(row: TurnRow): TurnNode {
     narrativeText: row.narrativeText,
     choices: row.choicesJson ?? [],
     sceneImageUrl: row.sceneImageUrl,
+    sceneShape: row.sceneShape,
     audioUrls: row.audioUrlsJson ?? [],
     stateDiff: row.stateDiffJson,
     diceCheck: row.diceCheckJson,

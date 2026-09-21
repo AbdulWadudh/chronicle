@@ -1,12 +1,17 @@
 import { db, schema, toTurnNode } from "@chronicle/db";
 import { PROTOCOL_VERSION } from "@chronicle/utils";
 import { eq } from "drizzle-orm";
-import { proposeChoices } from "~/engine/choices";
+import { planTurn } from "~/engine/choices";
 import { enqueueScene } from "~/engine/imagery";
 import { loadTurnContext } from "~/ws/loader";
 import { ownTurn } from "~/ws/media";
 import { beginTurn, type ChronicleSocket, finishTurn, send, sendError } from "~/ws/session";
-import { dispatchMedia, enqueueSentenceAudio, streamNarrative } from "~/ws/turnSession";
+import {
+  dispatchAudio,
+  dispatchScene,
+  enqueueSentenceAudio,
+  streamNarrative,
+} from "~/ws/turnSession";
 
 const FIRST_VARIANT = 1;
 
@@ -52,6 +57,7 @@ export async function regenerateTurn(
       context.character,
       turnId,
       row.narrativeText,
+      row.sceneShape,
       nextVariant(row.sceneImageUrl),
     );
     send(socket, { v: PROTOCOL_VERSION, replyTo, type: "TURN_COMMITTED", turn: toTurnNode(row) });
@@ -93,20 +99,28 @@ export async function regenerateTurn(
       signal,
     );
 
-    const choices = await proposeChoices(narrative, signal);
+    await db
+      .update(schema.turns)
+      .set({ narrativeText: narrative, audioUrlsJson: [], sceneImageUrl: null })
+      .where(eq(schema.turns.id, turnId));
+    await dispatchAudio(context, turnId, narrative);
+    const plan = await planTurn(narrative, signal);
     const [updated] = await db
       .update(schema.turns)
-      .set({
-        narrativeText: narrative,
-        choicesJson: choices,
-        audioUrlsJson: [],
-        sceneImageUrl: null,
-      })
+      .set({ choicesJson: plan.choices, sceneShape: plan.sceneShape })
       .where(eq(schema.turns.id, turnId))
       .returning();
     if (updated === undefined) throw new Error("The rewritten turn was not saved");
 
-    await dispatchMedia(context, turnId, narrative, nextVariant(row.sceneImageUrl));
+    await dispatchScene(
+      socket,
+      replyTo,
+      context,
+      turnId,
+      narrative,
+      plan.sceneShape,
+      nextVariant(row.sceneImageUrl),
+    );
     send(socket, {
       v: PROTOCOL_VERSION,
       replyTo,

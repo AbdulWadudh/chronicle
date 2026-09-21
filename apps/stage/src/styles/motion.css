@@ -130,6 +130,34 @@
     }
   }
 
+  @keyframes stage-drift {
+    0% {
+      transform: scale(1.04) translate3d(-1.5%, 1%, 0);
+    }
+    50% {
+      transform: scale(1.16) translate3d(1%, -1.5%, 0);
+    }
+    100% {
+      transform: scale(1.06) translate3d(1.5%, 1%, 0);
+    }
+  }
+
+  .stage-drift {
+    animation: stage-drift 24s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  [data-motion="off"] .stage-drift,
+  [data-motion="subtle"] .stage-drift {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage-drift {
+      animation: none;
+    }
+  }
+
   @keyframes dot-bloom {
     0% {
       --bloom: 0%;

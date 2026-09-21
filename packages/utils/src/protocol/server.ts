@@ -1,6 +1,7 @@
 import { DICE } from "@chronicle/config";
 import { z } from "zod";
-import { turnNodeSchema } from "../turns";
+import { imageStageSchema } from "../jobs";
+import { imageShapeSchema, turnNodeSchema } from "../turns";
 import { serverEnvelopeSchema } from "./envelope";
 
 const base = serverEnvelopeSchema;
@@ -30,11 +31,18 @@ export const sceneImageReadySchema = base.extend({
   imageUrl: z.string(),
 });
 
+export const scenePlannedSchema = base.extend({
+  type: z.literal("SCENE_PLANNED"),
+  turnId: z.string(),
+  shape: imageShapeSchema,
+});
+
 export const sceneProgressSchema = base.extend({
   type: z.literal("SCENE_PROGRESS"),
   turnId: z.string(),
   value: z.number().int().nonnegative(),
   max: z.number().int().positive(),
+  stage: imageStageSchema,
 });
 
 export const diceCheckRequiredSchema = base.extend({
@@ -70,6 +78,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
   sentenceAudioReadySchema,
   sceneImageReadySchema,
   sceneProgressSchema,
+  scenePlannedSchema,
   diceCheckRequiredSchema,
   turnCommittedSchema,
   errorSchema,

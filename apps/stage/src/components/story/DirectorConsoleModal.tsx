@@ -3,7 +3,10 @@ import { clampStatRank } from "@chronicle/utils";
 import { PreferenceHorizontalIcon } from "@hugeicons/core-free-icons";
 import { type ReactNode, useState } from "react";
 import { NumberField } from "~/components/common/NumberField";
+import { Label } from "~/components/ui/label";
 import { Sheet } from "~/components/ui/sheet";
+import { Switch } from "~/components/ui/switch";
+import { useThemeStore } from "~/theme/store";
 
 export interface DirectorConsoleModalProps {
   visible: boolean;
@@ -36,6 +39,8 @@ export function DirectorConsoleModal({
   const [draftStats, setDraftStats] = useState<StatBlock>(stats);
   const [draftAffinities, setDraftAffinities] = useState(affinities);
   const [checkpointName, setCheckpointName] = useState("");
+  const historyActions = useThemeStore((state) => state.historyActions);
+  const toggleHistoryActions = useThemeStore((state) => state.toggleHistoryActions);
 
   function apply(): void {
     onApply({
@@ -50,14 +55,31 @@ export function DirectorConsoleModal({
       open={visible}
       storageKey="director-console"
       icon={PreferenceHorizontalIcon}
-      title="Director's Console"
-      subtitle="Steer the next turn without the player seeing"
+      title="Story settings"
+      subtitle="Playback, stats and checkpoints for this story"
       onClose={onClose}
       actions={[
         { label: "Cancel", onPress: onClose, tone: "secondary" },
         { label: "Apply", onPress: apply, tone: "primary" },
       ]}
     >
+      <Section title="Playback">
+        <div className="flex items-center justify-between gap-4 rounded-card border-(length:--border-width-card) border-card-border bg-raised px-4 py-3">
+          <div className="min-w-0">
+            <Label htmlFor="history-actions">Actions on past turns</Label>
+            <p className="mt-0.5 text-[0.75rem] leading-relaxed text-text-muted">
+              Show the narration and re-voice buttons under every earlier turn.
+            </p>
+          </div>
+          <Switch
+            id="history-actions"
+            checked={historyActions}
+            onCheckedChange={toggleHistoryActions}
+            aria-label="Actions on past turns"
+          />
+        </div>
+      </Section>
+
       <Section title="Stats">
         {statDefinitions.map((definition) => (
           <NumberField
