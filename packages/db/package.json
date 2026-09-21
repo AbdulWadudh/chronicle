@@ -10,7 +10,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "bunx --bun drizzle-kit generate",
     "db:migrate": "bun --env-file=../../.env run src/migrate.ts"
   },
   "dependencies": {

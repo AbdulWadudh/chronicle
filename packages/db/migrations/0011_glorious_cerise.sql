@@ -1,0 +1,1 @@
+ALTER TABLE `characters` ADD `draft_portrait_url` text;

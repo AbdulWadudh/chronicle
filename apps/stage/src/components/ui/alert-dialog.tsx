@@ -1,5 +1,6 @@
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
 import type { ReactNode } from "react";
+import { useTopLayer } from "~/hooks/useTopLayer";
 import { Button } from "./button";
 
 export interface AlertDialogProps {
@@ -27,9 +28,12 @@ export function AlertDialog({
   children,
   onConfirm,
 }: AlertDialogProps) {
+  const { anchorRef, container } = useTopLayer<HTMLSpanElement>();
+
   return (
     <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
-      <AlertDialogPrimitive.Portal>
+      <span ref={anchorRef} hidden aria-hidden="true" />
+      <AlertDialogPrimitive.Portal container={container}>
         <AlertDialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-scrim transition-opacity duration-200 ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none" />
 
         <AlertDialogPrimitive.Viewport className="fixed inset-0 z-50 flex items-center justify-center p-4">

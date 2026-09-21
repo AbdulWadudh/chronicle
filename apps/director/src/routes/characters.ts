@@ -1,8 +1,11 @@
 import { db, schema, toCharacter, toWorld } from "@chronicle/db";
 import {
+  characterDraftPortraitKey,
   characterPortraitKey,
+  fetchBytes,
   inventorySchema,
   isValidBuild,
+  PORTRAIT_CONTENT_TYPE,
   pronounsSchema,
   statBlockSchema,
 } from "@chronicle/utils";
@@ -15,9 +18,14 @@ import { UPLOAD_MAX_BYTES, UPLOAD_TYPES, upload } from "~/storage";
 
 const portraitSchema = z.object({ prompt: z.string().min(1).max(600).optional() });
 
+const LOOK_MAX = 400;
+
 const patchCharacterSchema = z.object({
   name: z.string().min(1).optional(),
   bio: z.string().optional(),
+  appearance: z.string().max(LOOK_MAX).optional(),
+  outfit: z.string().max(LOOK_MAX).optional(),
+  outfitLocked: z.boolean().optional(),
   pronouns: pronounsSchema.optional(),
   stats: statBlockSchema.optional(),
 });
@@ -26,6 +34,9 @@ const createCharacterSchema = z.object({
   worldId: z.string().min(1),
   name: z.string().min(1),
   bio: z.string().default(""),
+  appearance: z.string().max(LOOK_MAX).default(""),
+  outfit: z.string().max(LOOK_MAX).default(""),
+  outfitLocked: z.boolean().default(true),
   pronouns: pronounsSchema.default("they"),
   portraitUrl: z.string().nullable().default(null),
   stats: statBlockSchema,
@@ -74,6 +85,9 @@ export const characterRoutes = new Hono<AuthEnv>()
         userId: user.id,
         name: body.data.name,
         bio: body.data.bio,
+        appearance: body.data.appearance,
+        outfit: body.data.outfit,
+        outfitLocked: body.data.outfitLocked,
         pronouns: body.data.pronouns,
         portraitUrl: body.data.portraitUrl,
         statsJson: body.data.stats,
@@ -105,6 +119,19 @@ export const characterRoutes = new Hono<AuthEnv>()
     const worldRow = await readableWorld(row.worldId, user.id);
     if (worldRow === null) return context.json({ error: "World not found." }, 404);
 
+    let portraitUrl = row.portraitUrl;
+    let draftPortraitUrl = row.draftPortraitUrl;
+    if (draftPortraitUrl !== null) {
+      const bytes = await fetchBytes(draftPortraitUrl);
+      const stored = await upload(
+        characterPortraitKey(row.worldId, row.id),
+        bytes,
+        PORTRAIT_CONTENT_TYPE,
+      );
+      portraitUrl = `${stored.split("?")[0]}?v=${Date.now()}`;
+      draftPortraitUrl = null;
+    }
+
     const stats = body.data.stats ?? row.statsJson;
     if (!isValidBuild(stats, worldRow.statDefinitionsJson, worldRow.pointBudget)) {
       return context.json({ error: "Stat build exceeds the point budget." }, 400);
@@ -115,6 +142,11 @@ export const characterRoutes = new Hono<AuthEnv>()
       .set({
         name: body.data.name ?? row.name,
         bio: body.data.bio ?? row.bio,
+        appearance: body.data.appearance ?? row.appearance,
+        outfit: body.data.outfit ?? row.outfit,
+        outfitLocked: body.data.outfitLocked ?? row.outfitLocked,
+        portraitUrl,
+        draftPortraitUrl,
         pronouns: body.data.pronouns ?? row.pronouns,
         statsJson: stats,
       })
@@ -176,9 +208,35 @@ export const characterRoutes = new Hono<AuthEnv>()
       return context.json({ error: "That image is larger than 8 MB." }, 413);
     }
 
-    const portraitUrl = await upload(characterPortraitKey(row.worldId, row.id), bytes, type);
-    await db.update(schema.characters).set({ portraitUrl }).where(eq(schema.characters.id, row.id));
-    return context.json({ portraitUrl });
+    const draftPortraitUrl = await upload(
+      characterDraftPortraitKey(row.worldId, row.id),
+      bytes,
+      type,
+    );
+    await db
+      .update(schema.characters)
+      .set({ draftPortraitUrl })
+      .where(eq(schema.characters.id, row.id));
+    return context.json({ draftPortraitUrl });
+  })
+  .delete("/:id/portrait/draft", async (context) => {
+    const user = context.get("user");
+    const row = await db
+      .select()
+      .from(schema.characters)
+      .where(
+        and(
+          eq(schema.characters.id, context.req.param("id")),
+          eq(schema.characters.userId, user.id),
+        ),
+      )
+      .get();
+    if (row === undefined) return context.json({ error: "Not found." }, 404);
+    await db
+      .update(schema.characters)
+      .set({ draftPortraitUrl: null })
+      .where(eq(schema.characters.id, row.id));
+    return context.body(null, 204);
   })
   .post("/:id/portrait", async (context) => {
     const user = context.get("user");
@@ -201,6 +259,7 @@ export const characterRoutes = new Hono<AuthEnv>()
       toWorld(worldRow),
       toCharacter(row),
       override.success ? override.data.prompt : undefined,
+      true,
     );
     return context.json({ status: "queued" }, 202);
   });

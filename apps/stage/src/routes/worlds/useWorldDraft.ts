@@ -1,5 +1,5 @@
 import { API, STATS } from "@chronicle/config";
-import type { StatDefinition, WorldVisibility } from "@chronicle/utils";
+import type { RenderStyle, ShotSize, StatDefinition, WorldVisibility } from "@chronicle/utils";
 import { useCallback, useMemo, useState } from "react";
 import { post } from "~/lib/api";
 import type { WorldSummary } from "~/lib/entities";
@@ -30,6 +30,9 @@ export interface WorldDraft {
   genre: string;
   description: string;
   opening: string;
+  visualStyle: string;
+  shotSize: ShotSize;
+  artStyle: RenderStyle;
   statDefinitions: StatDefinition[];
   pointBudget: number;
   visibility: WorldVisibility;
@@ -49,6 +52,9 @@ const EMPTY: WorldDraft = {
   genre: "",
   description: "",
   opening: "",
+  visualStyle: "",
+  shotSize: "waistUp",
+  artStyle: "photoreal",
   statDefinitions: [],
   pointBudget: STATS.defaultPointBudget,
   visibility: "private",
@@ -103,6 +109,9 @@ export function useWorldDraft() {
         title: draft.title.trim(),
         genre: draft.genre.trim(),
         description: draft.description.trim(),
+        visualStyle: draft.visualStyle.trim(),
+        shotSize: draft.shotSize,
+        artStyle: draft.artStyle,
         visibility: draft.visibility,
         statDefinitions: identify(draft.statDefinitions),
         pointBudget: draft.pointBudget,
@@ -123,6 +132,7 @@ export function useWorldDraft() {
       genre: draft.genre,
       description: draft.description,
       opening: draft.opening,
+      visualStyle: draft.visualStyle,
       abilities: draft.statDefinitions
         .map((definition) => definition.label)
         .filter((label) => label.trim().length > 0),

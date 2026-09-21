@@ -1,11 +1,4 @@
-import {
-  CHECK_RULES,
-  CHOICE_RULES,
-  IMAGERY,
-  NARRATOR_ENHANCED,
-  NARRATOR_RULES,
-  SUBJECT_BY_PRONOUN,
-} from "@chronicle/config";
+import { CHECK_RULES, CHOICE_RULES, NARRATOR_ENHANCED, NARRATOR_RULES } from "@chronicle/config";
 import {
   type Character,
   pronounPhrase,
@@ -46,16 +39,25 @@ export function buildContext(
   character: Character,
   state: WorldState,
   recentFacts: number,
+  interactingCharacters: readonly Character[] = [],
+  castSummary: string | null = null,
 ): string {
-  return [
+  const parts = [
     `Setting: ${world.title}. ${world.description}`,
     `Genre: ${world.genre}`,
     `Protagonist: ${character.name} (${pronounPhrase(character.pronouns)}). ${character.bio}`,
     `Abilities: ${describeStats(world, character)}`,
     describeState(state, recentFacts),
-  ]
-    .filter((part) => part.trim().length > 0)
-    .join("\n");
+  ];
+  if (castSummary !== null && castSummary !== undefined && castSummary.length > 0) {
+    parts.push(castSummary);
+  }
+  for (const other of interactingCharacters) {
+    parts.push(
+      `Interacting Character: ${other.name} (${pronounPhrase(other.pronouns)}). ${other.bio}`,
+    );
+  }
+  return parts.join("\n\n");
 }
 
 export function buildHistory(ancestry: readonly TurnNode[], depth: number): ChatMessage[] {
@@ -74,6 +76,8 @@ export interface NarrativeRequest {
   mode: "scratch" | "enhanced";
   checkOutcome: string | null;
   directorWhisper: string | null;
+  interactingCharacters?: readonly Character[];
+  castSummary?: string | null;
 }
 
 export function buildNarrativePrompt(
@@ -88,22 +92,51 @@ export function buildNarrativePrompt(
     .filter((part) => part.length > 0)
     .join(" ");
 
-  const action =
-    request.checkOutcome === null
-      ? request.action
-      : `${request.action}\n(Outcome: ${request.checkOutcome})`;
+  const context = buildContext(
+    request.world,
+    request.character,
+    request.state,
+    prompt.recentFacts,
+    request.interactingCharacters ?? [],
+    request.castSummary,
+  );
 
-  const context = buildContext(request.world, request.character, request.state, prompt.recentFacts);
+  const history = buildHistory(request.ancestry, prompt.historyDepth);
+  const check = request.checkOutcome === null ? "" : `Check outcome: ${request.checkOutcome}.\n\n`;
+
+  const mentionGuidance =
+    request.interactingCharacters && request.interactingCharacters.length > 0
+      ? ` The player is interacting with ${request.interactingCharacters.map((c) => c.name).join(", ")}. Involve them directly.`
+      : "";
 
   return [
+    { role: "system", content: `${system}\n\n${context}` },
+    ...history,
     {
-      role: "system",
-      content: `${system}
-
-${context}`,
+      role: "user",
+      content: `${check}Player action: ${request.action}.${mentionGuidance}`,
     },
-    ...buildHistory(request.ancestry, prompt.historyDepth),
-    { role: "user", content: action },
+  ];
+}
+
+export function buildChoicePrompt(
+  narrativeText: string,
+  interactingCharacters: readonly Character[] = [],
+  action?: string,
+): ChatMessage[] {
+  const mentionHint =
+    interactingCharacters.length > 0
+      ? ` Note: Interacting cast: ${interactingCharacters.map((c) => c.name).join(", ")}. In sceneVisual, describe a candid, natural interaction (waist-up) where characters actively look at each other or react to the scene, NEVER staring into camera. Name each character's facial expression and body language explicitly, and make them match the emotion of this moment. Describe only action, pose, expression, setting and light. Never describe a character's gender, age, hair, body, build or clothing — those are recorded separately and a conflicting description swaps their bodies.`
+      : "";
+
+  const userContent =
+    action !== undefined && action.trim().length > 0
+      ? `Player action: "${action}"\n\nNarrative outcome: ${narrativeText}`
+      : narrativeText;
+
+  return [
+    { role: "system", content: `${CHOICE_RULES.join(" ")}${mentionHint}` },
+    { role: "user", content: userContent },
   ];
 }
 
@@ -121,48 +154,4 @@ export function buildCheckPrompt(request: NarrativeRequest): ChatMessage[] {
     },
     { role: "user", content: request.action },
   ];
-}
-
-export function buildChoicePrompt(narrative: string): ChatMessage[] {
-  return [
-    { role: "system", content: CHOICE_RULES.join(" ") },
-    { role: "user", content: narrative },
-  ];
-}
-
-export function buildScenePrompt(
-  world: World,
-  character: Character,
-  narrative: string,
-  maxChars: number,
-): string {
-  const { lead, framing, style } = IMAGERY.scene;
-  const who = SUBJECT_BY_PRONOUN[character.pronouns];
-  return `${lead}, ${world.genre}, ${who} mid-action: ${clip(narrative, maxChars)}, ${framing}, ${style}`;
-}
-
-export function buildCoverPrompt(world: World, maxChars: number): string {
-  const { lead, style } = IMAGERY.cover;
-  return `${world.genre} ${lead}, ${world.title}, ${clip(world.description, maxChars)}, ${style}`;
-}
-
-function clip(text: string, maxChars: number): string {
-  if (text.length <= maxChars) return text;
-  const window = text.slice(0, maxChars);
-  const sentence = Math.max(
-    window.lastIndexOf("."),
-    window.lastIndexOf("!"),
-    window.lastIndexOf("?"),
-  );
-  if (sentence > maxChars / 2) return window.slice(0, sentence + 1);
-  const word = window.lastIndexOf(" ");
-  return word > 0 ? window.slice(0, word) : window;
-}
-
-export function buildPortraitPrompt(world: World, character: Character, maxChars: number): string {
-  const { lead, chest, waist, style, belowChest } = IMAGERY.portrait;
-  const description = clip(character.bio, maxChars);
-  const framing = belowChest.test(description) ? waist : chest;
-  const who = SUBJECT_BY_PRONOUN[character.pronouns];
-  return `${world.genre} ${lead}, ${character.name}, ${who}, ${description}, ${framing}, ${style}`;
 }

@@ -77,6 +77,7 @@ export function SceneFrame({
             <PreviewableImage
               imageUrl={imageUrl}
               alt={alt}
+              downloadName={alt}
               className={`absolute inset-0 h-full w-full rounded-none border-0 ${drift ? "stage-drift" : ""}`}
               imageClassName="h-full w-full object-contain"
             />

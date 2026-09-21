@@ -1,5 +1,6 @@
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 import type { ReactElement, ReactNode } from "react";
+import { useTopLayer } from "~/hooks/useTopLayer";
 import { cn } from "~/lib/utils";
 
 const TooltipProvider = TooltipPrimitive.Provider;
@@ -13,10 +14,12 @@ export interface TooltipProps {
 }
 
 function Tooltip({ content, children, side = "top", sideOffset = 6, className }: TooltipProps) {
+  const { anchorRef, container } = useTopLayer<HTMLButtonElement>();
+
   return (
     <TooltipPrimitive.Root>
-      <TooltipPrimitive.Trigger render={children} />
-      <TooltipPrimitive.Portal>
+      <TooltipPrimitive.Trigger ref={anchorRef} render={children} />
+      <TooltipPrimitive.Portal container={container}>
         <TooltipPrimitive.Positioner side={side} sideOffset={sideOffset} className="z-50">
           <TooltipPrimitive.Popup
             data-slot="tooltip"

@@ -1,5 +1,7 @@
 import type {
   Pronouns,
+  RenderStyle,
+  ShotSize,
   StatBlock,
   StatDefinition,
   WorldState,
@@ -11,6 +13,9 @@ export interface WorldSummary {
   title: string;
   description: string;
   genre: string;
+  visualStyle: string;
+  shotSize: ShotSize;
+  artStyle: RenderStyle;
   coverImageUrl: string | null;
   visibility: WorldVisibility;
 }
@@ -26,7 +31,11 @@ export interface CharacterSummary {
   worldId: string;
   name: string;
   bio: string;
+  appearance: string;
+  outfit: string;
+  outfitLocked: boolean;
   pronouns: Pronouns;
   portraitUrl: string | null;
+  draftPortraitUrl: string | null;
   statsJson: StatBlock;
 }

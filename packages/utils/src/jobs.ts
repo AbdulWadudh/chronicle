@@ -25,6 +25,16 @@ const imageParamsSchema = z.object({
   scheduler: z.string().min(1),
   upscale: z.number().positive(),
   upscaleDenoise: z.number().positive(),
+  portraitUrls: z.array(z.string()).default([]),
+  identity: z
+    .object({
+      method: z.enum(["fidelity", "style", "neutral"]),
+      weight: z.number(),
+      castWeight: z.number(),
+      startAt: z.number(),
+      endAt: z.number(),
+    })
+    .default({ method: "style", weight: 0.65, castWeight: 0.35, startAt: 0.15, endAt: 0.7 }),
 });
 
 export const diffusionJobSchema = z.discriminatedUnion("kind", [
@@ -40,6 +50,7 @@ export const diffusionJobSchema = z.discriminatedUnion("kind", [
     kind: z.literal("portrait"),
     worldId: z.string(),
     characterId: z.string(),
+    draft: z.boolean().default(false),
   }),
 ]);
 
@@ -83,7 +94,12 @@ export const imageProgressSchema = z.object({
 export const assetReadySchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("scene"), turnId: z.string(), imageUrl: z.string() }),
   z.object({ kind: z.literal("cover"), worldId: z.string(), imageUrl: z.string() }),
-  z.object({ kind: z.literal("portrait"), characterId: z.string(), imageUrl: z.string() }),
+  z.object({
+    kind: z.literal("portrait"),
+    characterId: z.string(),
+    imageUrl: z.string(),
+    draft: z.boolean().default(false),
+  }),
 ]);
 
 export type ImageParams = z.infer<typeof imageParamsSchema>;

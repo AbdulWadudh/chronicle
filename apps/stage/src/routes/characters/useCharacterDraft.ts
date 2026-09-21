@@ -11,6 +11,9 @@ function message(cause: unknown, fallback: string): string {
 export function useCharacterDraft(world: WorldDetail | null, existing?: CharacterSummary | null) {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+  const [appearance, setAppearance] = useState("");
+  const [outfit, setOutfit] = useState("");
+  const [outfitLocked, setOutfitLocked] = useState(true);
   const [pronouns, setPronouns] = useState<Pronouns>("they");
   const [stats, setStats] = useState<StatBlock>({});
   const [saving, setSaving] = useState(false);
@@ -20,6 +23,9 @@ export function useCharacterDraft(world: WorldDetail | null, existing?: Characte
     if (world === null) return;
     setName(existing?.name ?? "");
     setBio(existing?.bio ?? "");
+    setAppearance(existing?.appearance ?? "");
+    setOutfit(existing?.outfit ?? "");
+    setOutfitLocked(existing?.outfitLocked ?? true);
     setPronouns(existing?.pronouns ?? "they");
     setStats(existing?.statsJson ?? baselineStats(world.statDefinitionsJson));
     setError(null);
@@ -28,6 +34,9 @@ export function useCharacterDraft(world: WorldDetail | null, existing?: Characte
   const reset = useCallback(() => {
     setName(existing?.name ?? "");
     setBio(existing?.bio ?? "");
+    setAppearance(existing?.appearance ?? "");
+    setOutfit(existing?.outfit ?? "");
+    setOutfitLocked(existing?.outfitLocked ?? true);
     setPronouns(existing?.pronouns ?? "they");
     setError(null);
     if (world !== null) {
@@ -39,7 +48,15 @@ export function useCharacterDraft(world: WorldDetail | null, existing?: Characte
     if (world === null) return null;
     setSaving(true);
     setError(null);
-    const payload = { name: name.trim(), bio: bio.trim(), pronouns, stats };
+    const payload = {
+      name: name.trim(),
+      bio: bio.trim(),
+      appearance: appearance.trim(),
+      outfit: outfit.trim(),
+      outfitLocked,
+      pronouns,
+      stats,
+    };
     try {
       if (existing != null) {
         return await patch<CharacterSummary>(`${API.characters}/${existing.id}`, payload);
@@ -51,7 +68,7 @@ export function useCharacterDraft(world: WorldDetail | null, existing?: Characte
     } finally {
       setSaving(false);
     }
-  }, [world, existing, name, bio, pronouns, stats]);
+  }, [world, existing, name, bio, appearance, outfit, outfitLocked, pronouns, stats]);
 
   const strengths = useMemo(() => {
     if (world === null) return "";
@@ -62,8 +79,8 @@ export function useCharacterDraft(world: WorldDetail | null, existing?: Characte
   }, [world, stats]);
 
   const composeContext = useMemo(
-    () => ({ name, bio, strengths, pronouns }),
-    [name, bio, strengths, pronouns],
+    () => ({ name, bio, appearance, outfit, strengths, pronouns }),
+    [name, bio, appearance, outfit, strengths, pronouns],
   );
 
   const nameReady = name.trim().length > 0;
@@ -75,6 +92,12 @@ export function useCharacterDraft(world: WorldDetail | null, existing?: Characte
     setName,
     bio,
     setBio,
+    appearance,
+    setAppearance,
+    outfit,
+    setOutfit,
+    outfitLocked,
+    setOutfitLocked,
     pronouns,
     setPronouns,
     stats,

@@ -1,0 +1,1 @@
+ALTER TABLE `characters` ADD `outfit_locked` integer DEFAULT true NOT NULL;

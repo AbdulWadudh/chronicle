@@ -1,0 +1,1 @@
+ALTER TABLE `worlds` ADD `art_style` text DEFAULT 'photoreal' NOT NULL;

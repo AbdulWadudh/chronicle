@@ -14,6 +14,15 @@ export const worlds = sqliteTable(
     description: text("description").notNull().default(""),
     coverImageUrl: text("cover_image_url"),
     genre: text("genre").notNull().default(""),
+    visualStyle: text("visual_style").notNull().default(""),
+    shotSize: text("shot_size", { enum: ["closeUp", "waistUp", "threeQuarter", "fullBody"] })
+      .notNull()
+      .default("waistUp"),
+    artStyle: text("art_style", {
+      enum: ["photoreal", "anime", "painterly", "comic", "render3d"],
+    })
+      .notNull()
+      .default("photoreal"),
     visibility: text("visibility", { enum: ["private", "public"] })
       .notNull()
       .default("private"),
@@ -44,10 +53,14 @@ export const characters = sqliteTable(
       .references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     bio: text("bio").notNull().default(""),
+    appearance: text("appearance").notNull().default(""),
+    outfit: text("outfit").notNull().default(""),
+    outfitLocked: integer("outfit_locked", { mode: "boolean" }).notNull().default(true),
     pronouns: text("pronouns", { enum: ["he", "she", "they"] })
       .notNull()
       .default("they"),
     portraitUrl: text("portrait_url"),
+    draftPortraitUrl: text("draft_portrait_url"),
     statsJson: text("stats_json", { mode: "json" }).$type<StatBlock>().notNull(),
     inventoryJson: text("inventory_json", { mode: "json" }).$type<Inventory>().notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })

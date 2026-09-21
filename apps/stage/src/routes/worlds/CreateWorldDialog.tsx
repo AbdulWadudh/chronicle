@@ -101,6 +101,8 @@ export function CreateWorldDialog({ visible, onClose, onCreated }: CreateWorldDi
         draft={world.draft}
         modeFor={compose.modeFor}
         onChange={(key, value) => world.update(key, value)}
+        onShotSizeChange={(value) => world.update("shotSize", value)}
+        onArtStyleChange={(value) => world.update("artStyle", value)}
         onCompose={(target, mode) => void fill(target, mode)}
       />
 

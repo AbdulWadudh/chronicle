@@ -6,6 +6,7 @@ import { GroupLabel } from "~/components/ui/label";
 import { Segmented, type SegmentedOption } from "~/components/ui/segmented";
 import type { Compose } from "~/hooks/useCompose";
 import type { CharacterSummary, WorldDetail } from "~/lib/entities";
+import { LookFields } from "./LookFields";
 import { PortraitPanel } from "./PortraitPanel";
 import type { useCharacterDraft } from "./useCharacterDraft";
 
@@ -56,6 +57,7 @@ export function CharacterForm({ world, existing, draft, compose, onCompose }: Ch
       </div>
 
       <PortraitPanel
+        key={existing?.id ?? "new-character"}
         existing={existing}
         worldId={world?.id ?? null}
         compose={compose}
@@ -66,6 +68,8 @@ export function CharacterForm({ world, existing, draft, compose, onCompose }: Ch
           pronouns: draft.pronouns,
         })}
       />
+
+      <LookFields draft={draft} compose={compose} onCompose={onCompose} />
 
       {world !== null ? (
         <PointBuyStepper

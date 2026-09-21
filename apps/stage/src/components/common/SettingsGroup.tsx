@@ -14,15 +14,25 @@ export interface SettingsGroupProps {
   meta: GroupMeta;
   index: number;
   defaultOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }
 
-export function SettingsGroup({ meta, index, defaultOpen = true, children }: SettingsGroupProps) {
+export function SettingsGroup({
+  meta,
+  index,
+  defaultOpen = true,
+  open,
+  onOpenChange,
+  children,
+}: SettingsGroupProps) {
+  const controlled = open === undefined ? {} : { open, onOpenChange };
   return (
     <Collapsible.Root
-      defaultOpen={defaultOpen}
+      {...(open === undefined ? { defaultOpen } : controlled)}
       style={{ ["--rise-index" as string]: index }}
-      className="raise rise-in overflow-hidden rounded-card border-(length:--border-width-card) border-hairline bg-card"
+      className="raise rise-in shrink-0 overflow-hidden rounded-card border-(length:--border-width-card) border-hairline bg-card"
     >
       <Collapsible.Trigger className="group flex w-full cursor-pointer items-start gap-3 border-b border-hairline bg-raised px-4 py-3.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-inset">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-primary/15 bg-primary/[0.06] text-text-accent/80">
@@ -45,7 +55,9 @@ export function SettingsGroup({ meta, index, defaultOpen = true, children }: Set
       </Collapsible.Trigger>
 
       <Collapsible.Panel className="settings-panel">
-        <div className="flex flex-col gap-2 p-3">{children}</div>
+        <div className="flex max-h-(--settings-panel-max) flex-col gap-2 overflow-y-auto overscroll-contain p-3">
+          {children}
+        </div>
       </Collapsible.Panel>
     </Collapsible.Root>
   );

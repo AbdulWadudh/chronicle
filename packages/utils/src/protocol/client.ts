@@ -10,6 +10,7 @@ export const submitActionSchema = base.extend({
   action: z.string().min(1),
   mode: z.enum(["scratch", "enhanced"]),
   directorWhisper: z.string().nullable().default(null),
+  mentionedCharacterIds: z.array(z.string()).optional(),
 });
 
 export const selectChoiceSchema = base.extend({
@@ -22,7 +23,7 @@ export const selectChoiceSchema = base.extend({
 export const regenerateSchema = base.extend({
   type: z.literal("REGENERATE"),
   turnId: z.string(),
-  target: z.enum(["narrative", "visual", "audio"]),
+  target: z.enum(["narrative", "visual", "audio", "choices"]),
 });
 
 export const switchBranchSchema = base.extend({
@@ -77,3 +78,14 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
 
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 export type ClientMessageType = ClientMessage["type"];
+
+export type SubmitActionMessage = z.infer<typeof submitActionSchema>;
+export type SelectChoiceMessage = z.infer<typeof selectChoiceSchema>;
+export type RegenerateMessage = z.infer<typeof regenerateSchema>;
+export type SwitchBranchMessage = z.infer<typeof switchBranchSchema>;
+export type DirectorOverrideMessage = z.infer<typeof directorOverrideSchema>;
+export type SaveCheckpointMessage = z.infer<typeof saveCheckpointSchema>;
+export type RollbackCheckpointMessage = z.infer<typeof rollbackCheckpointSchema>;
+export type AbortTurnMessage = z.infer<typeof abortTurnSchema>;
+export type ResumeTurnMessage = z.infer<typeof resumeTurnSchema>;
+export type PingMessage = z.infer<typeof pingSchema>;

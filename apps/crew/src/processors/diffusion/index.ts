@@ -1,9 +1,11 @@
 import { ASSET_CHANNEL } from "@chronicle/config";
 import {
   type AssetReady,
+  characterDraftPortraitKey,
   characterPortraitKey,
   type DiffusionJob,
   diffusionJobSchema,
+  fetchBytes,
   imageChannel,
   PORTRAIT_CONTENT_TYPE,
   SCENE_CONTENT_TYPE,
@@ -16,6 +18,7 @@ import {
   fetchImage,
   resolveCheckpoint,
   submit,
+  uploadImage,
   waitForImages,
 } from "~/processors/diffusion/client";
 import { forgetPrompt, listenForProgress, watchPrompt } from "~/processors/diffusion/progress";
@@ -30,10 +33,10 @@ function destination(payload: DiffusionJob): { key: string; contentType: string 
     return { key: worldCoverKey(payload.worldId), contentType: PORTRAIT_CONTENT_TYPE };
   }
   if (payload.kind === "portrait") {
-    return {
-      key: characterPortraitKey(payload.worldId, payload.characterId),
-      contentType: PORTRAIT_CONTENT_TYPE,
-    };
+    const key = payload.draft
+      ? characterDraftPortraitKey(payload.worldId, payload.characterId)
+      : characterPortraitKey(payload.worldId, payload.characterId);
+    return { key, contentType: PORTRAIT_CONTENT_TYPE };
   }
   return {
     key: sceneKey(payload.worldId, payload.characterId, payload.turnId, payload.variant),
@@ -44,9 +47,26 @@ function destination(payload: DiffusionJob): { key: string; contentType: string 
 function announcement(payload: DiffusionJob, imageUrl: string): AssetReady {
   if (payload.kind === "cover") return { kind: "cover", worldId: payload.worldId, imageUrl };
   if (payload.kind === "portrait") {
-    return { kind: "portrait", characterId: payload.characterId, imageUrl };
+    return { kind: "portrait", characterId: payload.characterId, imageUrl, draft: payload.draft };
   }
   return { kind: "scene", turnId: payload.turnId, imageUrl };
+}
+
+async function preparePortraits(urls: readonly string[]): Promise<string[]> {
+  const filenames: string[] = [];
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    if (url === undefined) continue;
+    try {
+      const bytes = await fetchBytes(url);
+      const filename = `portrait-${i}-${Date.now()}.png`;
+      const uploaded = await uploadImage(bytes, filename);
+      filenames.push(uploaded);
+    } catch (error) {
+      console.error("[crew] failed to upload portrait to ComfyUI:", error);
+    }
+  }
+  return filenames;
 }
 
 export async function renderImage(job: Job<DiffusionJob>): Promise<string> {
@@ -54,8 +74,16 @@ export async function renderImage(job: Job<DiffusionJob>): Promise<string> {
   const label = payload.kind === "scene" ? payload.turnId : payload.worldId;
 
   const checkpoint = await resolveCheckpoint(payload.checkpoint);
+  const portraitFilenames =
+    payload.kind === "scene" && payload.portraitUrls.length > 0
+      ? await preparePortraits(payload.portraitUrls)
+      : [];
+
   listenForProgress(CLIENT_ID);
-  const promptId = await submit(buildWorkflow({ ...payload, checkpoint }, label), CLIENT_ID);
+  const promptId = await submit(
+    buildWorkflow({ ...payload, checkpoint }, label, portraitFilenames),
+    CLIENT_ID,
+  );
   if (payload.kind === "scene") watchPrompt(promptId, payload.turnId);
 
   let images: ComfyImage[];

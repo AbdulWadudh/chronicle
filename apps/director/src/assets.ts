@@ -38,9 +38,10 @@ async function persist(raw: string): Promise<void> {
   }
 
   if (asset.kind === "portrait") {
+    const url = versioned(asset.imageUrl);
     await db
       .update(schema.characters)
-      .set({ portraitUrl: versioned(asset.imageUrl) })
+      .set(asset.draft ? { draftPortraitUrl: url } : { portraitUrl: url, draftPortraitUrl: null })
       .where(eq(schema.characters.id, asset.characterId));
     return;
   }
