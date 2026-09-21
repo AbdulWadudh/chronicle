@@ -224,8 +224,13 @@ it only talks to the HTTP endpoints — but this is where the services are run f
 | Path | What |
 | --- | --- |
 | `G:\AI\MODELS` | Model weights. `Qwen3.5_9B\*.gguf` is the narrative LLM |
-| `G:\AI\STABILITY_MATRIX\Data\Packages\ComfyUI` | ComfyUI, serves `DIFFUSION_ENDPOINT` |
-| `G:\AI\STABILITY_MATRIX\Data\Models\StableDiffusion` | ComfyUI checkpoints |
+| `G:\AI\EIDOLON\COMFY_UI` | ComfyUI, serves `DIFFUSION_ENDPOINT`, launched by `scripts\ai-servers.ps1` |
+| `G:\AI\EIDOLON\COMFY_UI\ComfyUI\models\checkpoints` | ComfyUI checkpoints |
+
+Stability Matrix (`G:\AI\STABILITY_MATRIX`) is a separate, unused ComfyUI install — its
+model tree is not on the `DIFFUSION_ENDPOINT` path. An earlier version of this file named
+it as the server; confirmed wrong on 2026-09-21 against `scripts/ai-servers.ps1`, which
+launches `G:\AI\EIDOLON\COMFY_UI` on port 8188.
 
 Installed checkpoints, confirmed against `GET /object_info/CheckpointLoaderSimple`
 on 2026-09-20. Both are Lightning; no full-step SDXL checkpoint is installed.
@@ -247,10 +252,11 @@ settings change, never a code change.
 `image.upscale` adds a hires pass: the base latent is upscaled by that multiple and run
 through a second `KSampler` at `image.upscaleDenoise`. At 1.5 it is the difference
 between a soft 1024 and a sharp 1536. Measured 2026-09-20 on the 16 GB card: 1536x1536 in
-**21 s**, 3.19 MB, no OOM with the LLM and Kokoro resident. `1` turns the pass off.
+**21 s**, 3.19 MB, no OOM with the LLM resident. `1` turns the pass off.
 
 `image.checkpoint` accepts either a bare filename or a path relative to ComfyUI's
-checkpoints root, which `extra_model_paths.yaml` points at `Data/Models/StableDiffusion`.
+checkpoints root. `G:\AI\EIDOLON\COMFY_UI` carries no `extra_model_paths.yaml`, so that
+root is its own `ComfyUI\models\checkpoints`, not a Stability Matrix path.
 
 `resolveCheckpoint` asks ComfyUI for its real list via
 `GET /object_info/CheckpointLoaderSimple` and matches: exact path first, then
@@ -354,11 +360,13 @@ Writes still require the RustFS credentials. Do not put anything private in this
 
 ## VRAM budget
 
-Measured on a 16 GB card with everything resident — 9B Q6_K at 32K context with q8_0 KV,
-nomic-embed, ComfyUI holding SDXL Lightning, and Kokoro: **11.9 GB of 16.3 GB**. Keep
-`-ctk q8_0`. Dropping the K cache to q4_0 saves little and measurably hurts long-context
-coherence, which is exactly what a story accumulating turn history depends on. If VRAM
-ever gets tight, lower `-ctv` first — the value cache quantizes far more gracefully.
+Kokoro runs CPU-only (`USE_GPU=false` in `scripts/ai-servers.ps1`) as of 2026-09-21, so
+only the LLM, nomic-embed, and ComfyUI share the card. The last full measurement
+(**11.9 GB of 16.3 GB**, 2026-09-20) included Kokoro on GPU and is stale — re-measure
+before relying on a specific headroom number. Keep `-ctk q8_0`. Dropping the K cache to
+q4_0 saves little and measurably hurts long-context coherence, which is exactly what a
+story accumulating turn history depends on. If VRAM ever gets tight, lower `-ctv` first —
+the value cache quantizes far more gracefully.
 
 ## Dev stack
 

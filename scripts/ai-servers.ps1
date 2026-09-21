@@ -35,7 +35,7 @@ $Services = [ordered]@{
   }
   tts   = @{
     Port    = 8880
-    Command = "cd /d `"$AiRoot\KOKORO_TTS`" && set PYTHONUTF8=1&& set USE_GPU=true&& set PROJECT_ROOT=%CD%&& set PYTHONPATH=%CD%;%CD%\api&& set MODEL_DIR=src/models&& set VOICES_DIR=src/voices/v1_0&& set WEB_PLAYER_PATH=%CD%\web&& `"$AiRoot\KOKORO_TTS\.venv\Scripts\python.exe`" -m uvicorn api.src.main:app --host 127.0.0.1 --port 8880"
+    Command = "cd /d `"$AiRoot\KOKORO_TTS`" && set PYTHONUTF8=1&& set USE_GPU=false&& set PROJECT_ROOT=%CD%&& set PYTHONPATH=%CD%;%CD%\api&& set MODEL_DIR=src/models&& set VOICES_DIR=src/voices/v1_0&& set WEB_PLAYER_PATH=%CD%\web&& `"$AiRoot\KOKORO_TTS\.venv\Scripts\python.exe`" -m uvicorn api.src.main:app --host 127.0.0.1 --port 8880"
   }
 }
 
