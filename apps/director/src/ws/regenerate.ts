@@ -11,6 +11,7 @@ import {
   dispatchAudio,
   dispatchScene,
   enqueueSentenceAudio,
+  narratedSentences,
   streamNarrative,
 } from "~/ws/turnSession";
 
@@ -47,7 +48,7 @@ export async function regenerateTurn(
 
   if (target === "audio") {
     await db.update(schema.turns).set({ audioUrlsJson: [] }).where(eq(schema.turns.id, turnId));
-    await enqueueSentenceAudio(context, turnId, row.narrativeText);
+    await enqueueSentenceAudio(context, turnId, narratedSentences(row.narrativeText));
     send(socket, { v: PROTOCOL_VERSION, replyTo, type: "TURN_COMMITTED", turn: toTurnNode(row) });
     return;
   }

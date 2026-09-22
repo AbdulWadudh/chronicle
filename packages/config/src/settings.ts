@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ensembleSettingsSchema } from "./ensemble";
 
 export const SETTINGS_CHANNEL = "settings:changed";
 export const SETTINGS_ROW_ID = "runtime";
@@ -210,6 +211,7 @@ export const runtimeSettingsSchema = z.object({
   image: imageSchema.prefault({}),
   tts: ttsSchema.prefault({}),
   dice: diceSchema.prefault({}),
+  ensemble: ensembleSettingsSchema.prefault({}),
 });
 
 function patchOf<T extends z.ZodRawShape>(group: z.ZodObject<T>) {
@@ -232,6 +234,7 @@ export const runtimeSettingsPatchSchema = z.object({
   image: patchOf(imageSchema),
   tts: patchOf(ttsSchema),
   dice: patchOf(diceSchema),
+  ensemble: patchOf(ensembleSettingsSchema),
 });
 
 export type RuntimeSettings = z.infer<typeof runtimeSettingsSchema>;

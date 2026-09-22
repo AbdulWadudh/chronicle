@@ -134,7 +134,7 @@ export function buildPortraitPrompt(
   return `${lead}, ${world.genre}, ${character.name}, ${who}, ${described}, ${framing}, ${setting}${style}, ${rendering.tail}`;
 }
 
-function clip(text: string, maxChars: number): string {
+export function clip(text: string, maxChars: number): string {
   if (text.length <= maxChars) return text;
   const window = text.slice(0, maxChars);
   const sentence = Math.max(

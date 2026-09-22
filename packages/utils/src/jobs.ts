@@ -63,6 +63,7 @@ export const ttsJobSchema = z.object({
   text: z.string().min(1),
   voice: z.string().min(1),
   speed: z.number().positive(),
+  speakerId: z.string().nullable().default(null),
 });
 
 export const memoryJobSchema = z.object({
@@ -76,6 +77,7 @@ export const audioReadySchema = z.object({
   turnId: z.string(),
   sentenceIndex: z.number().int().nonnegative(),
   audioUrl: z.string(),
+  speakerId: z.string().nullable().default(null),
 });
 
 export const imageReadySchema = z.object({

@@ -44,6 +44,15 @@ General code style is global, in `~/.claude/rules/code.md`. Chronicle rules live
 
 `bun run audit` enforces the 300-line ceiling and the zero-comment rule, and fails the build.
 
+## Verifying in the running app
+
+Never create an account, world, character or turn for testing. Everything happens in my own
+account so I can see it. Sign in with `ADMIN_USERNAME` / `ADMIN_PASSWORD` from `.env`.
+
+These two are for driving a browser during verification. The app never reads them, so they are
+deliberately absent from `@chronicle/config/env` — adding them there would be config for a use
+that does not exist.
+
 ## Sub-agent delegation
 
 | Agent | Owns |

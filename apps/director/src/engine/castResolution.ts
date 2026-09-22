@@ -1,5 +1,5 @@
 import { type ChronicleDatabase, schema, toCharacter } from "@chronicle/db";
-import { type Character, pronounPhrase } from "@chronicle/utils";
+import { type Character, mentionedIn, pronounPhrase } from "@chronicle/utils";
 import { and, eq, ne } from "drizzle-orm";
 
 export async function resolveInteractingCharacters(
@@ -17,20 +17,12 @@ export async function resolveInteractingCharacters(
 
   if (rows.length === 0) return [];
 
-  const explicitIds = new Set(mentionedIds ?? []);
-  const normalizedAction = action.toLowerCase();
-  const mentionMatches = Array.from(action.matchAll(/@([a-zA-Z0-9_ ]+)/gu))
-    .map((match) => match[1]?.trim().toLowerCase() ?? "")
-    .filter((name) => name.length > 0);
-
-  const matched = rows.filter((row) => {
-    if (explicitIds.has(row.id)) return true;
-    const lowerName = row.name.toLowerCase();
-    if (mentionMatches.some((name) => lowerName.includes(name) || name.includes(lowerName))) {
-      return true;
-    }
-    return normalizedAction.includes(lowerName);
-  });
+  const ids = mentionedIn(
+    action,
+    rows.map((row) => ({ id: row.id, name: row.name })),
+    mentionedIds ?? [],
+  );
+  const matched = rows.filter((row) => ids.includes(row.id));
 
   return matched.map((row) => toCharacter(row));
 }

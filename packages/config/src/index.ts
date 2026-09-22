@@ -1,3 +1,4 @@
+export * from "./ensemble";
 export * from "./icons";
 export * from "./palettes";
 export * from "./prompts";

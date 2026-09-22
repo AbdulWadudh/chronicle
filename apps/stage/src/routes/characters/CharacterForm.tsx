@@ -7,6 +7,7 @@ import { Segmented, type SegmentedOption } from "~/components/ui/segmented";
 import type { Compose } from "~/hooks/useCompose";
 import type { CharacterSummary, WorldDetail } from "~/lib/entities";
 import { LookFields } from "./LookFields";
+import { PersonaFields } from "./PersonaFields";
 import { PortraitPanel } from "./PortraitPanel";
 import type { useCharacterDraft } from "./useCharacterDraft";
 
@@ -103,6 +104,8 @@ export function CharacterForm({ world, existing, draft, compose, onCompose }: Ch
           onCompose={(mode) => onCompose("character.bio", mode)}
         />
       </FormSection>
+
+      <PersonaFields draft={draft} compose={compose} onCompose={onCompose} />
 
       {error !== null ? (
         <p role="alert" className="text-[0.8125rem] text-danger">

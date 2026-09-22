@@ -1,5 +1,6 @@
 import type { RuntimeSettings, RuntimeSettingsGroup } from "@chronicle/config";
 import {
+  BubbleChatIcon,
   DiceFaces05Icon,
   FlashIcon,
   Image02Icon,
@@ -59,6 +60,11 @@ export const GROUP_META: Record<RuntimeSettingsGroup, GroupMeta> = {
     title: "Dice",
     blurb: "Server-authoritative checks. The client never decides an outcome.",
     icon: DiceFaces05Icon,
+  },
+  ensemble: {
+    title: "Ensemble",
+    blurb: "How a world's cast talk among themselves, for worlds with the group scene turned on.",
+    icon: BubbleChatIcon,
   },
 };
 
@@ -204,6 +210,27 @@ const dice: FieldMetaFor<"dice"> = {
   },
 };
 
+const ensemble: FieldMetaFor<"ensemble"> = {
+  enabled: {
+    label: "Group scenes",
+    hint: "The master switch. Off here, every world behaves as a single-character story regardless of its own setting.",
+  },
+  maxSpeakers: {
+    label: "Speakers per turn",
+    unit: "characters",
+    hint: "How many of the present cast may talk in one turn. Above two, a scene starts reading as a roll call.",
+  },
+  maxLinesPerSpeaker: {
+    label: "Lines each",
+    unit: "lines",
+    hint: "How much any one character may say before the turn moves on.",
+  },
+  speakChance: {
+    label: "Chattiness",
+    hint: "How readily a speaking slot gets filled at all. Lower leaves more silences, which makes the times they do speak land harder.",
+  },
+};
+
 const FIELD_META: Record<string, Record<string, FieldMeta>> = {
   narrative,
   structured,
@@ -212,6 +239,7 @@ const FIELD_META: Record<string, Record<string, FieldMeta>> = {
   image,
   tts,
   dice,
+  ensemble,
 };
 
 export function fieldMeta(group: string, field: string): FieldMeta {

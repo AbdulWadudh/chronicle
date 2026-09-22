@@ -12,6 +12,7 @@ import { composeRoutes } from "~/routes/compose";
 import { settingsRoutes } from "~/routes/settings";
 import { themeRoutes } from "~/routes/themes";
 import { turnRoutes } from "~/routes/turns";
+import { voiceRoutes } from "~/routes/voices";
 import { worldRoutes } from "~/routes/worlds";
 import { serveStage } from "~/static";
 import { activeTurnCount, connectionCount } from "~/ws/session";
@@ -44,6 +45,7 @@ export function createApp(): Hono<AuthEnv> {
   app.route(API.themes, themeRoutes);
   app.route(API.account, accountRoutes);
   app.route(API.admin, adminRoutes);
+  app.route(API.voices, voiceRoutes);
 
   app.all("/api/*", (context) => context.json({ error: "Not found." }, 404));
   app.get("*", serveStage);

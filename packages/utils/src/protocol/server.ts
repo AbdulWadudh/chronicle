@@ -23,6 +23,7 @@ export const sentenceAudioReadySchema = base.extend({
   turnId: z.string(),
   sentenceIndex: z.number().int().nonnegative(),
   audioUrl: z.string(),
+  speakerId: z.string().nullable().default(null),
 });
 
 export const sceneImageReadySchema = base.extend({

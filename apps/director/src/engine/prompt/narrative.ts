@@ -20,6 +20,22 @@ function narratorSystem(sentences: number): string {
   return [voice, tense, length, ...rest].join(" ");
 }
 
+function sentence(lead: string, value: string): string {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return "";
+  return /[.!?]$/u.test(trimmed) ? `${lead}: ${trimmed}` : `${lead}: ${trimmed}.`;
+}
+
+export function describePersona(character: Character): string {
+  return [
+    sentence("Warms to", character.likes),
+    sentence("Bristles at", character.dislikes),
+    sentence("Speaks", character.responseStyle),
+  ]
+    .filter((part) => part.length > 0)
+    .join(" ");
+}
+
 export function describeStats(world: World, character: Character): string {
   return world.statDefinitions
     .map((definition) => `${definition.label}: ${character.stats[definition.id] ?? 1}/5`)
@@ -51,7 +67,7 @@ export function buildContext(
   const parts = [
     `Setting: ${world.title}. ${world.description}`,
     `Genre: ${world.genre}`,
-    `Protagonist: ${character.name} (${pronounPhrase(character.pronouns)}). ${character.bio}`,
+    `Protagonist: ${character.name} (${pronounPhrase(character.pronouns)}). ${character.bio} ${describePersona(character)}`.trim(),
     `Abilities: ${describeStats(world, character)}`,
     describeState(state, recentFacts),
   ];
@@ -60,7 +76,7 @@ export function buildContext(
   }
   for (const other of interactingCharacters) {
     parts.push(
-      `Interacting Character: ${other.name} (${pronounPhrase(other.pronouns)}). ${other.bio}`,
+      `Interacting Character: ${other.name} (${pronounPhrase(other.pronouns)}). ${other.bio} ${describePersona(other)}`.trim(),
     );
   }
   return parts.join("\n\n");
@@ -92,6 +108,7 @@ export function buildNarrativePrompt(
 ): ChatMessage[] {
   const system = [
     narratorSystem(prompt.sentences),
+    request.world.narratorPrompt.trim(),
     request.mode === "enhanced" ? NARRATOR_ENHANCED : "",
     request.directorWhisper === null ? "" : `Hidden direction: ${request.directorWhisper}`,
   ]

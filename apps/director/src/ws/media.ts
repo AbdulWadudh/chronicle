@@ -102,6 +102,7 @@ function relay(pattern: string, raw: string): void {
       turnId: audio.turnId,
       sentenceIndex: audio.sentenceIndex,
       audioUrl: audio.audioUrl,
+      speakerId: audio.speakerId,
     });
   }
 }

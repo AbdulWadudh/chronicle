@@ -16,6 +16,7 @@ export function toTurnNode(row: TurnRow): TurnNode {
     audioUrls: row.audioUrlsJson ?? [],
     stateDiff: row.stateDiffJson,
     diceCheck: row.diceCheckJson,
+    cast: row.castJson,
     branchIndex: row.branchIndex,
     createdAt: row.createdAt,
   };

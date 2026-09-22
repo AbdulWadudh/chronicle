@@ -1,4 +1,4 @@
-import { RENDER_STYLES, type RenderStyleName, type ThemeTokens } from "@chronicle/config";
+import { ENSEMBLE, RENDER_STYLES, type RenderStyleName, type ThemeTokens } from "@chronicle/config";
 import { z } from "zod";
 
 export const statRankSchema = z.union([
@@ -30,6 +30,7 @@ export const worldStateSchema = z.object({
   summary: z.string().default(""),
   facts: z.array(z.string()).default([]),
   affinities: z.record(z.string(), z.number()).default({}),
+  bonds: z.record(z.string(), z.number()).default({}),
   flags: z.record(z.string(), z.boolean()).default({}),
 });
 
@@ -76,6 +77,9 @@ export const worldSchema = z.object({
   shotSize: shotSizeSchema.default("waistUp"),
   artStyle: renderStyleSchema.default("photoreal"),
   visibility: worldVisibilitySchema,
+  narratorPrompt: z.string().max(ENSEMBLE.narratorPromptMaxChars).default(""),
+  narratorVoiceId: z.string().nullable().default(null),
+  ensembleEnabled: z.boolean().default(false),
   statDefinitions: z.array(statDefinitionSchema),
   pointBudget: z.number().int().positive(),
   initialState: worldStateSchema,
@@ -94,6 +98,11 @@ export const characterSchema = z.object({
   pronouns: pronounsSchema.default("they"),
   portraitUrl: z.string().nullable(),
   draftPortraitUrl: z.string().nullable().default(null),
+  likes: z.string().max(ENSEMBLE.personalityMaxChars).default(""),
+  dislikes: z.string().max(ENSEMBLE.personalityMaxChars).default(""),
+  responseStyle: z.string().max(ENSEMBLE.personalityMaxChars).default(""),
+  eagerness: z.number().int().min(0).max(100).default(50),
+  voiceId: z.string().nullable().default(null),
   stats: statBlockSchema,
   inventory: inventorySchema,
   createdAt: z.coerce.date(),
@@ -103,6 +112,7 @@ export const statePatchSchema = z.object({
   summary: z.string().optional(),
   factsAdded: z.array(z.string()).optional(),
   affinityDeltas: z.record(z.string(), z.number()).optional(),
+  bondDeltas: z.record(z.string(), z.number()).optional(),
   flagsSet: z.record(z.string(), z.boolean()).optional(),
   statOverrides: statBlockSchema.optional(),
   inventoryAdded: inventorySchema.optional(),
@@ -128,10 +138,19 @@ export function applyStatePatch(state: WorldState, patch: StatePatch): WorldStat
   for (const [key, delta] of Object.entries(patch.affinityDeltas ?? {})) {
     affinities[key] = (affinities[key] ?? 0) + delta;
   }
+
+  const { min, max, maxDelta } = { ...ENSEMBLE.bonds.range, maxDelta: ENSEMBLE.bonds.maxDelta };
+  const bonds = { ...state.bonds };
+  for (const [key, delta] of Object.entries(patch.bondDeltas ?? {})) {
+    const stepped = Math.max(-maxDelta, Math.min(maxDelta, delta));
+    bonds[key] = Math.max(min, Math.min(max, (bonds[key] ?? 0) + stepped));
+  }
+
   return {
     summary: patch.summary ?? state.summary,
     facts: [...state.facts, ...(patch.factsAdded ?? [])],
     affinities,
+    bonds,
     flags: { ...state.flags, ...(patch.flagsSet ?? {}) },
   };
 }

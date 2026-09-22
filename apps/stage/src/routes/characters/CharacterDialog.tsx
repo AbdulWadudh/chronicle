@@ -34,6 +34,9 @@ export function CharacterDialog({
       "character.bio": draft.setBio,
       "character.appearance": draft.setAppearance,
       "character.outfit": draft.setOutfit,
+      "character.likes": draft.setLikes,
+      "character.dislikes": draft.setDislikes,
+      "character.responseStyle": draft.setResponseStyle,
     };
     apply[target]?.(value);
   }

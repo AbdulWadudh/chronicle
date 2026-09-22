@@ -108,6 +108,7 @@ export type ShotSize = keyof typeof SHOT_SIZES;
 
 export const IMAGERY = {
   scene: {
+    maxSubjects: 2,
     lead: "cinematic photo",
     framing: "natural depth of field",
     expression:

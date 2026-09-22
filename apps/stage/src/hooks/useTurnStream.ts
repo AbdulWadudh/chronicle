@@ -1,6 +1,7 @@
 import { API } from "@chronicle/config";
 import type { ImageShape, ServerMessage, TurnNode } from "@chronicle/utils";
 import { useCallback, useState } from "react";
+import { mergeSentenceAudio } from "~/hooks/mergeSentenceAudio";
 import { post } from "~/lib/api";
 import { assetUrl } from "~/lib/assets";
 import { useAudioQueue } from "./useAudioQueue";
@@ -112,19 +113,11 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
         case "SENTENCE_AUDIO_READY":
           audio.enqueueSentence(message.sentenceIndex, message.audioUrl);
           setCommittedTurns((previous) =>
-            previous.map((turn) =>
-              turn.id === message.turnId
-                ? {
-                    ...turn,
-                    audioUrls: [
-                      ...turn.audioUrls.filter(
-                        (clip) => clip.sentenceIndex !== message.sentenceIndex,
-                      ),
-                      { sentenceIndex: message.sentenceIndex, audioUrl: message.audioUrl },
-                    ].sort((left, right) => left.sentenceIndex - right.sentenceIndex),
-                  }
-                : turn,
-            ),
+            mergeSentenceAudio(previous, message.turnId, {
+              sentenceIndex: message.sentenceIndex,
+              audioUrl: message.audioUrl,
+              speakerId: message.speakerId,
+            }),
           );
           break;
         case "SCENE_PROGRESS":

@@ -24,6 +24,258 @@ style, and PuLID holds faces across scenes. Waves 7B-7D still have the open item
 | 7D | Memory and progression: branching, checkpoints, nomic-embed recall | planned |
 | 7E | Image identity, world art direction, render styles, world and portrait editing | done |
 | 7F | WebP assets, TanStack Query, grouped authoring forms | done |
+| 8 | Narrator prompt, voices, character personality, opt-in ensemble | waves 1-3 done, verified live |
+| 9 | Vector memory: real embeddings, rolling summaries, recall in prompts | planned |
+
+## Wave 8 — Ensemble (decisions locked 2026-09-22, Wave 0 gate)
+
+Narrator/voice/personality settings plus an opt-in multi-character system. Built as an
+**additive sibling** to the single-character path, never a rewrite of it.
+
+### Locked
+
+- **Presence** — `turns.castJson` (`{ present: string[] }`, nullable). Not a join table: presence
+  is read once by the loader and the DAG branches, so a world-level roster would desync on
+  `SWITCH_BRANCH`. Entered/exited are derived by diffing the parent turn.
+- **Generation** — one streaming call, line-prefixed attribution (`Name: text`; a bare line is
+  narrator), parsed incrementally so `NARRATIVE_CHUNK` is untouched. Structured JSON would kill
+  the token stream; one call per speaker costs N× TTFT on a single llama.cpp slot and makes
+  characters talk past each other. Format drift degrades to narrator-only, i.e. today.
+- **Attribution** — split per line, strip the prefix, then sentence-split within the line, so the
+  global `sentenceIndex` stays monotonic and `useAudioQueue` / `RESUME_TURN` are unchanged.
+  `speakerId` (nullable, default null) added to `SENTENCE_AUDIO_READY` and `ttsJobSchema`.
+  **Protocol stays `v: 1`** — additive optional field, and `RESUME_TURN` replays from an in-memory
+  buffer so no stored payload carries the old shape.
+- **Voices** — per character. `worlds.narratorVoiceId`, `characters.voiceId` (null = narrator).
+  `GET /api/v1/voices` proxies Kokoro's live list, cached per process, validated at write time —
+  same contract as `resolveCheckpoint`, never a hardcoded list. If a stored voice has vanished at
+  enqueue time the director falls back to the narrator voice and emits `ERROR`; failing the job
+  would stall the whole turn's audio queue.
+- **Image subjects** — hard cap of 2 (`IMAGERY.scene.maxSubjects`). Protagonist plus the single
+  most-involved other, ties broken by who spoke first. The rest of the present cast is absent from
+  the prompt entirely. This is the measured PuLID ceiling, not a new limit.
+- **Turn-taking** — director-owned, one pure function in `packages/utils/src/ensemble/`.
+  `@mention` always speaks; then fill to `ensemble.maxSpeakers` weighted by `characters.eagerness`
+  and a recency penalty, gated by `ensemble.speakChance`. Eagerness 0 never speaks unprompted.
+- **Presence transitions** — `presentAfter: string[]` added to the existing `PLAN_SCHEMA`, so they
+  come from the structured call that already runs. No extra round trip, no parsing risk.
+- Character `likes` / `dislikes` / `responseStyle` feed **both** paths, guarded on non-empty, so a
+  blank character yields today's exact prompt. `eagerness` is ensemble-only by nature.
+- `directorWhisper` on `SUBMIT_ACTION` folded in (closes the Wave 6 open item).
+
+### Separation and revert
+
+`prompts.ts` takes zero edits. All ensemble text, bounds and the settings schema live in
+`packages/config/src/ensemble.ts`; `settings.ts` gains 3 lines (it sits at 245, one under the
+audit warn). `buildEnsemblePrompt` is a sibling of `buildNarrativePrompt`, selected by one ternary
+in `turnSession.ts` on `world.ensembleEnabled && settings.ensemble.enabled`. The solo path never
+imports the ensemble module.
+
+Reverting is 3 file deletions plus ~6 line-edits. The schema columns can stay: unread, their
+defaults *are* the old behaviour, so there is no down-migration.
+
+Sole exception granted: `buildNarrativePrompt` gains one additive line for the world's narrator
+system prompt, which is a world setting independent of the toggle.
+
+### Wave 1 built and verified
+
+Migration `0013` applied to the real database: 14 migrations, row counts unchanged
+(3 worlds / 10 characters / 134 turns), every new column defaulted, `ensemble_enabled = 0`
+on all existing worlds. `bun run check` green across six workspaces. Verified in a browser
+at 390x844 signed in as the owner.
+
+- `packages/config/src/ensemble.ts` — `ENSEMBLE` prompts, `ENSEMBLE_BOUNDS`,
+  `ensembleSettingsSchema`. `prompts.ts` untouched. `settings.ts` +3 lines, now 248.
+- `worlds.narratorPrompt` / `narratorVoiceId` / `ensembleEnabled`;
+  `characters.likes` / `dislikes` / `responseStyle` / `eagerness` / `voiceId`; `turns.castJson`.
+  Every default reproduces current behaviour.
+- `worldState.bonds` and `statePatch.bondDeltas`, reduced and clamped in `applyStatePatch`.
+  The **existing `affinities` map was never written by anything** — `commitTurn` stores
+  `stateDiffJson: null` and the Director Console is fed a hardcoded `{}`. Bonds inherit that
+  gap; Wave 3 gives both a producer.
+- `GET /api/v1/voices` proxies Kokoro's live list (74 voices, graded), cached per process.
+  `voiceRejection` validates at write time on both world and character routes, so an
+  uninstalled id cannot be stored.
+- `routes/characters.ts` (280 lines) split to `routes/characters/{index,schemas}.ts` at 203/67.
+- Client: `useVoices`, `VoiceSelect`, `WorldNarrationFields`, `PersonaFields`. Eagerness is a
+  0-100 slider with a plain-language blurb per band.
+- `buildNarrativePrompt` gained exactly two additive lines: the world narrator prompt, and
+  `describePersona` on the protagonist and interacting-character lines. Confirmed against the
+  real rows: one leading system message, persona present for a filled character and absent for
+  a blank one.
+- Voices render as friendly names with locale/gender groups, a quality grade and a hover
+  preview (`GET /api/v1/voices/:id/preview`, 51 KB `audio/mpeg`; an unknown id 400s by name).
+  Narrator prompt and all three persona fields carry the generate/enhance pair, on four new
+  compose targets. `engine/compose.ts` (276 lines) split to `engine/compose/{index,targets}.ts`.
+
+### Wave 2 built
+
+`engine/prompt/ensemble.ts` — `buildEnsemblePrompt` and `buildEnsembleChoicePrompt`, siblings of
+the solo builders, importing nothing from them but `buildHistory`, `describeState`,
+`describeStats` and `describePersona`. `packages/utils/src/ensemble/bonds.ts` holds `bondKey`,
+`bondBand` and `describeBonds`.
+
+Measured with llama.cpp `/tokenize` against real rows, `n_ctx` 32768:
+
+| Prompt | Tokens |
+| --- | --- |
+| solo, before Wave 1 | 535 |
+| solo, after (persona + narrator prompt) | 605 |
+| ensemble, 4 characters, 3 present, 2 speaking | 1118 |
+
+The ensemble prompt costs **3.4% of the window**. History at `historyDepth` 12 is the dominant
+cost in a long game, not the cast.
+
+Verified against the live endpoint:
+
+- Attribution format was followed exactly — `Corvin Ashgrave: ...` per line, narration
+  unattributed, both named speakers spoke in the given order and the silent one stayed silent.
+- Personas separated the voices. `Barely speaks. One clause, then waits.` produced
+  "Three souls. Two memories. One hour of breath." `Warm and circling. Tells a story instead of
+  answering.` produced a circling anecdote that also hit her recorded dislike.
+- The solo path reads no worse: the "after" narration honoured the narrator instruction and
+  stayed in register.
+
+### Wave 3 built and verified
+
+Runtime is live. Verified in the browser on **The Fracture Between Us** (toggle on, 3 characters):
+an action with **no @mention** produced attributed dialogue from two characters, narration first.
+
+```
+The resonance in the room shifts; the panic in Nia's posture fractures into a cold, sharp focus...
+
+Nia Solace: Wrong about the strut? I calculated the microfractures three times before we even stood here.
+Kaelen Thorne: She's right, Voss. But my original model was based on pre-corrosion data.
+```
+
+`audio_urls_json` carried the right ids (`0,1` Kaelen / `2,3` Nia), `cast_json` recorded presence,
+and `state_diff_json` persisted resolved `fromId>toId` bond keys.
+
+- `packages/utils/src/ensemble/` — `pickSpeakers`, `parseAttributedLines`, bond helpers. Pure,
+  with `ensemble.test.ts` (10 tests) as the check.
+- `ws/narration.ts` holds the shared streaming primitives so `turnSession` (solo) and
+  `ensembleTurn` sit beside each other with no import cycle. `runTurn` branches on one line and
+  falls back to solo whenever the ensemble yields no speakers.
+- `loader.ts` now **folds `stateDiff` across the ancestry** and maps `castJson`. Without the fold
+  bonds were computed and discarded every turn. Existing turns hold `stateDiff: null`, so the
+  fold is the identity for every pre-existing game.
+- Scene subjects capped by `IMAGERY.scene.maxSubjects` (2), preferring whoever actually spoke.
+- `useTurnStream.ts` hit 301 lines; `mergeSentenceAudio` extracted to bring it back under.
+
+### Three bugs found only by running it
+
+- **`speakChance` gated the first speaker**, so ~40% of ensemble turns silently fell back to solo.
+  It now gates only speakers *after* the first: someone always speaks when the room is occupied.
+- **The model wrote narration and stopped.** The length rule said "then stop", and the replayed
+  ancestry is all narration-only assistant turns, so it pattern-matched. The speaking order now
+  lives in the **final user message**, closest to generation, and says so explicitly.
+- **`bondDeltas` came back with emotional phrases, not names** (`"panicked and disjointed"` →
+  `"sharp and aligned"`), so every entry was silently filtered and no bond ever moved. Fixed by
+  constraining `from`/`to` with a JSON-schema `enum` of the real cast names, which llama.cpp
+  enforces as grammar. Prompt wording alone did not fix this; two attempts failed before probing
+  the raw output.
+
+### @mention fix
+
+Reported as "@mentioning is not working". Selecting from the composer menu always worked; the
+break was everything else.
+
+- `SELECT_CHOICE` calls `startTurn` with **no `mentionedCharacterIds` at all**, and the ensemble
+  choice rule tells the model to name a character in at least one option. So every choice-driven
+  turn — the normal way to play — reached `chooseCast` with zero mentions.
+- `chooseCast` read only `mentionedCharacterIds`. The solo path's `resolveInteractingCharacters`
+  regex-matched names in the action text; the ensemble path had no such fallback, so a name typed
+  by hand or left by a choice was silently dropped.
+- The old solo matcher used `normalizedAction.includes(lowerName)`, so a character named "Will"
+  or "May" matched ordinary English.
+
+Fixed once at the shared point: `mentionedIn(action, cast, explicitIds)` in
+`packages/utils/src/ensemble/mentions.ts`, used by **both** paths. Word-boundary matching,
+`@Name` or `@FirstName` case-insensitive, bare full names case-sensitive. Four tests cover the
+choice case, the "Will" false positive, and explicit-id precedence.
+
+Verified live: `"I press Nia Solace for the exact number"` — no `@` at all — made Nia open the
+exchange, against a recency weighting that favoured Kaelen.
+
+### Presence fix — a mention must not teleport
+
+Reported as "the generated output is bullshit and the image shows two women when I am male".
+Both symptoms had one cause.
+
+`presentFor` force-added any mentioned character to the scene. Kaelen's playthrough had abandoned
+Elara ~20 turns earlier ("I drop her and run"; she is trapped behind a collapsed arch) and fled to
+an aqueduct ledge. Saying "Hi @Elara Voss, where are you?" put her back in the room, so she
+answered as if standing there, **and** she was handed to the renderer as a second subject.
+
+- Mentions no longer create presence. `presentFor(cast, parent)` reads the recorded cast; with no
+  record it seeds from **who the previous turn's narration actually named** (`mentionedIn` over
+  `narrativeText`), and only a world's very first turn seeds from the full cast.
+- `chooseCast` returns `absent` — mentioned but not in the scene. The prompt says they cannot hear
+  it and do not answer, so the narration shows what the words meet instead.
+- The ensemble path now also runs when there are no speakers but someone absent was addressed,
+  otherwise the solo fallback would resurrect them through `resolveInteractingCharacters`.
+- `ENSEMBLE.turnTaking` gained: a character addressed by name answers what was actually asked.
+
+Verified live as Kaelen: "Hi @Nia Solace, where are you?" (Nia has never appeared in his story)
+produced "Your voice ... finds no living ear to answer it" plus Elara saying "Nia isn't in this
+sector." Nia neither spoke nor entered `cast_json`.
+
+`presentFor` has four tests in `apps/director/src/engine/ensemble.test.ts`, including the real
+aqueduct text yielding an empty scene.
+
+### The two-women render
+
+Not caused by this work. The scene prompt for that turn was reconstructed and was correct:
+`(one adult man and one adult woman:1.4)`, `Kaelen Thorne ((a man:1.3) ... on the left)`, with
+`two women, two female subjects, all-female` in the negative. Kaelen's stored portrait is
+unambiguously male and PuLID applies the protagonist last, masked left. The render ignored all of
+it — the documented Wave 7E two-subject gender bleed. The presence fix removes the second subject
+from scenes like this one, which is the only lever that reliably helps today.
+
+### Still open after Wave 3
+
+- `directorWhisper` was **already wired end to end** before this wave — the Wave 6 note claiming
+  otherwise was stale. Nothing was built for it.
+- The narrative text keeps its `Name:` prefixes when displayed; TTS strips them. The client has
+  no designed speaker treatment yet.
+- `planEnsembleTurn` still swallows every failure into an empty plan. It hid the bond bug.
+- Bond deltas are often `0` even on a pointed exchange. The plumbing is proven; the 9B is
+  conservative about scoring them.
+- `ensemble.maxSpeakers` is advisory, not enforced. At `maxSpeakers: 1` the model still wrote a
+  line for a second character, and `parseAttributedLines` attributes any named cast member. The
+  cap shapes the prompt; it does not gate the parser.
+
+### Open from Wave 2
+
+- **The model wraps spoken lines in quotation marks** despite the instruction not to. The Wave 3
+  parser must strip them rather than fight the model.
+- Speaker persona blocks clip bios at 220 chars, silent cast at 140 and to a sentence boundary.
+  `firstSentence` skips abbreviations ("St. Aethelgard") by requiring the preceding word to be
+  longer than two letters.
+- `Tide of Debt`'s protagonist row has a bio naming "Wren Alder" while the character is
+  "Elara Vane". Pre-existing data, not a prompt bug, but it will confuse narration.
+
+### Fixed during verification
+
+- Base UI `Combobox` fires `onValueChange` on mount when the controlled value matches no item,
+  which silently wrote a narrator voice nobody chose. Selections are now ignored unless the
+  popup is open. One world had already taken a stray `af_v0nicole`; reset to null.
+- The trigger rendered the full `Name — Accent, gender` label, crushing the row label to two
+  lines at 390px. It now shows the bare name; accent, gender and grade live in the row blurb.
+
+### Open
+
+- Create-world dialog does not expose the narration fields. Defaults are correct for a new
+  world, so it is edit-only by choice.
+- `admin/fields.ts` still tells the operator that `prompt.recentFacts` controls "recalled
+  memory from vector memory". That is false until Wave 9.
+- Turn 1 of a world has nobody present, so the first ensemble turn is still single-voice; the cast
+  populates from `presentAfter` once the narration introduces them.
+- Choices stay three first-person protagonist actions. No "let Mira answer" option.
+- Narrator prompt capped at 600 chars (`ensemble.narratorPromptChars`).
+- A character can speak with their own voice without reaching the image. Unavoidable at cap 2.
+- `resolveInteractingCharacters` substring-matches names against raw action text, so a character
+  named "Will" or "May" false-positives on ordinary English. Fix in Wave 3.
 
 ## Wave 7F
 

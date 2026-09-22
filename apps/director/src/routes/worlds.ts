@@ -1,4 +1,4 @@
-import { STATS } from "@chronicle/config";
+import { ENSEMBLE, STATS } from "@chronicle/config";
 import { db, schema, toWorld } from "@chronicle/db";
 import {
   renderStyleSchema,
@@ -13,6 +13,7 @@ import { type AuthEnv, requireSession } from "~/auth";
 import { populateCast } from "~/casting";
 import { draftWorld } from "~/engine/authoring";
 import { enqueueCover } from "~/engine/imagery";
+import { voiceRejection } from "~/engine/voices";
 import { paletteOverridesSchema } from "~/themeTokens";
 
 const createWorldSchema = z.object({
@@ -25,6 +26,9 @@ const createWorldSchema = z.object({
   themeOverrides: paletteOverridesSchema.nullable().default(null),
   coverImageUrl: z.string().nullable().default(null),
   visibility: z.enum(["private", "public"]).default("private"),
+  narratorPrompt: z.string().max(ENSEMBLE.narratorPromptMaxChars).default(""),
+  narratorVoiceId: z.string().min(1).nullable().default(null),
+  ensembleEnabled: z.boolean().default(false),
   statDefinitions: z.array(statDefinitionSchema).min(1),
   pointBudget: z.number().int().positive().default(STATS.defaultPointBudget),
   initialState: worldStateSchema,
@@ -39,6 +43,9 @@ const patchWorldSchema = z.object({
   artStyle: renderStyleSchema.optional(),
   themeOverrides: paletteOverridesSchema.nullable().optional(),
   visibility: z.enum(["private", "public"]).optional(),
+  narratorPrompt: z.string().max(ENSEMBLE.narratorPromptMaxChars).optional(),
+  narratorVoiceId: z.string().min(1).nullable().optional(),
+  ensembleEnabled: z.boolean().optional(),
 });
 
 const coverSchema = z.object({ prompt: z.string().min(1).max(600).optional() });
@@ -95,6 +102,9 @@ export const worldRoutes = new Hono<AuthEnv>()
     const body = createWorldSchema.safeParse(await context.req.json().catch(() => null));
     if (!body.success) return context.json({ error: "Invalid world." }, 400);
 
+    const rejectedVoice = await voiceRejection(body.data.narratorVoiceId);
+    if (rejectedVoice !== null) return context.json({ error: rejectedVoice }, 400);
+
     const user = context.get("user");
     const [row] = await db
       .insert(schema.worlds)
@@ -109,6 +119,9 @@ export const worldRoutes = new Hono<AuthEnv>()
         artStyle: body.data.artStyle,
         themeOverridesJson: body.data.themeOverrides,
         visibility: body.data.visibility,
+        narratorPrompt: body.data.narratorPrompt,
+        narratorVoiceId: body.data.narratorVoiceId,
+        ensembleEnabled: body.data.ensembleEnabled,
         statDefinitionsJson: body.data.statDefinitions,
         pointBudget: body.data.pointBudget,
         initialStateJson: body.data.initialState,
@@ -133,6 +146,9 @@ export const worldRoutes = new Hono<AuthEnv>()
       .get();
     if (row === undefined) return context.json({ error: "Not found." }, 404);
 
+    const rejectedVoice = await voiceRejection(body.data.narratorVoiceId);
+    if (rejectedVoice !== null) return context.json({ error: rejectedVoice }, 400);
+
     const [updated] = await db
       .update(schema.worlds)
       .set({
@@ -147,6 +163,10 @@ export const worldRoutes = new Hono<AuthEnv>()
             ? row.themeOverridesJson
             : body.data.themeOverrides,
         visibility: body.data.visibility ?? row.visibility,
+        narratorPrompt: body.data.narratorPrompt ?? row.narratorPrompt,
+        narratorVoiceId:
+          body.data.narratorVoiceId === undefined ? row.narratorVoiceId : body.data.narratorVoiceId,
+        ensembleEnabled: body.data.ensembleEnabled ?? row.ensembleEnabled,
       })
       .where(eq(schema.worlds.id, row.id))
       .returning();

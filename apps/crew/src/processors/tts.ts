@@ -35,6 +35,7 @@ export async function synthesize(job: Job<TtsJob>): Promise<string> {
       turnId: payload.turnId,
       sentenceIndex: payload.sentenceIndex,
       audioUrl,
+      speakerId: payload.speakerId,
     }),
   );
   return audioUrl;

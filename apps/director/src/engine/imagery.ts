@@ -1,4 +1,4 @@
-import { IMAGE_SHAPES, JOB_PRIORITY, RENDER_STYLES } from "@chronicle/config";
+import { IMAGE_SHAPES, IMAGERY, JOB_PRIORITY, RENDER_STYLES } from "@chronicle/config";
 import { loadSettings } from "@chronicle/db";
 import type { Character, ImageParams, ImageShape, World } from "@chronicle/utils";
 import { ensureCastLooks, ensureLook } from "~/engine/appearance";
@@ -105,18 +105,14 @@ export async function enqueueScene(
   interactingCharacters: readonly Character[] = [],
 ): Promise<void> {
   const { prompt } = await loadSettings();
-  const negative = buildSceneNegativePrompt(
-    character,
-    interactingCharacters,
-    world.shotSize,
-    world.artStyle,
-  );
+  const cast = interactingCharacters.slice(0, IMAGERY.scene.maxSubjects - 1);
+  const negative = buildSceneNegativePrompt(character, cast, world.shotSize, world.artStyle);
 
   const portraits: string[] = [];
   if (typeof character.portraitUrl === "string" && character.portraitUrl.length > 0) {
     portraits.push(character.portraitUrl);
   }
-  for (const actor of interactingCharacters) {
+  for (const actor of cast) {
     if (
       typeof actor.portraitUrl === "string" &&
       actor.portraitUrl.length > 0 &&
@@ -132,8 +128,8 @@ export async function enqueueScene(
       character,
       visual: subject ?? narrative,
       maxChars: prompt.sceneChars,
-      interacting: interactingCharacters,
-      looks: await ensureCastLooks(world, [character, ...interactingCharacters]),
+      interacting: cast,
+      looks: await ensureCastLooks(world, [character, ...cast]),
       shape,
       worldStyle: await ensureWorldStyle(world),
     }),

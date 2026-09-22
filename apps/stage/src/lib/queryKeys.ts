@@ -8,4 +8,5 @@ export const queryKeys = {
   admin: () => ["admin"] as const,
   accounts: () => ["accounts"] as const,
   themes: () => ["themes"] as const,
+  voices: () => ["voices"] as const,
 } as const;

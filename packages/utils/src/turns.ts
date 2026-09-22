@@ -21,6 +21,11 @@ export const imageShapeSchema = z.enum(["square", "portrait", "landscape"]);
 export const sentenceAudioSchema = z.object({
   sentenceIndex: z.number().int().nonnegative(),
   audioUrl: z.string(),
+  speakerId: z.string().nullable().default(null),
+});
+
+export const turnCastSchema = z.object({
+  present: z.array(z.string()).default([]),
 });
 
 export const turnNodeSchema = z.object({
@@ -35,10 +40,12 @@ export const turnNodeSchema = z.object({
   audioUrls: z.array(sentenceAudioSchema),
   stateDiff: statePatchSchema.nullable(),
   diceCheck: diceCheckSchema.nullable(),
+  cast: turnCastSchema.nullable().default(null),
   branchIndex: z.number().int().nonnegative(),
   createdAt: z.coerce.date(),
 });
 
+export type TurnCast = z.infer<typeof turnCastSchema>;
 export type DiceCheck = z.infer<typeof diceCheckSchema>;
 export type ImageShape = z.infer<typeof imageShapeSchema>;
 export type TurnChoice = z.infer<typeof turnChoiceSchema>;

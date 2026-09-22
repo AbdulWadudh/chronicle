@@ -20,6 +20,9 @@ export interface WorldSummary {
   themeOverrides: PaletteOverrides | null;
   coverImageUrl: string | null;
   visibility: WorldVisibility;
+  narratorPrompt: string;
+  narratorVoiceId: string | null;
+  ensembleEnabled: boolean;
 }
 
 export interface WorldDetail extends WorldSummary {
@@ -39,5 +42,10 @@ export interface CharacterSummary {
   pronouns: Pronouns;
   portraitUrl: string | null;
   draftPortraitUrl: string | null;
+  likes: string;
+  dislikes: string;
+  responseStyle: string;
+  eagerness: number;
+  voiceId: string | null;
   statsJson: StatBlock;
 }
