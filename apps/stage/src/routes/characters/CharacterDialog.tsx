@@ -29,8 +29,13 @@ export function CharacterDialog({
     if (world === null) return;
     const value = await compose.run(target, mode, draft.composeContext, world.id);
     if (value === null) return;
-    if (target === "character.name") draft.setName(value);
-    else draft.setBio(value);
+    const apply: Partial<Record<ComposeTarget, (next: string) => void>> = {
+      "character.name": draft.setName,
+      "character.bio": draft.setBio,
+      "character.appearance": draft.setAppearance,
+      "character.outfit": draft.setOutfit,
+    };
+    apply[target]?.(value);
   }
 
   function dismiss(): void {

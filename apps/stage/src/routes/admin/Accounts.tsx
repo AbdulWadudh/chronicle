@@ -1,11 +1,13 @@
 import { API } from "@chronicle/config";
 import { ShieldKeyIcon, UserIcon, UserRemove01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { AlertDialog } from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
 import { ApiError, get, patch } from "~/lib/api";
+import { queryKeys } from "~/lib/queryKeys";
 import { AdminScreen } from "./AdminScreen";
 
 type Role = "user" | "admin";
@@ -123,58 +125,48 @@ function confirmCopy(pending: PendingChange | null): { title: string; body: stri
 }
 
 export function Accounts() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [currentUserId, setCurrentUserId] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [pending, setPending] = useState<PendingChange | null>(null);
   const [confirming, setConfirming] = useState(false);
 
-  useEffect(() => {
-    let abandoned = false;
-    get<AccountsBody>(`${API.admin}/accounts`)
-      .then((body) => {
-        if (abandoned) return;
-        setAccounts(body.accounts);
-        setCurrentUserId(body.currentUserId);
-        setLoading(false);
-      })
-      .catch((cause: unknown) => {
-        if (abandoned) return;
-        setError(reasonOf(cause));
-        setLoading(false);
-      });
-    return () => {
-      abandoned = true;
-    };
-  }, []);
+  const query = useQuery({
+    queryKey: queryKeys.accounts(),
+    queryFn: () => get<AccountsBody>(`${API.admin}/accounts`),
+  });
 
-  const setRole = useCallback((account: Account, role: Role) => {
-    setBusyId(account.id);
-    patch<{ role: Role }>(`${API.admin}/accounts/${account.id}`, { role })
-      .then((body) => {
-        setAccounts((rows) =>
-          rows.map((row) => (row.id === account.id ? { ...row, role: body.role } : row)),
-        );
-        toast.success(
-          body.role === "admin"
-            ? `${account.name} is now an admin`
-            : `${account.name} is now a user`,
-        );
-      })
-      .catch((cause: unknown) => {
-        toast.error("Role unchanged", { description: reasonOf(cause) });
-      })
-      .finally(() => setBusyId(null));
-  }, []);
+  const role = useMutation({
+    mutationFn: ({ account, role: next }: { account: Account; role: Role }) =>
+      patch<{ role: Role }>(`${API.admin}/accounts/${account.id}`, { role: next }),
+    onSuccess: (body, variables) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.accounts() });
+      toast.success(
+        body.role === "admin"
+          ? `${variables.account.name} is now an admin`
+          : `${variables.account.name} is now a user`,
+      );
+    },
+    onError: (cause: Error) => {
+      toast.error("Role unchanged", { description: reasonOf(cause) });
+    },
+  });
+
+  const accounts = query.data?.accounts ?? [];
+  const currentUserId = query.data?.currentUserId ?? "";
+  const busyId = role.isPending ? (role.variables?.account.id ?? null) : null;
+
+  const setRole = useCallback(
+    (account: Account, next: Role) => {
+      role.mutate({ account, role: next });
+    },
+    [role],
+  );
 
   return (
     <AdminScreen
       title="Accounts"
       blurb="Every account on this installation. An admin can open every operator screen, so promote deliberately."
-      loading={loading}
-      error={error}
+      loading={query.isPending}
+      error={query.error === null ? null : reasonOf(query.error)}
     >
       {accounts.map((account, index) => (
         <AccountRow

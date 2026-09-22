@@ -1,8 +1,10 @@
 import { API } from "@chronicle/config";
 import type { RenderStyle, ShotSize } from "@chronicle/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { get, patch } from "~/lib/api";
 import type { WorldDetail } from "~/lib/entities";
+import { queryKeys } from "~/lib/queryKeys";
 
 export interface WorldLook {
   visualStyle: string;
@@ -18,58 +20,51 @@ export interface WorldLook {
 }
 
 export function useWorldLook(worldId: string | null): WorldLook {
+  const queryClient = useQueryClient();
   const [visualStyle, setVisualStyle] = useState("");
   const [shotSize, setShotSize] = useState<ShotSize>("waistUp");
   const [artStyle, setArtStyle] = useState<RenderStyle>("photoreal");
-  const [loaded, setLoaded] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const world = useQuery({
+    queryKey: queryKeys.world(worldId),
+    queryFn: () => get<WorldDetail>(`${API.worlds}/${worldId}`),
+    enabled: worldId !== null,
+  });
 
   useEffect(() => {
-    if (worldId === null) return;
-    let current = true;
-    setLoaded(false);
-    get<WorldDetail>(`${API.worlds}/${worldId}`)
-      .then((world) => {
-        if (!current) return;
-        setVisualStyle(world.visualStyle);
-        setShotSize(world.shotSize);
-        setArtStyle(world.artStyle);
-        setLoaded(true);
-      })
-      .catch((cause: unknown) => {
-        if (!current) return;
-        setError(cause instanceof Error ? cause.message : "That world could not be read.");
-      });
-    return () => {
-      current = false;
-    };
-  }, [worldId]);
+    if (world.data === undefined) return;
+    setVisualStyle(world.data.visualStyle);
+    setShotSize(world.data.shotSize);
+    setArtStyle(world.data.artStyle);
+  }, [world.data]);
 
-  const save = useCallback(async (): Promise<void> => {
-    if (worldId === null) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await patch(`${API.worlds}/${worldId}`, {
+  const saving = useMutation({
+    mutationFn: () =>
+      patch(`${API.worlds}/${worldId}`, {
         visualStyle: visualStyle.trim(),
         shotSize,
         artStyle,
-      });
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "That change could not be saved.");
-    } finally {
-      setSaving(false);
-    }
-  }, [worldId, visualStyle, shotSize, artStyle]);
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.world(worldId) });
+      void queryClient.invalidateQueries({ queryKey: ["worlds"] });
+    },
+  });
+
+  const save = useCallback(async (): Promise<void> => {
+    if (worldId === null) return;
+    await saving.mutateAsync();
+  }, [worldId, saving]);
+
+  const failure = world.error ?? saving.error;
 
   return {
     visualStyle,
     shotSize,
     artStyle,
-    loaded,
-    saving,
-    error,
+    loaded: world.isSuccess,
+    saving: saving.isPending,
+    error: failure === null || failure === undefined ? null : failure.message,
     setVisualStyle,
     setShotSize,
     setArtStyle,

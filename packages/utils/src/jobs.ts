@@ -23,6 +23,7 @@ const imageParamsSchema = z.object({
   cfg: z.number().positive(),
   sampler: z.string().min(1),
   scheduler: z.string().min(1),
+  quality: z.number().int().min(1).max(100).default(90),
   upscale: z.number().positive(),
   upscaleDenoise: z.number().positive(),
   portraitUrls: z.array(z.string()).default([]),

@@ -182,6 +182,10 @@ function targetLines(
     omit !== "name" && context.name.length > 0 ? `Protagonist name: ${context.name}` : "",
     `Protagonist pronouns: ${pronounPhrase(context.pronouns)}. Use them throughout.`,
     context.strengths.length > 0 ? `Strongest abilities: ${context.strengths}` : "",
+    omit !== "bio" && context.bio.length > 0 ? `Backstory: ${context.bio}` : "",
+    target === "character.outfit" && context.appearance.length > 0
+      ? `Their appearance: ${context.appearance}`
+      : "",
   ];
 }
 

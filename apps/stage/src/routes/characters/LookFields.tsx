@@ -1,6 +1,6 @@
 import type { ComposeMode, ComposeTarget } from "@chronicle/utils";
 import { ComposableField } from "~/components/common/ComposableField";
-import { GroupLabel } from "~/components/ui/label";
+import { LabeledRow, RowGroup } from "~/components/common/FormRow";
 import { Switch } from "~/components/ui/switch";
 import type { Compose } from "~/hooks/useCompose";
 import type { useCharacterDraft } from "./useCharacterDraft";
@@ -27,21 +27,22 @@ export function LookFields({ draft, compose, onCompose }: LookFieldsProps) {
         onCompose={(mode) => onCompose("character.appearance", mode)}
       />
 
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
-        <div className="min-w-0">
-          <GroupLabel>Keep the outfit</GroupLabel>
-          <p className="text-[0.6875rem] leading-relaxed text-text-muted">
-            {draft.outfitLocked
+      <RowGroup>
+        <LabeledRow
+          label="Keep the outfit"
+          blurb={
+            draft.outfitLocked
               ? "The same clothes in every scene."
-              : "Each scene dresses them to fit the moment."}
-          </p>
-        </div>
-        <Switch
-          checked={draft.outfitLocked}
-          onCheckedChange={draft.setOutfitLocked}
-          aria-label="Keep the same outfit across scenes"
-        />
-      </div>
+              : "Each scene dresses them to fit the moment."
+          }
+        >
+          <Switch
+            checked={draft.outfitLocked}
+            onCheckedChange={draft.setOutfitLocked}
+            aria-label="Keep the same outfit across scenes"
+          />
+        </LabeledRow>
+      </RowGroup>
 
       {draft.outfitLocked ? (
         <ComposableField

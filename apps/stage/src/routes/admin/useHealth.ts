@@ -1,7 +1,9 @@
 import { API } from "@chronicle/config";
 import type { AdminHealthReport } from "@chronicle/utils";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { ApiError, get } from "~/lib/api";
+import { queryKeys } from "~/lib/queryKeys";
 
 const POLL_MS = 15_000;
 
@@ -14,47 +16,33 @@ export interface HealthController {
   reload: () => void;
 }
 
+function phaseOf(
+  report: AdminHealthReport | undefined,
+  error: Error | null,
+  pending: boolean,
+): HealthPhase {
+  if (error instanceof ApiError && (error.status === 401 || error.status === 403)) return "denied";
+  if (report !== undefined) return "ready";
+  if (pending) return "loading";
+  return "unreachable";
+}
+
 export function useHealth(): HealthController {
-  const [phase, setPhase] = useState<HealthPhase>("loading");
-  const [report, setReport] = useState<AdminHealthReport | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const query = useQuery({
+    queryKey: queryKeys.health(),
+    queryFn: () => get<AdminHealthReport>(`${API.admin}/health`),
+    refetchInterval: POLL_MS,
+    retry: false,
+  });
 
-  const generation = useRef(0);
-  const reportRef = useRef<AdminHealthReport | null>(null);
-  reportRef.current = report;
+  const reload = useCallback(() => {
+    void query.refetch();
+  }, [query]);
 
-  const load = useCallback(async (initial: boolean): Promise<void> => {
-    const ticket = ++generation.current;
-    if (!initial) setRefreshing(true);
-    try {
-      const next = await get<AdminHealthReport>(`${API.admin}/health`);
-      if (ticket !== generation.current) return;
-      setReport(next);
-      setPhase("ready");
-    } catch (cause) {
-      if (ticket !== generation.current) return;
-      if (cause instanceof ApiError && (cause.status === 401 || cause.status === 403)) {
-        setPhase("denied");
-      } else if (reportRef.current === null) {
-        setPhase("unreachable");
-      }
-    } finally {
-      if (ticket === generation.current) setRefreshing(false);
-    }
-  }, []);
-
-  const reload = useCallback((): void => {
-    void load(false);
-  }, [load]);
-
-  useEffect(() => {
-    void load(true);
-    const interval = setInterval(() => void load(false), POLL_MS);
-    return () => {
-      clearInterval(interval);
-      generation.current += 1;
-    };
-  }, [load]);
-
-  return { phase, report, refreshing, reload };
+  return {
+    phase: phaseOf(query.data, query.error, query.isPending),
+    report: query.data ?? null,
+    refreshing: query.isFetching && query.data !== undefined,
+    reload,
+  };
 }

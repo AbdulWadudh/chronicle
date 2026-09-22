@@ -2,8 +2,8 @@
 
 Build progress tracker. Read this first. Update it at every wave gate, before the commit.
 
-**Status:** Wave 7E (image identity and world art direction) complete and verified live against
-ComfyUI. Characters carry a stored look, worlds carry an art bible, a shot size and a render
+**Status:** Wave 7F (WebP assets, TanStack Query, authoring UI) complete. Wave 7E (image identity
+and world art direction) complete and verified live against ComfyUI. Characters carry a stored look, worlds carry an art bible, a shot size and a render
 style, and PuLID holds faces across scenes. Waves 7B-7D still have the open items listed below.
 **Updated:** 2026-09-22
 
@@ -23,6 +23,30 @@ style, and PuLID holds faces across scenes. Waves 7B-7D still have the open item
 | 7C | Immersive delivery: per-sentence audio, scene skeletons, REGENERATE, degraded paths | audio persistence, REGENERATE, live render progress and the painting state done; Cinema Mode gating open |
 | 7D | Memory and progression: branching, checkpoints, nomic-embed recall | planned |
 | 7E | Image identity, world art direction, render styles, world and portrait editing | done |
+| 7F | WebP assets, TanStack Query, grouped authoring forms | done |
+
+## Wave 7F
+
+- Assets are WebP, not PNG. `SaveAnimatedWEBP` at one frame, quality from `image.quality`
+  (default 90). Measured on an 832x1216 render: PNG 1379 KB, WebP q90 134 KB, q82 81 KB.
+  `SaveImageAdvanced`'s AVIF path validates but fails at execution — its V3 dynamic combo is not
+  reachable through the plain `/prompt` API, so AVIF is not an option in this build.
+- `nextVariant` matched `scene-(\d+)\.png`, which would have reset every regenerate to variant 1
+  once the extension changed.
+- TanStack Query owns every read path: `usePaginatedData` is `useInfiniteQuery`, `useImagePoll`
+  is `refetchInterval`, and `useCharacterSheet`, `useWorldCast`, `useWorldLook`, `useSettings`,
+  `useHealth`, `useAdmin` and the accounts screen are queries. Saves invalidate instead of
+  remounting lists through `key` counters. The StrictMode guards those hooks needed are gone.
+- Character and world forms grouped into labelled sections with one shared row primitive
+  (`components/common/FormRow`).
+- Portrait renders take unsaved form values, so changing pronouns or name and painting no longer
+  uses the stored row.
+- Compose dispatched only name and bio, so drafting an appearance overwrote the backstory.
+
+### Open
+
+- Adding a dependency mid-session leaves the Vite dev server serving a blank page until it is
+  restarted. `bun app:clear` forces re-optimisation.
 
 ## Wave 7E
 

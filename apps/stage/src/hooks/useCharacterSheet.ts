@@ -1,8 +1,10 @@
 import { API } from "@chronicle/config";
 import type { StatBlock, StatDefinition } from "@chronicle/utils";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
 import { get } from "~/lib/api";
 import type { CharacterSummary, WorldDetail } from "~/lib/entities";
+import { queryKeys } from "~/lib/queryKeys";
 
 export interface CharacterSheet {
   name: string;
@@ -16,88 +18,67 @@ export interface CharacterSheet {
   cast: CharacterSummary[];
 }
 
-interface Loaded {
-  name: string;
-  worldTitle: string;
-  worldId: string | null;
-  statDefinitions: StatDefinition[];
-  stats: StatBlock;
-  cast: CharacterSummary[];
-}
-
-const EMPTY: Loaded = {
-  name: "",
-  worldTitle: "",
-  worldId: null,
-  statDefinitions: [],
-  stats: {},
-  cast: [],
-};
 const STRONG_RANK = 3;
+const NO_DEFINITIONS: StatDefinition[] = [];
 
 export function useCharacterSheet(characterId: string | null): CharacterSheet {
-  const [sheet, setSheet] = useState<Loaded>(EMPTY);
-  const [error, setError] = useState<string | null>(null);
+  const character = useQuery({
+    queryKey: queryKeys.character(characterId),
+    queryFn: () => get<CharacterSummary>(`${API.characters}/${characterId}`),
+    enabled: characterId !== null,
+  });
 
-  useEffect(() => {
-    if (characterId === null) return;
-    let cancelled = false;
+  const worldId = character.data?.worldId ?? null;
 
-    const load = async (): Promise<void> => {
-      const character = await get<CharacterSummary>(`${API.characters}/${characterId}`);
-      const [world, castResponse] = await Promise.all([
-        get<WorldDetail>(`${API.worlds}/${character.worldId}`),
-        get<{ items: CharacterSummary[] }>(`${API.characters}?worldId=${character.worldId}`).catch(
-          () => ({ items: [] }),
-        ),
-      ]);
-      if (cancelled) return;
-      setSheet({
-        name: character.name,
-        worldTitle: world.title,
-        worldId: character.worldId,
-        statDefinitions: world.statDefinitionsJson,
-        stats: character.statsJson,
-        cast: castResponse.items.filter((item) => item.id !== characterId),
-      });
-      setError(null);
-    };
+  const [world, cast] = useQueries({
+    queries: [
+      {
+        queryKey: queryKeys.world(worldId),
+        queryFn: () => get<WorldDetail>(`${API.worlds}/${worldId}`),
+        enabled: worldId !== null,
+      },
+      {
+        queryKey: queryKeys.characters(worldId),
+        queryFn: () => get<{ items: CharacterSummary[] }>(`${API.characters}?worldId=${worldId}`),
+        enabled: worldId !== null,
+      },
+    ],
+  });
 
-    load().catch((cause: unknown) => {
-      if (cancelled) return;
-      setSheet(EMPTY);
-      setError(cause instanceof Error ? cause.message : "Could not load this character.");
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [characterId]);
+  const statDefinitions = world.data?.statDefinitionsJson ?? NO_DEFINITIONS;
+  const stats = character.data?.statsJson ?? {};
 
   const labelOf = useCallback(
     (statId: string): string =>
-      sheet.statDefinitions.find((definition) => definition.id === statId)?.label ?? statId,
-    [sheet.statDefinitions],
+      statDefinitions.find((definition) => definition.id === statId)?.label ?? statId,
+    [statDefinitions],
   );
 
   const strengths = useMemo(
     () =>
-      sheet.statDefinitions
-        .filter((definition) => (sheet.stats[definition.id] ?? 1) >= STRONG_RANK)
+      statDefinitions
+        .filter((definition) => (stats[definition.id] ?? 1) >= STRONG_RANK)
         .map((definition) => definition.label)
         .join(", "),
-    [sheet],
+    [statDefinitions, stats],
   );
 
+  const members = useMemo(
+    () => (cast.data?.items ?? []).filter((item) => item.id !== characterId),
+    [cast.data, characterId],
+  );
+
+  const failure = character.error ?? world.error;
+
   return {
-    name: sheet.name,
-    worldTitle: sheet.worldTitle,
-    worldId: sheet.worldId,
-    statDefinitions: sheet.statDefinitions,
-    stats: sheet.stats,
+    name: character.data?.name ?? "",
+    worldTitle: world.data?.title ?? "",
+    worldId,
+    statDefinitions,
+    stats,
     strengths,
     labelOf,
-    error,
-    cast: sheet.cast,
+    error: failure === null || failure === undefined ? null : failure.message,
+    cast: members,
   };
 }

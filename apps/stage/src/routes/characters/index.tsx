@@ -1,6 +1,7 @@
 import { API } from "@chronicle/config";
 import { PlusSignIcon, UserMultipleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { BackButton } from "~/components/common/BackButton";
@@ -10,6 +11,7 @@ import { Screen } from "~/components/common/Screen";
 import { AlertDialog } from "~/components/ui/alert-dialog";
 import { get, remove } from "~/lib/api";
 import type { CharacterSummary, WorldDetail } from "~/lib/entities";
+import { queryKeys } from "~/lib/queryKeys";
 import { CharacterCard } from "./CharacterCard";
 import { CharacterDialog } from "./CharacterDialog";
 import { WorldBrief } from "./WorldBrief";
@@ -23,7 +25,7 @@ export function CharacterSelect() {
   const [editing, setEditing] = useState<CharacterSummary | null>(null);
   const [creating, setCreating] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<CharacterSummary | null>(null);
-  const [revision, setRevision] = useState(0);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export function CharacterSelect() {
     if (pendingDelete === null) return;
     try {
       await remove(`${API.characters}/${pendingDelete.id}`);
-      setRevision((value) => value + 1);
+      void queryClient.invalidateQueries({ queryKey: ["characters"] });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "That character was not removed.");
     } finally {
@@ -90,7 +92,7 @@ export function CharacterSelect() {
       ) : null}
 
       <PaginatedList
-        key={`${worldId ?? ""}-${revision}`}
+        queryKey={queryKeys.characters(worldId)}
         loadPage={loadPage}
         autoLoadMore={false}
         keyExtractor={(character) => character.id}
@@ -122,7 +124,7 @@ export function CharacterSelect() {
           const wasEditing = editing !== null;
           setCreating(false);
           setEditing(null);
-          setRevision((value) => value + 1);
+          void queryClient.invalidateQueries({ queryKey: ["characters"] });
           if (!wasEditing) void navigate(`/play/${character.id}`);
         }}
       />

@@ -59,7 +59,8 @@ async function preparePortraits(urls: readonly string[]): Promise<string[]> {
     if (url === undefined) continue;
     try {
       const bytes = await fetchBytes(url);
-      const filename = `portrait-${i}-${Date.now()}.png`;
+      const extension = (url.split("?")[0] ?? url).split(".").pop() ?? "png";
+      const filename = `portrait-${i}-${Date.now()}.${extension}`;
       const uploaded = await uploadImage(bytes, filename);
       filenames.push(uploaded);
     } catch (error) {

@@ -1,14 +1,17 @@
 import { API } from "@chronicle/config";
 import { baselineStats, isValidBuild, type Pronouns, type StatBlock } from "@chronicle/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { patch, post } from "~/lib/api";
 import type { CharacterSummary, WorldDetail } from "~/lib/entities";
+import { queryKeys } from "~/lib/queryKeys";
 
 function message(cause: unknown, fallback: string): string {
   return cause instanceof Error && cause.message.length > 0 ? cause.message : fallback;
 }
 
 export function useCharacterDraft(world: WorldDetail | null, existing?: CharacterSummary | null) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [appearance, setAppearance] = useState("");
@@ -58,17 +61,20 @@ export function useCharacterDraft(world: WorldDetail | null, existing?: Characte
       stats,
     };
     try {
-      if (existing != null) {
-        return await patch<CharacterSummary>(`${API.characters}/${existing.id}`, payload);
-      }
-      return await post<CharacterSummary>(API.characters, { worldId: world.id, ...payload });
+      const saved =
+        existing != null
+          ? await patch<CharacterSummary>(`${API.characters}/${existing.id}`, payload)
+          : await post<CharacterSummary>(API.characters, { worldId: world.id, ...payload });
+      void queryClient.invalidateQueries({ queryKey: ["characters"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.character(saved.id) });
+      return saved;
     } catch (cause) {
       setError(message(cause, "The character could not be saved."));
       return null;
     } finally {
       setSaving(false);
     }
-  }, [world, existing, name, bio, appearance, outfit, outfitLocked, pronouns, stats]);
+  }, [queryClient, world, existing, name, bio, appearance, outfit, outfitLocked, pronouns, stats]);
 
   const strengths = useMemo(() => {
     if (world === null) return "";

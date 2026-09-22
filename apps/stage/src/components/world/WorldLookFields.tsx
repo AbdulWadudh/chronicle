@@ -1,8 +1,8 @@
 import { RENDER_STYLES } from "@chronicle/config";
 import type { ComposeMode, RenderStyle, ShotSize } from "@chronicle/utils";
 import { ComposableField } from "~/components/common/ComposableField";
+import { LabeledRow, RowGroup } from "~/components/common/FormRow";
 import { Select } from "~/components/ui/select";
-import { LabeledRow, RowGroup } from "~/components/world/LabeledRow";
 
 const SHOT_LABEL: Record<ShotSize, string> = {
   closeUp: "Close-up",

@@ -1,6 +1,7 @@
 import { API } from "@chronicle/config";
 import { Globe02Icon, PlusSignIcon, UserIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import { PageHeader } from "~/components/common/PageHeader";
@@ -10,6 +11,7 @@ import { UserMenu } from "~/components/common/UserMenu";
 import { Segmented, type SegmentedOption } from "~/components/ui/segmented";
 import { get } from "~/lib/api";
 import type { WorldSummary } from "~/lib/entities";
+import { queryKeys } from "~/lib/queryKeys";
 import { CreateWorldDialog } from "./CreateWorldDialog";
 import { EditWorldDialog } from "./EditWorldDialog";
 import { WorldCard } from "./WorldCard";
@@ -26,7 +28,7 @@ export function Worlds() {
   const [scope, setScope] = useState<Scope>("mine");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<WorldSummary | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const queryClient = useQueryClient();
 
   const loadPage = useCallback(
     async (cursor: string | null, signal: AbortSignal): Promise<Page<WorldSummary>> => {
@@ -71,7 +73,7 @@ export function Worlds() {
       </div>
 
       <PaginatedList
-        key={`${scope}-${reloadKey}`}
+        queryKey={queryKeys.worlds(scope)}
         loadPage={loadPage}
         keyExtractor={(world) => world.id}
         listClassName="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
@@ -97,7 +99,7 @@ export function Worlds() {
         onClose={() => setEditing(null)}
         onSaved={() => {
           setEditing(null);
-          setReloadKey((previous) => previous + 1);
+          void queryClient.invalidateQueries({ queryKey: ["worlds"] });
         }}
       />
 

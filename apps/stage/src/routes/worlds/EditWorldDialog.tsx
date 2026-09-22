@@ -1,16 +1,18 @@
 import { API } from "@chronicle/config";
 import type { ComposeMode, RenderStyle, ShotSize, WorldVisibility } from "@chronicle/utils";
 import { Globe02Icon, LockIcon } from "@hugeicons/core-free-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { AppModal } from "~/components/common/AppModal";
 import { ComposableField } from "~/components/common/ComposableField";
+import { LabeledRow, RowGroup } from "~/components/common/FormRow";
 import { Segmented, type SegmentedOption } from "~/components/ui/segmented";
-import { LabeledRow, RowGroup } from "~/components/world/LabeledRow";
 import { WorldCoverPanel } from "~/components/world/WorldCoverPanel";
 import { WorldLookFields } from "~/components/world/WorldLookFields";
 import { useCompose } from "~/hooks/useCompose";
 import { patch } from "~/lib/api";
 import type { WorldSummary } from "~/lib/entities";
+import { queryKeys } from "~/lib/queryKeys";
 
 const VISIBILITY: readonly SegmentedOption<WorldVisibility>[] = [
   { value: "private", label: "Private", icon: LockIcon },
@@ -25,6 +27,7 @@ export interface EditWorldDialogProps {
 
 export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProps) {
   const compose = useCompose();
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [description, setDescription] = useState("");
@@ -72,6 +75,8 @@ export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProp
         artStyle,
         visibility,
       });
+      void queryClient.invalidateQueries({ queryKey: ["worlds"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.world(world.id) });
       onSaved(saved);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "That world could not be saved.");
