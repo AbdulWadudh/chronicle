@@ -11,6 +11,7 @@ import { useFollowScroll } from "~/components/story/useFollowScroll";
 import { useSentenceReveal } from "~/components/story/useSentenceReveal";
 import { useCharacterSheet } from "~/hooks/useCharacterSheet";
 import { useCompose } from "~/hooks/useCompose";
+import { useElementSize } from "~/hooks/useElementSize";
 import { useReducedMotion } from "~/hooks/useReducedMotion";
 import { useTurnStream } from "~/hooks/useTurnStream";
 import { post } from "~/lib/api";
@@ -31,6 +32,7 @@ export function Play() {
   const cinemaMode = useThemeStore((state) => state.cinemaMode);
   const immersive = useThemeStore((state) => state.immersive);
   const setActiveStory = useThemeStore((state) => state.setActiveStory);
+  const setWorldTheme = useThemeStore((state) => state.setWorldTheme);
   const motionLevel = useThemeStore((state) => state.motionLevel);
   const reduceMotion = useReducedMotion() || motionLevel === "off";
 
@@ -40,12 +42,22 @@ export function Play() {
   const [whisper, setWhisper] = useState("");
   const [mapOpen, setMapOpen] = useState(false);
   const [consoleOpen, setConsoleOpen] = useState(false);
-  const follow = useFollowScroll();
+  const [composerRef, composerSize] = useElementSize<HTMLDivElement>();
+  const follow = useFollowScroll({
+    count: stream.committedTurns.length,
+    onReachTop: stream.loadOlderTurns,
+  });
 
   useEffect(() => {
     setActiveStory(id);
     return () => setActiveStory(null);
   }, [id, setActiveStory]);
+
+  useEffect(() => {
+    if (sheet.worldId === null) return;
+    setWorldTheme(sheet.worldId, sheet.themeOverrides);
+    return () => setWorldTheme(null, null);
+  }, [sheet.worldId, sheet.themeOverrides, setWorldTheme]);
 
   const latest = stream.committedTurns.at(-1);
   const busy = stream.activeTurnId !== null;
@@ -69,14 +81,21 @@ export function Play() {
     reveal.isComplete &&
     stream.playingSentenceIndex === null;
 
+  const { stickToBottom } = follow;
+  useEffect(() => {
+    if (cinematic) return;
+    stickToBottom();
+  }, [cinematic, stickToBottom]);
+
   useEffect(() => {
     if (!cinematicDone) return;
     const timer = setTimeout(endCinematic, CINEMATIC_BEAT_MS);
     return () => clearTimeout(timer);
   }, [cinematicDone, endCinematic]);
   const empty = latest === undefined && !busy;
-  const choices =
-    phase === "decision" && stageTurn !== null && reveal.isComplete ? stageTurn.choices : [];
+  const backdropUrl = latest?.sceneImageUrl ?? stream.sceneImageUrl;
+  const offered = phase === "decision" && stageTurn !== null ? stageTurn.choices : [];
+  const choices = reveal.isComplete ? offered : [];
 
   function submitAction(action: string, mentionedCharacterIds?: string[]): void {
     stream.submitAction(
@@ -128,7 +147,7 @@ export function Play() {
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden pt-(--safe-top) pb-(--safe-bottom)">
-      <SceneBackdrop imageUrl={latest?.sceneImageUrl ?? stream.sceneImageUrl} />
+      <SceneBackdrop imageUrl={backdropUrl} />
       <PlayHeader
         status={stream.status}
         worldTitle={sheet.worldTitle}
@@ -150,6 +169,7 @@ export function Play() {
       <div
         ref={follow.ref}
         onScroll={follow.onScroll}
+        style={{ paddingBottom: cinematic ? undefined : composerSize.height }}
         className={`scrollbar-none relative flex min-h-0 flex-1 flex-col px-4 ${
           cinematic ? "overflow-hidden" : "overflow-y-auto"
         }`}
@@ -163,6 +183,7 @@ export function Play() {
         ) : (
           <>
             <PlayScript
+              scrollRef={follow.ref}
               turns={history}
               stream={stream}
               busy={busy}
@@ -186,9 +207,13 @@ export function Play() {
         )}
       </div>
 
-      <div className="relative flex flex-col">
+      <div
+        ref={composerRef}
+        className="pointer-events-none absolute inset-x-0 bottom-(--safe-bottom) z-20 flex flex-col"
+      >
         <Composer
           choices={choices}
+          offered={offered}
           busy={busy}
           composing={compose.modeFor("turn.action")}
           whisper={whisper}

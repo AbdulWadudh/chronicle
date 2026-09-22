@@ -9,11 +9,15 @@ export const NARRATOR_RULES = [
 
 export const NARRATOR_ENHANCED = "Elevate the player's phrasing into richer prose.";
 
+export const CHOICE_BANNED_OPENERS = ["I press my palm", "I press my hand", "I slam"] as const;
+
 export const CHOICE_RULES = [
   "Read the passage and offer exactly three next actions the protagonist could take.",
-  "Each label is one short first-person sentence, concrete and physical.",
+  "Each label is one short first-person sentence naming one specific thing the protagonist does.",
   "Each hint is at most six words naming what it risks or reaches for.",
-  "The three must pull in genuinely different directions. Never decide whether any of them works.",
+  "The three must differ in kind, not only in target. Draw them from different registers: force or movement, speech and persuasion, watching and deducing, using an ability or an object, deceiving or concealing, tending to someone, waiting or withdrawing. At most one may be physical force.",
+  "Never start two labels with the same verb, and never reuse a verb the player has already used this scene.",
+  "A good set gives the player a real dilemma: one action that costs something, one that reveals something, one that changes the footing. Never decide whether any of them works.",
   "Also pick the frame for this moment's illustration: portrait for a single figure, a face, a doorway or anything tall; landscape for a vista, a crowd, a room or travel; square when neither dominates.",
 ] as const;
 

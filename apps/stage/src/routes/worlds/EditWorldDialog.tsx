@@ -1,5 +1,11 @@
 import { API } from "@chronicle/config";
-import type { ComposeMode, RenderStyle, ShotSize, WorldVisibility } from "@chronicle/utils";
+import type {
+  ComposeMode,
+  PaletteOverrides,
+  RenderStyle,
+  ShotSize,
+  WorldVisibility,
+} from "@chronicle/utils";
 import { Globe02Icon, LockIcon } from "@hugeicons/core-free-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -7,8 +13,10 @@ import { AppModal } from "~/components/common/AppModal";
 import { ComposableField } from "~/components/common/ComposableField";
 import { LabeledRow, RowGroup } from "~/components/common/FormRow";
 import { Segmented, type SegmentedOption } from "~/components/ui/segmented";
+import { ThemeStudio } from "~/components/world/ThemeStudio";
 import { WorldCoverPanel } from "~/components/world/WorldCoverPanel";
 import { WorldLookFields } from "~/components/world/WorldLookFields";
+import { WorldThemeFields } from "~/components/world/WorldThemeFields";
 import { useCompose } from "~/hooks/useCompose";
 import { patch } from "~/lib/api";
 import type { WorldSummary } from "~/lib/entities";
@@ -34,8 +42,10 @@ export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProp
   const [visualStyle, setVisualStyle] = useState("");
   const [shotSize, setShotSize] = useState<ShotSize>("waistUp");
   const [artStyle, setArtStyle] = useState<RenderStyle>("photoreal");
+  const [themeOverrides, setThemeOverrides] = useState<PaletteOverrides | null>(null);
   const [visibility, setVisibility] = useState<WorldVisibility>("private");
   const [saving, setSaving] = useState(false);
+  const [studioOpen, setStudioOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,6 +56,7 @@ export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProp
     setVisualStyle(world.visualStyle);
     setShotSize(world.shotSize);
     setArtStyle(world.artStyle);
+    setThemeOverrides(world.themeOverrides);
     setVisibility(world.visibility);
     setError(null);
   }, [world]);
@@ -73,6 +84,7 @@ export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProp
         visualStyle: visualStyle.trim(),
         shotSize,
         artStyle,
+        themeOverrides,
         visibility,
       });
       void queryClient.invalidateQueries({ queryKey: ["worlds"] });
@@ -161,6 +173,21 @@ export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProp
               if (value !== null) setVisualStyle(value);
             });
         }}
+      />
+
+      <WorldThemeFields
+        themeOverrides={themeOverrides}
+        onThemeChange={setThemeOverrides}
+        onOpenStudio={() => setStudioOpen(true)}
+      />
+
+      <ThemeStudio
+        open={studioOpen}
+        worldId={world?.id ?? null}
+        worldTitle={title}
+        worldTheme={themeOverrides}
+        onWorldThemeChange={setThemeOverrides}
+        onClose={() => setStudioOpen(false)}
       />
 
       <RowGroup label="Access">

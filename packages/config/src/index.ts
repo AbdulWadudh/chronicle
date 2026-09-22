@@ -1,3 +1,4 @@
+export * from "./icons";
 export * from "./palettes";
 export * from "./prompts";
 export * from "./queues";

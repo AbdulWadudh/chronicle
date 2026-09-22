@@ -4,8 +4,12 @@ import {
   type ThemeScheme,
   type ThemeTokens,
 } from "@chronicle/config";
-import { mergeThemeTokens, THEME_PALETTES, type ThemePalette } from "@chronicle/utils";
-import { useMemo } from "react";
+import {
+  mergeThemeTokens,
+  type PaletteOverrides,
+  THEME_PALETTES,
+  type ThemePalette,
+} from "@chronicle/utils";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -27,7 +31,38 @@ export type ToastPosition =
 
 export type SchemeOverrides = Record<ThemeScheme, Partial<ThemeTokens>>;
 
-const EMPTY: Partial<ThemeTokens> = {};
+export const EMPTY: Partial<ThemeTokens> = {};
+
+export const SHARED_TOKEN_KEYS: readonly (keyof ThemeTokens)[] = [
+  "radius",
+  "borderWidth",
+  "fontScale",
+  "lineHeightMultiplier",
+  "letterSpacing",
+  "shadowOffset",
+  "blurIntensity",
+  "glassOpacity",
+  "fontUI",
+  "fontNarrative",
+  "fontMono",
+];
+
+export interface WorldTheme {
+  mode?: ThemeScheme;
+  dark: Partial<ThemeTokens>;
+  light: Partial<ThemeTokens>;
+  shared: Partial<ThemeTokens>;
+}
+
+export const EMPTY_WORLD_THEME: WorldTheme = { dark: {}, light: {}, shared: {} };
+
+export function isSharedToken(key: keyof ThemeTokens): boolean {
+  return SHARED_TOKEN_KEYS.includes(key);
+}
+
+export function baseTokens(scheme: ThemeScheme): ThemeTokens {
+  return scheme === "dark" ? DEFAULT_THEME_TOKENS : DEFAULT_LIGHT_THEME_TOKENS;
+}
 
 interface ThemeState {
   preference: ThemePreference;
@@ -37,6 +72,10 @@ interface ThemeState {
   customOverrides: SchemeOverrides;
   storyOverrides: Record<string, Partial<ThemeTokens>>;
   activeStoryId: string | null;
+  worldTheme: PaletteOverrides | null;
+  worldThemeEnabled: boolean;
+  worldOverrides: Record<string, WorldTheme>;
+  activeWorldId: string | null;
   cinemaMode: boolean;
   immersive: boolean;
   historyActions: boolean;
@@ -54,6 +93,13 @@ interface ThemeState {
   setStoryOverride: (storyId: string, patch: Partial<ThemeTokens>) => void;
   clearStoryOverride: (storyId: string) => void;
   setActiveStory: (storyId: string | null) => void;
+  setWorldTheme: (worldId: string | null, theme: PaletteOverrides | null) => void;
+  toggleWorldTheme: () => void;
+  setWorldOverride: (worldId: string, scheme: ThemeScheme, patch: Partial<ThemeTokens>) => void;
+  clearWorldOverride: (worldId: string) => void;
+  setWorldMode: (worldId: string, scheme: ThemeScheme | null) => void;
+  seedWorldOverride: (worldId: string, theme: WorldTheme) => void;
+  clearWorldOverrideKey: (worldId: string, scheme: ThemeScheme, key: keyof ThemeTokens) => void;
   toggleCinemaMode: () => void;
   toggleImmersive: () => void;
   toggleHistoryActions: () => void;
@@ -63,7 +109,7 @@ interface ThemeState {
   resetTheme: () => void;
 }
 
-function activeScheme(preference: ThemePreference, systemIsDark: boolean): ThemeScheme {
+export function activeScheme(preference: ThemePreference, systemIsDark: boolean): ThemeScheme {
   if (preference === "system") return systemIsDark ? "dark" : "light";
   return preference;
 }
@@ -89,6 +135,10 @@ export const useThemeStore = create<ThemeState>()(
       palettes: THEME_PALETTES,
       customOverrides: { dark: {}, light: {} },
       storyOverrides: {},
+      worldTheme: null,
+      worldThemeEnabled: true,
+      worldOverrides: {},
+      activeWorldId: null,
       activeStoryId: null,
       cinemaMode: true,
       immersive: true,
@@ -156,6 +206,59 @@ export const useThemeStore = create<ThemeState>()(
           return { storyOverrides: next };
         }),
       setActiveStory: (activeStoryId) => set({ activeStoryId }),
+      setWorldTheme: (activeWorldId, worldTheme) => set({ activeWorldId, worldTheme }),
+      toggleWorldTheme: () => set((state) => ({ worldThemeEnabled: !state.worldThemeEnabled })),
+      setWorldOverride: (worldId, scheme, patch) =>
+        set((state) => {
+          const existing = state.worldOverrides[worldId] ?? EMPTY_WORLD_THEME;
+          const shared = { ...existing.shared };
+          const scoped = { ...existing[scheme] };
+          for (const [key, value] of Object.entries(patch)) {
+            const slot = isSharedToken(key as keyof ThemeTokens) ? shared : scoped;
+            Object.assign(slot, { [key]: value });
+          }
+          return {
+            worldOverrides: {
+              ...state.worldOverrides,
+              [worldId]: { ...existing, shared, [scheme]: scoped },
+            },
+          };
+        }),
+      seedWorldOverride: (worldId, theme) =>
+        set((state) =>
+          state.worldOverrides[worldId] === undefined
+            ? { worldOverrides: { ...state.worldOverrides, [worldId]: theme } }
+            : {},
+        ),
+      setWorldMode: (worldId, mode) =>
+        set((state) => {
+          const existing = state.worldOverrides[worldId] ?? EMPTY_WORLD_THEME;
+          const next = { ...existing };
+          if (mode === null) delete next.mode;
+          else next.mode = mode;
+          return { worldOverrides: { ...state.worldOverrides, [worldId]: next } };
+        }),
+      clearWorldOverrideKey: (worldId, scheme, key) =>
+        set((state) => {
+          const existing = state.worldOverrides[worldId];
+          if (existing === undefined) return {};
+          const shared = { ...existing.shared };
+          const scoped = { ...existing[scheme] };
+          delete shared[key];
+          delete scoped[key];
+          return {
+            worldOverrides: {
+              ...state.worldOverrides,
+              [worldId]: { ...existing, shared, [scheme]: scoped },
+            },
+          };
+        }),
+      clearWorldOverride: (worldId) =>
+        set((state) => {
+          const next = { ...state.worldOverrides };
+          delete next[worldId];
+          return { worldOverrides: next };
+        }),
       toggleCinemaMode: () => set((state) => ({ cinemaMode: !state.cinemaMode })),
       toggleImmersive: () => set((state) => ({ immersive: !state.immersive })),
       toggleHistoryActions: () => set((state) => ({ historyActions: !state.historyActions })),
@@ -173,6 +276,8 @@ export const useThemeStore = create<ThemeState>()(
         palettes: state.palettes,
         customOverrides: state.customOverrides,
         storyOverrides: state.storyOverrides,
+        worldThemeEnabled: state.worldThemeEnabled,
+        worldOverrides: state.worldOverrides,
         cinemaMode: state.cinemaMode,
         immersive: state.immersive,
         historyActions: state.historyActions,
@@ -184,59 +289,4 @@ export const useThemeStore = create<ThemeState>()(
   ),
 );
 
-export function useScheme(): ThemeScheme {
-  const preference = useThemeStore((state) => state.preference);
-  const systemIsDark = useThemeStore((state) => state.systemIsDark);
-  return activeScheme(preference, systemIsDark);
-}
-
-export function useIsDark(): boolean {
-  return useScheme() === "dark";
-}
-
-export function useActivePalette(): ThemePalette | null {
-  const paletteId = useThemeStore((state) => state.paletteId);
-  const palettes = useThemeStore((state) => state.palettes);
-  return useMemo(
-    () => (paletteId === null ? null : (palettes.find((one) => one.id === paletteId) ?? null)),
-    [paletteId, palettes],
-  );
-}
-
-export function usePaletteTokens(): Partial<ThemeTokens> {
-  const scheme = useScheme();
-  const palette = useActivePalette();
-  return palette === null ? EMPTY : palette.overrides[scheme];
-}
-
-export function useCustomOverrides(): Partial<ThemeTokens> {
-  const scheme = useScheme();
-  const overrides = useThemeStore((state) => state.customOverrides);
-  return overrides[scheme] ?? EMPTY;
-}
-
-export function baseTokens(scheme: ThemeScheme): ThemeTokens {
-  return scheme === "dark" ? DEFAULT_THEME_TOKENS : DEFAULT_LIGHT_THEME_TOKENS;
-}
-
-export function useResolvedTheme(): ThemeTokens {
-  const scheme = useScheme();
-  const palette = usePaletteTokens();
-  const custom = useCustomOverrides();
-  const storyOverrides = useThemeStore((state) => state.storyOverrides);
-  const activeStoryId = useThemeStore((state) => state.activeStoryId);
-
-  return useMemo(() => {
-    const story = activeStoryId === null ? EMPTY : (storyOverrides[activeStoryId] ?? EMPTY);
-    return mergeThemeTokens(
-      mergeThemeTokens(mergeThemeTokens(baseTokens(scheme), palette), custom),
-      story,
-    );
-  }, [scheme, palette, custom, storyOverrides, activeStoryId]);
-}
-
-export function useDefaultTokens(): ThemeTokens {
-  const scheme = useScheme();
-  const palette = usePaletteTokens();
-  return useMemo(() => mergeThemeTokens(baseTokens(scheme), palette), [scheme, palette]);
-}
+export * from "~/theme/selectors";

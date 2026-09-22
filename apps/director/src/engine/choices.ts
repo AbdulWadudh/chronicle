@@ -41,10 +41,11 @@ export async function planTurn(
   signal: AbortSignal,
   interactingCharacters: readonly Character[] = [],
   action?: string,
+  avoid: readonly string[] = [],
 ): Promise<TurnPlan> {
   try {
     const drafted = await completeStructured<TurnPlan>(
-      buildChoicePrompt(narrative, interactingCharacters, action),
+      buildChoicePrompt(narrative, interactingCharacters, action, avoid),
       {
         schemaName: "turn_plan",
         schema: PLAN_SCHEMA,

@@ -90,6 +90,7 @@ export const imageProgressSchema = z.object({
   value: z.number().int().nonnegative(),
   max: z.number().int().positive(),
   stage: imageStageSchema,
+  preview: z.string().nullable().default(null),
 });
 
 export const assetReadySchema = z.discriminatedUnion("kind", [

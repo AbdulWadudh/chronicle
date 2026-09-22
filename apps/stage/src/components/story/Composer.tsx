@@ -19,6 +19,7 @@ const DRAFT_STYLE = { fieldSizing: "content", minHeight: 52, maxHeight: 132 } as
 
 export interface ComposerProps {
   choices: readonly TurnChoice[];
+  offered?: readonly TurnChoice[];
   busy: boolean;
   composing: ComposeMode | null;
   whisper: string;
@@ -36,6 +37,7 @@ export interface ComposerProps {
 
 export function Composer({
   choices,
+  offered = [],
   busy,
   composing,
   whisper,
@@ -62,6 +64,9 @@ export function Composer({
   const mention = useComposerMention();
   const ready = draft.trim().length > 0 && !busy && composing === null;
   const offering = (choices.length > 0 && !busy) || isRerollingChoices;
+  const hasSuggestions = offered.length > 0 || isRerollingChoices;
+  const panelChoices = choices.length > 0 ? choices : offered;
+  const showPanel = offering || (showChoices && hasSuggestions);
   const filteredCast =
     mention.mentionQuery === null
       ? []
@@ -118,7 +123,7 @@ export function Composer({
   }
 
   return (
-    <div className="flex w-full max-w-170 flex-col gap-2.5 self-center px-4 pt-3 pb-4">
+    <div className="pointer-events-auto relative z-10 flex w-full max-w-170 flex-col gap-2.5 self-center px-4 pt-3 pb-4">
       {mention.mentionQuery !== null && cast.length > 0 ? (
         <MentionMenu
           characters={cast}
@@ -126,7 +131,7 @@ export function Composer({
           selectedIndex={mention.mentionIndex}
           onSelect={selectMention}
         />
-      ) : offering ? (
+      ) : showPanel ? (
         <div
           className={showChoices ? "flex flex-col gap-2" : "hidden md:flex md:flex-col md:gap-2"}
         >
@@ -138,7 +143,7 @@ export function Composer({
                 onClick={onRerollChoices}
                 disabled={busy || isRerollingChoices}
                 aria-label="Reroll"
-                className="h-6 gap-1.5 px-2 text-[0.6875rem] text-text-muted hover:text-text-secondary"
+                className="h-6 gap-1.5 bg-transparent px-2 text-[0.6875rem] text-text-muted hover:bg-transparent hover:text-text-accent"
               >
                 <HugeiconsIcon
                   icon={RefreshIcon}
@@ -152,7 +157,7 @@ export function Composer({
           </div>
           {isRerollingChoices
             ? [0, 1, 2].map((i) => <ChoiceSkeleton key={i} index={i} />)
-            : choices
+            : panelChoices
                 .slice(0, 3)
                 .map((choice, index) => (
                   <ChoiceRow
@@ -194,7 +199,7 @@ export function Composer({
               disabled={busy}
               onCompose={compose}
             />
-            {offering ? (
+            {hasSuggestions ? (
               <Tooltip content={showChoices ? "Hide suggestions" : "Show suggestions"}>
                 <Button
                   variant="outline"

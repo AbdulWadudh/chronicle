@@ -1,3 +1,4 @@
+import type { ImageStage } from "@chronicle/utils";
 import { PaintBrush01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "motion/react";
@@ -15,6 +16,8 @@ export interface SceneFrameProps {
   aspect: number;
   painting: boolean;
   percent: number | null;
+  stage?: ImageStage | null;
+  preview?: string | null;
   actions?: ReactNode;
   corner?: ReactNode;
   layoutId?: string;
@@ -42,6 +45,8 @@ export function SceneFrame({
   aspect,
   painting,
   percent,
+  stage = null,
+  preview = null,
   actions,
   corner,
   layoutId,
@@ -49,20 +54,17 @@ export function SceneFrame({
   drift = false,
 }: SceneFrameProps) {
   const blank = imageUrl === null;
+  const collapsed = blank && !painting;
 
   return (
     <motion.div
       layout={animateLayout}
       layoutId={layoutId}
       transition={MORPH}
-      style={{ aspectRatio: aspect }}
+      style={{ aspectRatio: collapsed ? undefined : aspect }}
       className="group relative w-full overflow-hidden rounded-card border-(length:--border-width-card) border-card-border bg-secondary shadow-(--shadow-overlay)"
     >
-      <div
-        className={`absolute inset-0 bg-linear-to-br from-secondary via-raised to-secondary ${
-          blank && painting ? "animate-pulse" : ""
-        }`}
-      />
+      <div className={`absolute inset-0 ${blank && !painting ? "bg-secondary/40" : ""}`} />
 
       <AnimatePresence initial={false}>
         {blank ? null : (
@@ -87,12 +89,19 @@ export function SceneFrame({
 
       <AnimatePresence>
         {painting ? (
-          <ScenePainting key="painting" over={!blank} percent={percent} veil={drift} />
+          <ScenePainting
+            key="painting"
+            over={!blank}
+            percent={percent}
+            stage={stage}
+            preview={preview}
+            veil={drift}
+          />
         ) : null}
       </AnimatePresence>
 
-      {blank && !painting ? (
-        <div className="absolute inset-0 flex items-center justify-center p-3">
+      {collapsed ? (
+        <div className="flex items-center justify-center p-3">
           <Badge muted>
             <HugeiconsIcon icon={PaintBrush01Icon} size={14} strokeWidth={1.75} />
             No scene for this moment yet
@@ -112,7 +121,17 @@ export function SceneFrame({
         </div>
       )}
 
-      {corner === undefined || blank ? null : corner}
+      {corner === undefined || collapsed ? null : (
+        <div
+          className={`transition-opacity duration-150 motion-reduce:transition-none ${
+            painting
+              ? "opacity-100"
+              : "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+          }`}
+        >
+          {corner}
+        </div>
+      )}
     </motion.div>
   );
 }

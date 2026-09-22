@@ -61,7 +61,13 @@ export async function regenerateTurn(
         context.character.id,
         row.narrativeText,
       );
-      const plan = await planTurn(row.narrativeText, signal, cast, row.playerAction);
+      const plan = await planTurn(
+        row.narrativeText,
+        signal,
+        cast,
+        row.playerAction,
+        row.choicesJson.map((choice) => choice.label),
+      );
       await db
         .update(schema.turns)
         .set({ choicesJson: plan.choices })

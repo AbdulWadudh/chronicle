@@ -1,5 +1,11 @@
 import { STATS } from "@chronicle/config";
-import type { Inventory, StatBlock, StatDefinition, WorldState } from "@chronicle/utils";
+import type {
+  Inventory,
+  PaletteOverrides,
+  StatBlock,
+  StatDefinition,
+  WorldState,
+} from "@chronicle/utils";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { users } from "./auth";
 
@@ -15,6 +21,7 @@ export const worlds = sqliteTable(
     coverImageUrl: text("cover_image_url"),
     genre: text("genre").notNull().default(""),
     visualStyle: text("visual_style").notNull().default(""),
+    themeOverridesJson: text("theme_overrides_json", { mode: "json" }).$type<PaletteOverrides>(),
     shotSize: text("shot_size", { enum: ["closeUp", "waistUp", "threeQuarter", "fullBody"] })
       .notNull()
       .default("waistUp"),

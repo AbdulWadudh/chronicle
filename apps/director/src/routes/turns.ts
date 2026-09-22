@@ -1,5 +1,5 @@
 import { db, newId, schema, toTurnNode } from "@chronicle/db";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { type AuthEnv, requireSession } from "~/auth";
@@ -7,6 +7,11 @@ import { enqueueScene } from "~/engine/imagery";
 import { loadTurnContext } from "~/ws/loader";
 import { ownTurnFor } from "~/ws/media";
 import { nextVariant } from "~/ws/regenerate";
+
+const pageSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(12),
+  before: z.string().min(1).nullable().default(null),
+});
 
 const sceneSchema = z.object({
   prompt: z.string().trim().max(600).nullable().default(null),
@@ -29,19 +34,32 @@ async function ownsCharacter(characterId: string, userId: string): Promise<boole
 export const turnRoutes = new Hono<AuthEnv>()
   .use("*", requireSession)
   .get("/", async (context) => {
-    const characterId = new URL(context.req.url).searchParams.get("characterId");
+    const params = new URL(context.req.url).searchParams;
+    const characterId = params.get("characterId");
     if (characterId === null) return context.json({ error: "characterId is required." }, 400);
     const user = context.get("user");
     if (!(await ownsCharacter(characterId, user.id))) {
       return context.json({ error: "Not found." }, 404);
     }
-    const items = await db
+    const page = pageSchema.safeParse({
+      limit: params.get("limit") ?? undefined,
+      before: params.get("before"),
+    });
+    if (!page.success) return context.json({ error: "Invalid page." }, 400);
+
+    const { limit, before } = page.data;
+    const belongs = eq(schema.turns.characterId, characterId);
+    const rows = await db
       .select()
       .from(schema.turns)
-      .where(eq(schema.turns.characterId, characterId))
-      .orderBy(asc(schema.turns.createdAt))
+      .where(before === null ? belongs : and(belongs, lt(schema.turns.id, before)))
+      .orderBy(desc(schema.turns.id))
+      .limit(limit + 1)
       .all();
-    return context.json({ items: items.map(toTurnNode) });
+
+    const hasMore = rows.length > limit;
+    const items = (hasMore ? rows.slice(0, limit) : rows).reverse().map(toTurnNode);
+    return context.json({ items, hasMore });
   })
   .post("/:turnId/scene", async (context) => {
     const body = sceneSchema.safeParse(await context.req.json().catch(() => null));

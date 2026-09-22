@@ -1,0 +1,118 @@
+@layer components {
+  @keyframes scene-drift-1 {
+    0%,
+    9% {
+      transform: scale(1.16) translate3d(-1.6%, -1.1%, 0);
+    }
+    48%,
+    56% {
+      transform: scale(1.24) translate3d(0%, 0.4%, 0);
+    }
+    100% {
+      transform: scale(1.32) translate3d(1.6%, 1.5%, 0);
+    }
+  }
+
+  @keyframes scene-drift-2 {
+    0%,
+    11% {
+      transform: scale(1.3) translate3d(1.8%, 1.2%, 0);
+    }
+    52%,
+    61% {
+      transform: scale(1.22) translate3d(0.4%, -0.2%, 0);
+    }
+    100% {
+      transform: scale(1.14) translate3d(-1.4%, -1.4%, 0);
+    }
+  }
+
+  @keyframes scene-drift-3 {
+    0%,
+    8% {
+      transform: scale(1.12) translate3d(0%, 1.6%, 0);
+    }
+    45%,
+    58% {
+      transform: scale(1.22) translate3d(-0.8%, 0.2%, 0);
+    }
+    100% {
+      transform: scale(1.34) translate3d(0.6%, -1.6%, 0);
+    }
+  }
+
+  @keyframes scene-drift-4 {
+    0%,
+    12% {
+      transform: scale(1.26) translate3d(-2%, 0.6%, 0);
+    }
+    50%,
+    60% {
+      transform: scale(1.2) translate3d(-0.2%, -0.4%, 0);
+    }
+    100% {
+      transform: scale(1.28) translate3d(2%, -1%, 0);
+    }
+  }
+
+  .scene-drift {
+    animation: scene-drift-1 34s cubic-bezier(0.4, 0, 0.2, 1) alternate infinite;
+    will-change: transform;
+  }
+
+  .scene-drift-2 {
+    animation-name: scene-drift-2;
+    animation-duration: 41s;
+  }
+
+  .scene-drift-3 {
+    animation-name: scene-drift-3;
+    animation-duration: 37s;
+  }
+
+  .scene-drift-4 {
+    animation-name: scene-drift-4;
+    animation-duration: 45s;
+  }
+
+  [data-motion="off"] .scene-drift,
+  [data-motion="subtle"] .scene-drift {
+    animation: none;
+    transform: scale(1.25);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scene-drift {
+      animation: none;
+      transform: scale(1.25);
+    }
+  }
+
+  @keyframes stage-drift {
+    0% {
+      transform: scale(1.04) translate3d(-1.5%, 1%, 0);
+    }
+    50% {
+      transform: scale(1.16) translate3d(1%, -1.5%, 0);
+    }
+    100% {
+      transform: scale(1.06) translate3d(1.5%, 1%, 0);
+    }
+  }
+
+  .stage-drift {
+    animation: stage-drift 24s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  [data-motion="off"] .stage-drift,
+  [data-motion="subtle"] .stage-drift {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage-drift {
+      animation: none;
+    }
+  }
+}

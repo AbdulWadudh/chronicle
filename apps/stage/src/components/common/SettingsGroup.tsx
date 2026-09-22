@@ -3,6 +3,7 @@ import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactNode } from "react";
+import { iconToneStyle } from "~/lib/iconTone";
 
 export interface GroupMeta {
   title: string;
@@ -35,8 +36,13 @@ export function SettingsGroup({
       className="raise rise-in shrink-0 overflow-hidden rounded-card border-(length:--border-width-card) border-hairline bg-card"
     >
       <Collapsible.Trigger className="group flex w-full cursor-pointer items-start gap-3 border-b border-hairline bg-raised px-4 py-3.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-inset">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-primary/15 bg-primary/[0.06] text-text-accent/80">
-          <HugeiconsIcon icon={meta.icon} size={17} strokeWidth={1.5} />
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-hairline bg-raised text-text-accent">
+          <HugeiconsIcon
+            icon={meta.icon}
+            size={17}
+            strokeWidth={1.5}
+            style={iconToneStyle(meta.icon)}
+          />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[0.9375rem] font-semibold tracking-[-0.015em] text-text-primary">
@@ -55,9 +61,7 @@ export function SettingsGroup({
       </Collapsible.Trigger>
 
       <Collapsible.Panel className="settings-panel">
-        <div className="flex max-h-(--settings-panel-max) flex-col gap-2 overflow-y-auto overscroll-contain p-3">
-          {children}
-        </div>
+        <div className="flex flex-col gap-2 p-3">{children}</div>
       </Collapsible.Panel>
     </Collapsible.Root>
   );

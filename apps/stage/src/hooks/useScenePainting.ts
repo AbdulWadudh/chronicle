@@ -6,13 +6,20 @@ const RENDER_TIMEOUT_MS = 180_000;
 export interface SceneProgress {
   percent: number;
   stage: ImageStage;
+  preview: string | null;
 }
 
 export interface ScenePainting {
   start: (turnId: string) => void;
   stop: (turnId: string) => void;
   finish: (turnId: string) => void;
-  report: (turnId: string, value: number, max: number, stage: ImageStage) => void;
+  report: (
+    turnId: string,
+    value: number,
+    max: number,
+    stage: ImageStage,
+    preview: string | null,
+  ) => void;
   isPainting: (turnId: string) => boolean;
   progressOf: (turnId: string) => SceneProgress | null;
 }
@@ -43,12 +50,19 @@ export function useScenePainting(): ScenePainting {
     [stop],
   );
 
-  const report = useCallback((turnId: string, value: number, max: number, stage: ImageStage) => {
-    setProgress((previous) => ({
-      ...previous,
-      [turnId]: { percent: Math.round((value / max) * 100), stage },
-    }));
-  }, []);
+  const report = useCallback(
+    (turnId: string, value: number, max: number, stage: ImageStage, preview: string | null) => {
+      setProgress((previous) => ({
+        ...previous,
+        [turnId]: {
+          percent: Math.round((value / max) * 100),
+          stage,
+          preview: preview ?? previous[turnId]?.preview ?? null,
+        },
+      }));
+    },
+    [],
+  );
 
   const isPainting = useCallback(
     (turnId: string): boolean => paintingTurnIds.includes(turnId),

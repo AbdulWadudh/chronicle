@@ -1,5 +1,5 @@
 import { API } from "@chronicle/config";
-import type { StatBlock, StatDefinition } from "@chronicle/utils";
+import type { PaletteOverrides, StatBlock, StatDefinition } from "@chronicle/utils";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { get } from "~/lib/api";
@@ -16,6 +16,7 @@ export interface CharacterSheet {
   labelOf: (statId: string) => string;
   error: string | null;
   cast: CharacterSummary[];
+  themeOverrides: PaletteOverrides | null;
 }
 
 const STRONG_RANK = 3;
@@ -80,5 +81,6 @@ export function useCharacterSheet(characterId: string | null): CharacterSheet {
     labelOf,
     error: failure === null || failure === undefined ? null : failure.message,
     cast: members,
+    themeOverrides: world.data?.themeOverrides ?? null,
   };
 }

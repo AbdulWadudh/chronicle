@@ -6,6 +6,15 @@ const FADE = { duration: 1.4, ease: "easeOut" } as const;
 
 const ORBS = ["118vw 100vw at 72% 22%", "98vw 90vw at 6% 86%", "76vw 68vw at 92% 66%"] as const;
 
+const DRIFT_PATHS = ["", "scene-drift-2", "scene-drift-3", "scene-drift-4"] as const;
+
+function driftPath(imageUrl: string | null): string {
+  if (imageUrl === null) return "";
+  let hash = 0;
+  for (const character of imageUrl) hash = (hash * 31 + character.charCodeAt(0)) % 1024;
+  return DRIFT_PATHS[hash % DRIFT_PATHS.length] ?? "";
+}
+
 export interface SceneBackdropProps {
   imageUrl: string | null;
 }
@@ -35,7 +44,7 @@ export function SceneBackdrop({ imageUrl }: SceneBackdropProps) {
             exit={{ opacity: 0 }}
             transition={FADE}
             style={{ backgroundImage: washOf(palette) }}
-            className="scene-drift absolute inset-0"
+            className={`scene-drift ${driftPath(imageUrl)} absolute inset-0`}
           />
         )}
       </AnimatePresence>
