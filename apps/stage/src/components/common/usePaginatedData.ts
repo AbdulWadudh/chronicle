@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
 
 export interface Page<T> {
   items: T[];
@@ -17,61 +18,38 @@ export interface PaginatedData<T> {
   refresh: () => void;
 }
 
-export function usePaginatedData<T>(loadPage: PageLoader<T>): PaginatedData<T> {
-  const [items, setItems] = useState<T[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [exhausted, setExhausted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function usePaginatedData<T>(
+  queryKey: readonly unknown[],
+  loadPage: PageLoader<T>,
+): PaginatedData<T> {
+  const query = useInfiniteQuery({
+    queryKey,
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam, signal }) => loadPage(pageParam, signal),
+    getNextPageParam: (page: Page<T>) => page.nextCursor,
+  });
 
-  const cursorRef = useRef<string | null>(null);
-  const controllerRef = useRef<AbortController | null>(null);
-
-  const fetchPage = useCallback(
-    async (from: string | null, replace: boolean): Promise<void> => {
-      controllerRef.current?.abort();
-      const controller = new AbortController();
-      controllerRef.current = controller;
-      const superseded = (): boolean => controllerRef.current !== controller;
-
-      setLoading(true);
-      setError(null);
-      try {
-        const page = await loadPage(from, controller.signal);
-        if (superseded()) return;
-        setItems((previous) => (replace ? page.items : [...previous, ...page.items]));
-        cursorRef.current = page.nextCursor;
-        setExhausted(page.nextCursor === null);
-      } catch (cause) {
-        if (superseded() || controller.signal.aborted) return;
-        setError(cause instanceof Error ? cause.message : "Failed to load.");
-      } finally {
-        if (!superseded()) {
-          setLoading(false);
-          setRefreshing(false);
-        }
-      }
-    },
-    [loadPage],
+  const items = useMemo(
+    () => (query.data?.pages ?? []).flatMap((page) => page.items),
+    [query.data],
   );
 
-  useEffect(() => {
-    setItems([]);
-    cursorRef.current = null;
-    setExhausted(false);
-    void fetchPage(null, true);
-    return () => controllerRef.current?.abort();
-  }, [fetchPage]);
-
   const loadMore = useCallback(() => {
-    if (exhausted || loading) return;
-    void fetchPage(cursorRef.current, false);
-  }, [exhausted, fetchPage, loading]);
+    if (!query.hasNextPage || query.isFetchingNextPage) return;
+    void query.fetchNextPage();
+  }, [query]);
 
   const refresh = useCallback(() => {
-    setRefreshing(true);
-    void fetchPage(null, true);
-  }, [fetchPage]);
+    void query.refetch();
+  }, [query]);
 
-  return { items, loading, refreshing, exhausted, error, loadMore, refresh };
+  return {
+    items,
+    loading: query.isFetching,
+    refreshing: query.isRefetching && !query.isFetchingNextPage,
+    exhausted: !query.hasNextPage,
+    error: query.error === null ? null : query.error.message,
+    loadMore,
+    refresh,
+  };
 }

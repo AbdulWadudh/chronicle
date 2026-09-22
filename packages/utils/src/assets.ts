@@ -1,6 +1,6 @@
-export const SCENE_CONTENT_TYPE = "image/png";
+export const SCENE_CONTENT_TYPE = "image/webp";
 export const AUDIO_CONTENT_TYPE = "audio/mpeg";
-export const PORTRAIT_CONTENT_TYPE = "image/png";
+export const PORTRAIT_CONTENT_TYPE = "image/webp";
 
 export const AVATAR_CONTENT_TYPES: Record<string, string> = {
   "image/png": "png",
@@ -29,15 +29,15 @@ export function turnPrefix(worldId: string, characterId: string, turnId: string)
 }
 
 export function worldCoverKey(worldId: string): string {
-  return `${worldPrefix(worldId)}/cover.png`;
+  return `${worldPrefix(worldId)}/cover.webp`;
 }
 
 export function characterPortraitKey(worldId: string, characterId: string): string {
-  return `${characterPrefix(worldId, characterId)}/portrait.png`;
+  return `${characterPrefix(worldId, characterId)}/portrait.webp`;
 }
 
 export function characterDraftPortraitKey(worldId: string, characterId: string): string {
-  return `${characterPrefix(worldId, characterId)}/portrait-draft.png`;
+  return `${characterPrefix(worldId, characterId)}/portrait-draft.webp`;
 }
 
 export function sceneKey(
@@ -46,7 +46,7 @@ export function sceneKey(
   turnId: string,
   variant: number,
 ): string {
-  return `${turnPrefix(worldId, characterId, turnId)}/scene-${variant}.png`;
+  return `${turnPrefix(worldId, characterId, turnId)}/scene-${variant}.webp`;
 }
 
 export function sentenceAudioKey(

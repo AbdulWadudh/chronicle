@@ -22,15 +22,23 @@ export function LabeledRow({ label, blurb, htmlFor, children }: LabeledRowProps)
   );
 }
 
-export function RowGroup({ label, children }: { label: string; children: ReactNode }) {
+export function FormSection({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-1">
+    <section className="flex flex-col gap-2">
       <h4 className="text-[0.6875rem] font-medium tracking-[-0.005em] text-text-accent/70">
         {label}
       </h4>
-      <div className="divide-y divide-hairline rounded-card border-(length:--border-width-card) border-card-border bg-raised px-4">
-        {children}
-      </div>
+      {children}
     </section>
   );
+}
+
+export function RowGroup({ label, children }: { label?: string; children: ReactNode }) {
+  const rows = (
+    <div className="divide-y divide-hairline rounded-card border-(length:--border-width-card) border-card-border bg-raised px-4">
+      {children}
+    </div>
+  );
+  if (label === undefined) return rows;
+  return <FormSection label={label}>{rows}</FormSection>;
 }

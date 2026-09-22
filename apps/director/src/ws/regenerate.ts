@@ -20,7 +20,7 @@ export type RegenerateTarget = "narrative" | "visual" | "audio" | "choices";
 
 export function nextVariant(sceneImageUrl: string | null): number {
   if (sceneImageUrl === null) return FIRST_VARIANT;
-  const matched = /scene-(\d+)\.png/u.exec(sceneImageUrl);
+  const matched = /scene-(\d+)\.\w+/u.exec(sceneImageUrl);
   const current = matched === null ? FIRST_VARIANT : Number(matched[1]);
   return Number.isFinite(current) ? current + 1 : FIRST_VARIANT;
 }

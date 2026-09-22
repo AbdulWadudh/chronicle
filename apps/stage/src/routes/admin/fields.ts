@@ -172,6 +172,10 @@ const image: FieldMetaFor<"image"> = {
     mono: true,
     hint: "How the noise level steps down across the run.",
   },
+  quality: {
+    label: "Image quality",
+    hint: "WebP encode quality. 90 is visually lossless at about a tenth of a PNG's size; below 75 starts to soften skin and hair.",
+  },
   upscale: {
     label: "Detail pass",
     unit: "×",

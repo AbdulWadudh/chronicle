@@ -16,9 +16,16 @@ import { type AuthEnv, requireSession } from "~/auth";
 import { enqueuePortrait } from "~/engine/imagery";
 import { UPLOAD_MAX_BYTES, UPLOAD_TYPES, upload } from "~/storage";
 
-const portraitSchema = z.object({ prompt: z.string().min(1).max(600).optional() });
-
 const LOOK_MAX = 400;
+
+const portraitSchema = z.object({
+  prompt: z.string().min(1).max(600).optional(),
+  name: z.string().min(1).optional(),
+  pronouns: pronounsSchema.optional(),
+  bio: z.string().optional(),
+  appearance: z.string().max(LOOK_MAX).optional(),
+  outfit: z.string().max(LOOK_MAX).optional(),
+});
 
 const patchCharacterSchema = z.object({
   name: z.string().min(1).optional(),
@@ -255,10 +262,18 @@ export const characterRoutes = new Hono<AuthEnv>()
     if (worldRow === null) return context.json({ error: "World not found." }, 404);
     const body = await context.req.json().catch(() => null);
     const override = portraitSchema.safeParse(body);
+    const unsaved = override.success ? override.data : {};
     await enqueuePortrait(
       toWorld(worldRow),
-      toCharacter(row),
-      override.success ? override.data.prompt : undefined,
+      toCharacter({
+        ...row,
+        name: unsaved.name ?? row.name,
+        pronouns: unsaved.pronouns ?? row.pronouns,
+        bio: unsaved.bio ?? row.bio,
+        appearance: unsaved.appearance ?? row.appearance,
+        outfit: unsaved.outfit ?? row.outfit,
+      }),
+      unsaved.prompt,
       true,
     );
     return context.json({ status: "queued" }, 202);

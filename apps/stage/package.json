@@ -17,6 +17,7 @@
     "@hugeicons/core-free-icons": "latest",
     "@hugeicons/react": "latest",
     "@react-three/fiber": "latest",
+    "@tanstack/react-query": "latest",
     "canvaskit-wasm": "latest",
     "class-variance-authority": "latest",
     "clsx": "latest",

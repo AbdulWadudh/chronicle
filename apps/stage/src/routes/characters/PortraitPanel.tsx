@@ -1,5 +1,5 @@
 import { API } from "@chronicle/config";
-import type { ComposeContext, ComposeMode } from "@chronicle/utils";
+import type { ComposeContext, ComposeMode, Pronouns } from "@chronicle/utils";
 import {
   ArrowTurnBackwardIcon,
   PaintBrush01Icon,
@@ -19,14 +19,29 @@ import { useImagePoll } from "~/hooks/useImagePoll";
 import { post, putBytes, remove } from "~/lib/api";
 import type { CharacterSummary } from "~/lib/entities";
 
+export interface CharacterLookDraft {
+  name: string;
+  pronouns: Pronouns;
+  bio: string;
+  appearance: string;
+  outfit: string;
+}
+
 export interface PortraitPanelProps {
   existing: CharacterSummary | null;
   worldId: string | null;
   compose: Compose;
   describe: () => Partial<ComposeContext>;
+  liveValues: () => CharacterLookDraft;
 }
 
-export function PortraitPanel({ existing, worldId, compose, describe }: PortraitPanelProps) {
+export function PortraitPanel({
+  existing,
+  worldId,
+  compose,
+  describe,
+  liveValues,
+}: PortraitPanelProps) {
   const [prompt, setPrompt] = useState("");
   const [awaiting, setAwaiting] = useState<{ since: string | null } | null>(null);
   const [uploaded, setUploaded] = useState<string | null>(null);
@@ -101,10 +116,10 @@ export function PortraitPanel({ existing, worldId, compose, describe }: Portrait
     setError(null);
     try {
       const trimmed = prompt.trim();
-      await post(
-        `${API.characters}/${existing.id}/portrait`,
-        trimmed.length > 0 ? { prompt: trimmed } : {},
-      );
+      await post(`${API.characters}/${existing.id}/portrait`, {
+        ...liveValues(),
+        ...(trimmed.length > 0 ? { prompt: trimmed } : {}),
+      });
       setAwaiting({ since: portrait });
       setDiscarded(false);
     } catch (cause) {

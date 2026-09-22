@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { get } from "~/lib/api";
 
 const INTERVAL_MS = 3000;
-const MAX_ATTEMPTS = 60;
 
 export interface ImagePoll {
   url: string | null;
@@ -14,44 +13,23 @@ export function useImagePoll<T>(
   select: (entity: T) => string | null,
   previous: string | null = null,
 ): ImagePoll {
-  const [url, setUrl] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const query = useQuery({
+    queryKey: ["image-poll", path, previous],
+    queryFn: () => get<T>(path as string),
+    enabled: path !== null,
+    staleTime: 0,
+    gcTime: 0,
+    refetchInterval: (query) => {
+      const found = query.state.data === undefined ? null : select(query.state.data);
+      return found !== null && found !== previous ? false : INTERVAL_MS;
+    },
+  });
 
-  useEffect(() => {
-    setUrl(null);
-    if (path === null) {
-      setPending(false);
-      return;
-    }
+  const found = query.data === undefined ? null : select(query.data);
+  const arrived = found !== null && found !== previous;
 
-    let attempts = 0;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let cancelled = false;
-    setPending(true);
-
-    const poll = async (): Promise<void> => {
-      attempts += 1;
-      const found = select(await get<T>(path));
-      if (cancelled) return;
-      if (found !== null && found !== previous) {
-        setUrl(found);
-        setPending(false);
-        return;
-      }
-      if (attempts >= MAX_ATTEMPTS) {
-        setPending(false);
-        return;
-      }
-      timer = setTimeout(() => void poll().catch(() => setPending(false)), INTERVAL_MS);
-    };
-
-    timer = setTimeout(() => void poll().catch(() => setPending(false)), INTERVAL_MS);
-
-    return () => {
-      cancelled = true;
-      if (timer !== null) clearTimeout(timer);
-    };
-  }, [path, select, previous]);
-
-  return { url, pending };
+  return {
+    url: arrived ? found : null,
+    pending: path !== null && !arrived,
+  };
 }

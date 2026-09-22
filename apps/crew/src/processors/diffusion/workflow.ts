@@ -39,8 +39,15 @@ export function buildWorkflow(
       inputs: { samples: [hires ? NODE_HIRES_SAMPLER : NODE_BASE_SAMPLER, 0], vae: ["1", 2] },
     },
     [NODE_SAVE]: {
-      class_type: "SaveImage",
-      inputs: { filename_prefix: `chronicle/${prefix}`, images: ["8", 0] },
+      class_type: "SaveAnimatedWEBP",
+      inputs: {
+        filename_prefix: `chronicle/${prefix}`,
+        images: ["8", 0],
+        fps: 1,
+        lossless: false,
+        quality: job.quality,
+        method: "default",
+      },
     },
   };
 

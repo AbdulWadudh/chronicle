@@ -45,6 +45,7 @@ async function imageParams(
     cfg: image.cfg,
     sampler: image.sampler,
     scheduler: image.scheduler,
+    quality: image.quality,
     upscale: image.upscale,
     upscaleDenoise: image.upscaleDenoise,
     identity: {

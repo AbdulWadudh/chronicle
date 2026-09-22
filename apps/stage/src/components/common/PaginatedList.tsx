@@ -9,6 +9,7 @@ import { type PageLoader, usePaginatedData } from "./usePaginatedData";
 export type { Page, PageLoader } from "./usePaginatedData";
 
 export interface PaginatedListProps<T> {
+  queryKey: readonly unknown[];
   loadPage: PageLoader<T>;
   keyExtractor: (item: T) => string;
   renderItem: (item: T, index: number) => ReactElement;
@@ -21,6 +22,7 @@ export interface PaginatedListProps<T> {
 }
 
 export function PaginatedList<T>({
+  queryKey,
   loadPage,
   keyExtractor,
   renderItem,
@@ -31,7 +33,7 @@ export function PaginatedList<T>({
   listClassName,
   header,
 }: PaginatedListProps<T>) {
-  const data = usePaginatedData(loadPage);
+  const data = usePaginatedData(queryKey, loadPage);
   const sentinel = useRef<HTMLDivElement>(null);
   const loadMore = data.loadMore;
 
