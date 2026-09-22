@@ -19,7 +19,7 @@ export function ReplaySceneButton({ turn, busy, onReplay }: ReplaySceneButtonPro
         disabled={busy}
         aria-label="Replay this scene"
         onClick={() => onReplay(turn)}
-        className="absolute right-2 bottom-2 border-hairline-strong bg-card/55 text-text-accent backdrop-blur-sm hover:border-primary/50 hover:bg-card/80"
+        className="absolute right-2 bottom-2 border-hairline-strong bg-transparent text-text-accent hover:border-primary/50 hover:bg-card/40"
       >
         <HugeiconsIcon icon={PlayCircleIcon} size={16} strokeWidth={2} />
       </Button>

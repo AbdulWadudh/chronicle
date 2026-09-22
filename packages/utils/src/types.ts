@@ -1,4 +1,4 @@
-import { RENDER_STYLES, type RenderStyleName } from "@chronicle/config";
+import { RENDER_STYLES, type RenderStyleName, type ThemeTokens } from "@chronicle/config";
 import { z } from "zod";
 
 export const statRankSchema = z.union([
@@ -47,6 +47,17 @@ export function pronounPhrase(pronouns: z.infer<typeof pronounsSchema>): string 
   return PRONOUN_PHRASE[pronouns];
 }
 
+const tokenPatchSchema = z.record(z.string(), z.union([z.string(), z.number()])) as z.ZodType<
+  Partial<ThemeTokens>
+>;
+
+export const themeOverridesSchema = z.object({
+  mode: z.enum(["dark", "light"]).optional(),
+  dark: tokenPatchSchema,
+  light: tokenPatchSchema,
+  shared: tokenPatchSchema.default({}),
+});
+
 export const shotSizeSchema = z.enum(["closeUp", "waistUp", "threeQuarter", "fullBody"]);
 
 export const renderStyleSchema = z.enum(
@@ -61,6 +72,7 @@ export const worldSchema = z.object({
   coverImageUrl: z.string().nullable(),
   genre: z.string().default(""),
   visualStyle: z.string().default(""),
+  themeOverrides: themeOverridesSchema.nullable().default(null),
   shotSize: shotSizeSchema.default("waistUp"),
   artStyle: renderStyleSchema.default("photoreal"),
   visibility: worldVisibilitySchema,

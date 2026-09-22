@@ -69,6 +69,7 @@ function relay(pattern: string, raw: string): void {
         value: progress.value,
         max: progress.max,
         stage: progress.stage,
+        preview: progress.preview,
       });
     }
     return;

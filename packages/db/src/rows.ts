@@ -9,6 +9,7 @@ export function toWorld(row: WorldRow): World {
     ...row,
     statDefinitions: row.statDefinitionsJson,
     initialState: row.initialStateJson,
+    themeOverrides: row.themeOverridesJson,
   });
 }
 

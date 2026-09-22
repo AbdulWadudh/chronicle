@@ -1,5 +1,6 @@
 import { API, type RuntimeSettings, type RuntimeSettingsPatch } from "@chronicle/config";
 import { mergeRuntimeSettings } from "@chronicle/utils";
+import { useDebouncedCallback } from "@tanstack/react-pacer";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -29,7 +30,6 @@ export function useSettings(): SettingsController {
   const [status, setStatus] = useState<SaveStatus>("idle");
 
   const queued = useRef<RuntimeSettingsPatch>({});
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const badge = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const query = useQuery({
@@ -39,7 +39,6 @@ export function useSettings(): SettingsController {
 
   useEffect(
     () => () => {
-      if (timer.current !== null) clearTimeout(timer.current);
       if (badge.current !== null) clearTimeout(badge.current);
     },
     [],
@@ -84,6 +83,17 @@ export function useSettings(): SettingsController {
     },
   });
 
+  const flush = useDebouncedCallback(
+    () => {
+      const body = queued.current;
+      queued.current = {};
+      if (Object.keys(body).length === 0) return;
+      setStatus("saving");
+      save.mutate(body);
+    },
+    { wait: SAVE_DEBOUNCE_MS },
+  );
+
   const update = useCallback(
     (next: RuntimeSettingsPatch) => {
       const current = query.data?.settings;
@@ -94,16 +104,9 @@ export function useSettings(): SettingsController {
         Object.assign(queued.current, { [group]: { ...existing, ...values } });
       }
 
-      if (timer.current !== null) clearTimeout(timer.current);
-      timer.current = setTimeout(() => {
-        const body = queued.current;
-        queued.current = {};
-        if (Object.keys(body).length === 0) return;
-        setStatus("saving");
-        save.mutate(body);
-      }, SAVE_DEBOUNCE_MS);
+      flush();
     },
-    [query.data, save, store],
+    [query.data, store, flush],
   );
 
   const reset = useCallback(() => {

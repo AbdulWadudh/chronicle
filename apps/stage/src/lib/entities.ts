@@ -1,4 +1,5 @@
 import type {
+  PaletteOverrides,
   Pronouns,
   RenderStyle,
   ShotSize,
@@ -16,6 +17,7 @@ export interface WorldSummary {
   visualStyle: string;
   shotSize: ShotSize;
   artStyle: RenderStyle;
+  themeOverrides: PaletteOverrides | null;
   coverImageUrl: string | null;
   visibility: WorldVisibility;
 }

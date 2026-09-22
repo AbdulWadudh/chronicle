@@ -1,4 +1,3 @@
-import { DEFAULT_THEME_TOKENS } from "@chronicle/config";
 import {
   createThemePalette,
   deleteThemePalette,
@@ -10,13 +9,7 @@ import { faker } from "@faker-js/faker";
 import { Hono } from "hono";
 import { z } from "zod";
 import { type AuthEnv, requireSession } from "~/auth";
-
-const TOKEN_KEYS = Object.keys(DEFAULT_THEME_TOKENS) as [string, ...string[]];
-
-const tokenPatch = z.partialRecord(
-  z.enum(TOKEN_KEYS),
-  z.union([z.string().max(200), z.number().finite()]),
-);
+import { tokenPatchSchema as tokenPatch } from "~/themeTokens";
 
 const patchBody = z
   .object({

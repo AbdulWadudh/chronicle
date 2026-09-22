@@ -1,0 +1,1 @@
+ALTER TABLE `worlds` ADD `theme_overrides_json` text;

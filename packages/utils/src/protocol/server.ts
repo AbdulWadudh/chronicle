@@ -39,6 +39,7 @@ export const scenePlannedSchema = base.extend({
 
 export const sceneProgressSchema = base.extend({
   type: z.literal("SCENE_PROGRESS"),
+  preview: z.string().nullable().default(null),
   turnId: z.string(),
   value: z.number().int().nonnegative(),
   max: z.number().int().positive(),

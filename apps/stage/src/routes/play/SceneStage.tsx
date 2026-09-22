@@ -4,6 +4,7 @@ import { NarrativeStream } from "~/components/story/NarrativeStream";
 import type { SentenceReveal } from "~/components/story/useSentenceReveal";
 import { useElementSize } from "~/hooks/useElementSize";
 import type { PlayPhase, TurnStream } from "~/hooks/useTurnStream";
+import { FullScreenSceneButton } from "./FullScreenSceneButton";
 import { ReplaySceneButton } from "./ReplaySceneButton";
 import { SceneFrame } from "./SceneFrame";
 import { ScenePromptCard } from "./ScenePromptCard";
@@ -106,6 +107,8 @@ export function SceneStage({
           aspect={aspect}
           painting={painting}
           percent={progress?.percent ?? null}
+          stage={progress?.stage ?? null}
+          preview={progress?.preview ?? null}
           layoutId={layoutId}
           animateLayout={!reduceMotion}
           drift={cinematic}
@@ -121,7 +124,9 @@ export function SceneStage({
             )
           }
           corner={
-            cinematic || turn === null ? undefined : (
+            cinematic || turn === null ? undefined : painting ? (
+              <FullScreenSceneButton busy={busy} onEnter={stream.enterCinematic} />
+            ) : (
               <ReplaySceneButton turn={turn} busy={busy} onReplay={stream.replayTurn} />
             )
           }
@@ -131,28 +136,38 @@ export function SceneStage({
       {cinematic ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 bg-linear-to-t from-scrim to-transparent px-6 pt-20 pb-[max(1.5rem,var(--safe-bottom))]">
           {reveal.visible.length === 0 ? null : (
-            <div className="pointer-events-auto w-full max-w-130 rounded-card border-(length:--border-width-card) border-primary/40 bg-card/80 px-5 py-4 shadow-(--shadow-overlay) backdrop-blur-md">
+            <div className="pointer-events-auto w-full max-w-130 rounded-card border-(length:--border-width-card) border-primary/45 bg-card/30 px-5 py-4 backdrop-blur-xl">
               {narration}
             </div>
           )}
-          <button
-            type="button"
-            onClick={onEndCinematic}
-            className="pressable pointer-events-auto cursor-pointer rounded-control border-(length:--border-width-card) border-primary/35 bg-card/85 px-3.5 py-1.5 text-[0.6875rem] font-medium tracking-[0.12em] text-text-primary uppercase shadow-md backdrop-blur-md transition-colors hover:border-primary/60 hover:bg-card"
-          >
-            {hint ?? (stream.sceneReady ? "Tap to continue" : "Tap to skip the wait")}
-          </button>
-          {stream.sceneReady ? null : (
-            <p className="text-[0.75rem] text-text-secondary italic">
-              {progress === null
-                ? "Preparing the scene…"
-                : `${STAGE_LABEL[progress.stage] ?? "Painting the scene"}…`}
-              {progress === null ? null : (
-                <span className="ml-2 tabular-nums text-text-accent not-italic">
-                  {progress.percent}%
+          {stream.sceneReady ? (
+            <button
+              type="button"
+              onClick={onEndCinematic}
+              className="pressable pointer-events-auto cursor-pointer rounded-control border-(length:--border-width-card) border-primary/50 bg-card/20 px-3.5 py-1.5 text-[0.6875rem] font-medium tracking-[0.12em] text-text-primary uppercase backdrop-blur-md transition-colors hover:border-primary/70 hover:bg-card/40"
+            >
+              {hint ?? "Tap to continue"}
+            </button>
+          ) : (
+            <>
+              <p className="flex items-baseline gap-2 text-[0.8125rem] text-text-primary">
+                <span>
+                  {progress === null
+                    ? "Preparing the scene"
+                    : (STAGE_LABEL[progress.stage] ?? "Painting the scene")}
                 </span>
-              )}
-            </p>
+                {progress === null ? null : (
+                  <span className="tabular-nums text-text-muted">{progress.percent}%</span>
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={onEndCinematic}
+                className="pointer-events-auto cursor-pointer text-[0.6875rem] font-medium tracking-[0.12em] text-text-muted uppercase underline-offset-4 transition-colors hover:text-text-primary hover:underline motion-reduce:transition-none"
+              >
+                {hint ?? "Skip the wait"}
+              </button>
+            </>
           )}
         </div>
       ) : (

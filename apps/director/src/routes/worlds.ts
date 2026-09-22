@@ -13,6 +13,7 @@ import { type AuthEnv, requireSession } from "~/auth";
 import { populateCast } from "~/casting";
 import { draftWorld } from "~/engine/authoring";
 import { enqueueCover } from "~/engine/imagery";
+import { paletteOverridesSchema } from "~/themeTokens";
 
 const createWorldSchema = z.object({
   title: z.string().min(1),
@@ -21,6 +22,7 @@ const createWorldSchema = z.object({
   visualStyle: z.string().max(600).default(""),
   shotSize: shotSizeSchema.default("waistUp"),
   artStyle: renderStyleSchema.default("photoreal"),
+  themeOverrides: paletteOverridesSchema.nullable().default(null),
   coverImageUrl: z.string().nullable().default(null),
   visibility: z.enum(["private", "public"]).default("private"),
   statDefinitions: z.array(statDefinitionSchema).min(1),
@@ -35,6 +37,7 @@ const patchWorldSchema = z.object({
   visualStyle: z.string().max(600).optional(),
   shotSize: shotSizeSchema.optional(),
   artStyle: renderStyleSchema.optional(),
+  themeOverrides: paletteOverridesSchema.nullable().optional(),
   visibility: z.enum(["private", "public"]).optional(),
 });
 
@@ -104,6 +107,7 @@ export const worldRoutes = new Hono<AuthEnv>()
         visualStyle: body.data.visualStyle,
         shotSize: body.data.shotSize,
         artStyle: body.data.artStyle,
+        themeOverridesJson: body.data.themeOverrides,
         visibility: body.data.visibility,
         statDefinitionsJson: body.data.statDefinitions,
         pointBudget: body.data.pointBudget,
@@ -138,6 +142,10 @@ export const worldRoutes = new Hono<AuthEnv>()
         visualStyle: body.data.visualStyle ?? row.visualStyle,
         shotSize: body.data.shotSize ?? row.shotSize,
         artStyle: body.data.artStyle ?? row.artStyle,
+        themeOverridesJson:
+          body.data.themeOverrides === undefined
+            ? row.themeOverridesJson
+            : body.data.themeOverrides,
         visibility: body.data.visibility ?? row.visibility,
       })
       .where(eq(schema.worlds.id, row.id))

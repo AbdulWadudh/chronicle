@@ -1,10 +1,13 @@
 import { API } from "@chronicle/config";
 import type { ImageShape, ServerMessage, TurnNode } from "@chronicle/utils";
-import { useCallback, useEffect, useState } from "react";
-import { get, post } from "~/lib/api";
+import { useCallback, useState } from "react";
+import { post } from "~/lib/api";
+import { assetUrl } from "~/lib/assets";
 import { useAudioQueue } from "./useAudioQueue";
+import { useCinematic } from "./useCinematic";
 import { type SocketStatus, useGameSocket } from "./useGameSocket";
 import { type SceneProgress, useScenePainting } from "./useScenePainting";
+import { useTurnHistory } from "./useTurnHistory";
 
 export type PlayPhase = "cinematic" | "decision";
 
@@ -34,6 +37,9 @@ export interface TurnStream {
   playingSentenceIndex: number | null;
   error: string | null;
   isRerollingChoices: boolean;
+  hasOlderTurns: boolean;
+  loadingOlder: boolean;
+  loadOlderTurns: () => void;
   submitAction: (
     action: string,
     directorWhisper: string | null,
@@ -43,6 +49,7 @@ export interface TurnStream {
   progressOf: (turnId: string) => SceneProgress | null;
   abort: () => void;
   endCinematic: () => void;
+  enterCinematic: () => void;
   endReplay: () => void;
   regenerate: (turnId: string, target: "narrative" | "audio" | "choices") => void;
   repaintScene: (turnId: string, prompt: string | null) => void;
@@ -56,51 +63,33 @@ export interface TurnStream {
 export function useTurnStream(characterId: string | null, immersive: boolean): TurnStream {
   const [streamingText, setStreamingText] = useState("");
   const [activeTurnId, setActiveTurnId] = useState<string | null>(null);
-  const [committedTurns, setCommittedTurns] = useState<TurnNode[]>([]);
   const [sceneImageUrl, setSceneImageUrl] = useState<string | null>(null);
   const [sceneShape, setSceneShape] = useState<ImageShape | null>(null);
   const [pendingCheck, setPendingCheck] = useState<PendingDiceCheck | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [cinematicTurnId, setCinematicTurnId] = useState<string | null>(null);
-  const [replayTurnId, setReplayTurnId] = useState<string | null>(null);
-  const [replayKey, setReplayKey] = useState(0);
   const [isRerollingChoices, setIsRerollingChoices] = useState(false);
   const painting = useScenePainting();
+
+  const onFirstPage = useCallback(
+    (items: TurnNode[]) => {
+      const last = items.at(-1);
+      setSceneImageUrl(last?.sceneImageUrl ?? null);
+      if (last !== undefined && last.sceneImageUrl === null) painting.start(last.id);
+    },
+    [painting.start],
+  );
+
+  const history = useTurnHistory(characterId, onFirstPage);
+  const { turns: committedTurns, setTurns: setCommittedTurns } = history;
 
   const latest = committedTurns.at(-1);
   const sceneReady =
     activeTurnId !== null
       ? sceneImageUrl !== null
       : latest === undefined || !painting.isPainting(latest.id);
-  const holdNarration = cinematicTurnId !== null && !sceneReady;
+  const cinematic = useCinematic(activeTurnId, immersive);
+  const holdNarration = cinematic.cinematicTurnId !== null && !sceneReady;
   const audio = useAudioQueue(holdNarration);
-
-  useEffect(() => {
-    if (immersive && activeTurnId !== null) setCinematicTurnId(activeTurnId);
-  }, [immersive, activeTurnId]);
-
-  useEffect(() => {
-    if (characterId === null) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const history = await get<{ items: TurnNode[] }>(
-          `${API.turns}?characterId=${encodeURIComponent(characterId)}`,
-        );
-        if (cancelled) return;
-        setCommittedTurns(history.items);
-        const last = history.items.at(-1);
-        setSceneImageUrl(last?.sceneImageUrl ?? null);
-        if (last !== undefined && last.sceneImageUrl === null) painting.start(last.id);
-      } catch (cause) {
-        if (!cancelled)
-          setError(cause instanceof Error ? cause.message : "Could not load history.");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [characterId, painting.start]);
 
   const handleMessage = useCallback(
     (message: ServerMessage) => {
@@ -139,17 +128,31 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
           );
           break;
         case "SCENE_PROGRESS":
-          painting.report(message.turnId, message.value, message.max, message.stage);
-          break;
-        case "SCENE_IMAGE_READY":
-          setSceneImageUrl(message.imageUrl);
-          painting.finish(message.turnId);
-          setCommittedTurns((previous) =>
-            previous.map((turn) =>
-              turn.id === message.turnId ? { ...turn, sceneImageUrl: message.imageUrl } : turn,
-            ),
+          painting.report(
+            message.turnId,
+            message.value,
+            message.max,
+            message.stage,
+            message.preview,
           );
           break;
+        case "SCENE_IMAGE_READY": {
+          const { turnId, imageUrl } = message;
+          const reveal = (): void => {
+            setSceneImageUrl(imageUrl);
+            painting.finish(turnId);
+            setCommittedTurns((previous) =>
+              previous.map((turn) =>
+                turn.id === turnId ? { ...turn, sceneImageUrl: imageUrl } : turn,
+              ),
+            );
+          };
+          const preload = new Image();
+          preload.onload = reveal;
+          preload.onerror = reveal;
+          preload.src = assetUrl(imageUrl);
+          break;
+        }
         case "DICE_CHECK_REQUIRED":
           setPendingCheck({
             turnId: message.turnId,
@@ -181,7 +184,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
           break;
       }
     },
-    [audio, painting],
+    [audio, painting, setCommittedTurns],
   );
 
   const socket = useGameSocket(characterId, handleMessage);
@@ -242,11 +245,10 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
   const replayTurn = useCallback(
     (turn: TurnNode) => {
       audio.reset();
-      setReplayTurnId(turn.id);
-      setReplayKey((count) => count + 1);
+      cinematic.markReplay(turn.id);
       for (const clip of turn.audioUrls) audio.enqueueSentence(clip.sentenceIndex, clip.audioUrl);
     },
-    [audio],
+    [audio, cinematic],
   );
 
   const abort = useCallback(() => {
@@ -255,15 +257,13 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
     socket.send({ type: "ABORT_TURN", turnId: activeTurnId });
   }, [activeTurnId, socket]);
 
-  const endCinematic = useCallback(() => setCinematicTurnId(null), []);
-  const endReplay = useCallback(() => setReplayTurnId(null), []);
   const acknowledgeDice = useCallback(() => setPendingCheck(null), []);
 
   return {
     status: socket.status,
-    phase: cinematicTurnId === null ? "decision" : "cinematic",
-    replayTurnId,
-    replayKey,
+    phase: cinematic.cinematicTurnId === null ? "decision" : "cinematic",
+    replayTurnId: cinematic.replayTurnId,
+    replayKey: cinematic.replayKey,
     sceneReady,
     holdNarration,
     streamingText,
@@ -273,14 +273,18 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
     sceneShape,
     pendingCheck,
     playingSentenceIndex: audio.playingSentenceIndex,
-    error: error ?? socket.lastError,
+    error: error ?? history.error ?? socket.lastError,
     isRerollingChoices,
+    hasOlderTurns: history.hasOlderTurns,
+    loadingOlder: history.loadingOlder,
+    loadOlderTurns: history.loadOlderTurns,
     submitAction,
     selectChoice,
     progressOf: painting.progressOf,
     abort,
-    endCinematic,
-    endReplay,
+    endCinematic: cinematic.end,
+    enterCinematic: cinematic.enter,
+    endReplay: cinematic.endReplay,
     regenerate,
     repaintScene,
     isPainting: painting.isPainting,

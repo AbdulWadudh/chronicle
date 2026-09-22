@@ -8,16 +8,19 @@ import {
   PreferenceHorizontalIcon,
   UserMultipleIcon,
 } from "@hugeicons/core-free-icons";
-import { type ReactNode, useState } from "react";
+import { useDebouncedCallback } from "@tanstack/react-pacer";
+import { type ReactNode, useEffect, useState } from "react";
 import { NumberField } from "~/components/common/NumberField";
 import { type GroupMeta, SettingsGroup } from "~/components/common/SettingsGroup";
 import { Label } from "~/components/ui/label";
 import { Sheet } from "~/components/ui/sheet";
 import { Switch } from "~/components/ui/switch";
+import { ThemeStudio } from "~/components/world/ThemeStudio";
 import { WorldLookFields } from "~/components/world/WorldLookFields";
+import { WorldThemeFields } from "~/components/world/WorldThemeFields";
 import { useCompose } from "~/hooks/useCompose";
 import { useWorldLook } from "~/hooks/useWorldLook";
-import { useThemeStore } from "~/theme/store";
+import { EMPTY_WORLD_THEME, useThemeStore } from "~/theme/store";
 
 export interface DirectorConsoleModalProps {
   visible: boolean;
@@ -60,6 +63,8 @@ const SECTIONS = {
 
 type SectionName = keyof typeof SECTIONS;
 
+const THEME_SYNC_MS = 800;
+
 const ORDER: readonly SectionName[] = ["playback", "imagery", "stats", "affinities", "checkpoint"];
 
 function Section({
@@ -98,11 +103,30 @@ export function DirectorConsoleModal({
   const [draftStats, setDraftStats] = useState<StatBlock>(stats);
   const [draftAffinities, setDraftAffinities] = useState(affinities);
   const [checkpointName, setCheckpointName] = useState("");
-  const [openSection, setOpenSection] = useState<SectionName | null>("playback");
+  const [openSection, setOpenSection] = useState<SectionName | null>(null);
+  const [studioOpen, setStudioOpen] = useState(false);
   const historyActions = useThemeStore((state) => state.historyActions);
   const toggleHistoryActions = useThemeStore((state) => state.toggleHistoryActions);
   const look = useWorldLook(worldId);
+  const seedWorldOverride = useThemeStore((state) => state.seedWorldOverride);
   const compose = useCompose();
+
+  useEffect(() => {
+    if (worldId === null || look.themeOverrides === null) return;
+    seedWorldOverride(worldId, { ...EMPTY_WORLD_THEME, ...look.themeOverrides });
+  }, [worldId, look.themeOverrides, seedWorldOverride]);
+
+  const localTheme = useThemeStore((state) =>
+    worldId === null ? undefined : state.worldOverrides[worldId],
+  );
+  const saveTheme = look.saveTheme;
+
+  const syncTheme = useDebouncedCallback(saveTheme, { wait: THEME_SYNC_MS });
+
+  useEffect(() => {
+    if (worldId === null || localTheme === undefined) return;
+    syncTheme(localTheme);
+  }, [worldId, localTheme, syncTheme]);
 
   async function draftStyle(mode: "generate" | "enhance"): Promise<void> {
     const value = await compose.run(
@@ -165,9 +189,25 @@ export function DirectorConsoleModal({
             onArtStyleChange={look.setArtStyle}
             onCompose={(mode) => void draftStyle(mode)}
           />
+        ) : null}
+        {look.loaded ? (
+          <WorldThemeFields
+            themeOverrides={look.themeOverrides}
+            onThemeChange={look.setThemeOverrides}
+            onOpenStudio={() => setStudioOpen(true)}
+          />
         ) : (
           <p className="text-sm text-text-muted">Reading this world…</p>
         )}
+        <ThemeStudio
+          open={studioOpen}
+          worldId={worldId}
+          worldTitle="This world"
+          worldTheme={look.themeOverrides}
+          onWorldThemeChange={look.setThemeOverrides}
+          onClose={() => setStudioOpen(false)}
+        />
+
         {look.error === null ? null : (
           <p role="alert" className="text-[0.8125rem] text-danger">
             {look.error}

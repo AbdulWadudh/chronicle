@@ -1,4 +1,10 @@
-import { CHECK_RULES, CHOICE_RULES, NARRATOR_ENHANCED, NARRATOR_RULES } from "@chronicle/config";
+import {
+  CHECK_RULES,
+  CHOICE_BANNED_OPENERS,
+  CHOICE_RULES,
+  NARRATOR_ENHANCED,
+  NARRATOR_RULES,
+} from "@chronicle/config";
 import {
   type Character,
   pronounPhrase,
@@ -123,7 +129,14 @@ export function buildChoicePrompt(
   narrativeText: string,
   interactingCharacters: readonly Character[] = [],
   action?: string,
+  avoid: readonly string[] = [],
 ): ChatMessage[] {
+  const banned = ` These openings are banned outright, never write a label starting with any of them: ${CHOICE_BANNED_OPENERS.join(", ")}.`;
+
+  const rejected =
+    avoid.length === 0
+      ? ""
+      : ` Already offered for this moment. Do not repeat, rephrase or reuse their verbs: ${avoid.join(" | ")}.`;
   const mentionHint =
     interactingCharacters.length > 0
       ? ` Note: Interacting cast: ${interactingCharacters.map((c) => c.name).join(", ")}. In sceneVisual, describe a candid, natural interaction (waist-up) where characters actively look at each other or react to the scene, NEVER staring into camera. Name each character's facial expression and body language explicitly, and make them match the emotion of this moment. Describe only action, pose, expression, setting and light. Never describe a character's gender, age, hair, body, build or clothing — those are recorded separately and a conflicting description swaps their bodies.`
@@ -135,7 +148,7 @@ export function buildChoicePrompt(
       : narrativeText;
 
   return [
-    { role: "system", content: `${CHOICE_RULES.join(" ")}${mentionHint}` },
+    { role: "system", content: `${CHOICE_RULES.join(" ")}${banned}${mentionHint}${rejected}` },
     { role: "user", content: userContent },
   ];
 }
