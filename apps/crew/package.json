@@ -13,7 +13,6 @@
     "@chronicle/config": "workspace:*",
     "@chronicle/db": "workspace:*",
     "@chronicle/utils": "workspace:*",
-    "@lancedb/lancedb": "latest",
     "bullmq": "latest",
     "ioredis": "latest",
     "zod": "latest"

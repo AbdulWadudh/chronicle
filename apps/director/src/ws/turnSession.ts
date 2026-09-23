@@ -3,6 +3,7 @@ import { PROTOCOL_VERSION, type TurnNode } from "@chronicle/utils";
 import type { ResolvedCheck } from "~/engine/adjudicator";
 import { resolveInteractingCharacters, summarizeWorldCast } from "~/engine/castResolution";
 import { planTurn } from "~/engine/choices";
+import { recallFor } from "~/engine/recall";
 import { closeBuffer } from "~/ws/buffer";
 import { playEnsembleTurn } from "~/ws/ensembleTurn";
 import { ownTurn } from "~/ws/media";
@@ -18,6 +19,7 @@ import { beginTurn, finishTurn, send } from "~/ws/session";
 import {
   commitTurn,
   dispatchAudio,
+  enqueueMemory,
   enqueueSentenceAudio,
   narratedSentences,
 } from "~/ws/turnOutput";
@@ -27,6 +29,7 @@ export {
   commitTurn,
   dispatchAudio,
   dispatchScene,
+  enqueueMemory,
   enqueueSentenceAudio,
   narratedSentences,
   type StartTurnInput,
@@ -58,6 +61,7 @@ async function playSoloTurn(
 
   const narrative = await streamNarrative(input, turnId, check, signal, cast, castSummary);
   await dispatchAudio(context, turnId, narrative);
+  await enqueueMemory(context, turnId, input.action, narrative);
 
   const plan = await planTurn(narrative, signal, cast, input.action);
   await dispatchScene(
@@ -74,8 +78,8 @@ async function playSoloTurn(
   return commitTurn(input, turnId, narrative, check, plan);
 }
 
-export async function runTurn(input: StartTurnInput): Promise<void> {
-  const { socket, replyTo, context } = input;
+export async function runTurn(submitted: StartTurnInput): Promise<void> {
+  const { socket, replyTo, context } = submitted;
   const turnId = newId();
   ownTurn(turnId, socket);
   const signal = beginTurn(turnId);
@@ -85,12 +89,19 @@ export async function runTurn(input: StartTurnInput): Promise<void> {
     replyTo,
     type: "TURN_INITIALIZED",
     turnId,
-    parentId: input.parentTurnId,
+    parentId: submitted.parentTurnId,
   });
 
   try {
-    const check = await adjudicate(input, turnId, signal);
     const settings = await loadSettings();
+    const recalled = await recallFor(
+      context.ancestry,
+      submitted.action,
+      settings.prompt,
+      settings.memory,
+    );
+    const input = { ...submitted, recalled };
+    const check = await adjudicate(input, turnId, signal);
     const ensembleOn = context.world.ensembleEnabled && settings.ensemble.enabled;
 
     const turn =

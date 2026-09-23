@@ -70,7 +70,18 @@ export const memoryJobSchema = z.object({
   turnId: z.string(),
   characterId: z.string(),
   worldId: z.string(),
+  playerAction: z.string(),
   narrativeText: z.string().min(1),
+  summarise: z
+    .object({ previous: z.string(), earlierTurns: z.array(z.string()) })
+    .nullable()
+    .default(null),
+});
+
+export const memoryReadySchema = z.object({
+  turnId: z.string(),
+  summary: z.string(),
+  factsAdded: z.array(z.string()),
 });
 
 export const audioReadySchema = z.object({
@@ -111,6 +122,7 @@ export type DiffusionJob = z.infer<typeof diffusionJobSchema>;
 export type DiffusionKind = DiffusionJob["kind"];
 export type TtsJob = z.infer<typeof ttsJobSchema>;
 export type MemoryJob = z.infer<typeof memoryJobSchema>;
+export type MemoryReady = z.infer<typeof memoryReadySchema>;
 export type AudioReady = z.infer<typeof audioReadySchema>;
 export type ImageReady = z.infer<typeof imageReadySchema>;
 export type ImageStage = z.infer<typeof imageStageSchema>;

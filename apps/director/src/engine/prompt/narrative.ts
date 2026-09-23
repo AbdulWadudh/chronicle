@@ -2,6 +2,7 @@ import {
   CHECK_RULES,
   CHOICE_BANNED_OPENERS,
   CHOICE_RULES,
+  MEMORY,
   NARRATOR_ENHANCED,
   NARRATOR_RULES,
 } from "@chronicle/config";
@@ -56,6 +57,11 @@ export function describeState(state: WorldState, recentFacts: number): string {
     .join("\n");
 }
 
+export function describeRecall(recalled: readonly string[]): string {
+  if (recalled.length === 0) return "";
+  return `${MEMORY.recallLead}\n${recalled.join("\n\n")}`;
+}
+
 export function buildContext(
   world: World,
   character: Character,
@@ -63,6 +69,7 @@ export function buildContext(
   recentFacts: number,
   interactingCharacters: readonly Character[] = [],
   castSummary: string | null = null,
+  recalled: readonly string[] = [],
 ): string {
   const parts = [
     `Setting: ${world.title}. ${world.description}`,
@@ -70,6 +77,7 @@ export function buildContext(
     `Protagonist: ${character.name} (${pronounPhrase(character.pronouns)}). ${character.bio} ${describePersona(character)}`.trim(),
     `Abilities: ${describeStats(world, character)}`,
     describeState(state, recentFacts),
+    describeRecall(recalled),
   ];
   if (castSummary !== null && castSummary !== undefined && castSummary.length > 0) {
     parts.push(castSummary);
@@ -79,7 +87,7 @@ export function buildContext(
       `Interacting Character: ${other.name} (${pronounPhrase(other.pronouns)}). ${other.bio} ${describePersona(other)}`.trim(),
     );
   }
-  return parts.join("\n\n");
+  return parts.filter((part) => part.length > 0).join("\n\n");
 }
 
 export function buildHistory(ancestry: readonly TurnNode[], depth: number): ChatMessage[] {
@@ -100,6 +108,7 @@ export interface NarrativeRequest {
   directorWhisper: string | null;
   interactingCharacters?: readonly Character[];
   castSummary?: string | null;
+  recalled?: readonly string[];
 }
 
 export function buildNarrativePrompt(
@@ -122,6 +131,7 @@ export function buildNarrativePrompt(
     prompt.recentFacts,
     request.interactingCharacters ?? [],
     request.castSummary,
+    request.recalled ?? [],
   );
 
   const history = buildHistory(request.ancestry, prompt.historyDepth);

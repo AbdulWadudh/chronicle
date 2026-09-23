@@ -1,67 +1,75 @@
-import { env } from "@chronicle/config/env";
-import { type MemoryJob, memoryJobSchema, splitIntoSentences } from "@chronicle/utils";
-import { type Connection, connect, type Table } from "@lancedb/lancedb";
+import { MEMORY, MEMORY_CHANNEL } from "@chronicle/config";
+import { embedTexts, rememberEpisode } from "@chronicle/db";
+import { type MemoryJob, type MemoryReady, memoryJobSchema } from "@chronicle/utils";
 import type { Job } from "bullmq";
+import { z } from "zod";
+import { completeStructured } from "~/llm";
+import { publisher } from "~/redis";
 
-const TABLE_NAME = "episodes";
-const EMBEDDING_DIMENSIONS = 384;
+const summarySchema = z.object({
+  summary: z.string(),
+  factsAdded: z.array(z.string()).max(MEMORY.factsPerSummary),
+});
 
-let connectionPromise: Promise<Connection> | null = null;
+const SUMMARY_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    summary: { type: "string" },
+    factsAdded: { type: "array", items: { type: "string" }, maxItems: MEMORY.factsPerSummary },
+  },
+  required: ["summary", "factsAdded"],
+  additionalProperties: false,
+} as const;
 
-async function vectorStore(): Promise<Connection> {
-  connectionPromise ??= connect(env().VECTOR_DB_PATH);
-  return connectionPromise;
+export function episodeText(playerAction: string, narrativeText: string): string {
+  return `Player: ${playerAction}\nNarrator: ${narrativeText}`;
 }
 
-export function embed(text: string): number[] {
-  const vector = new Array<number>(EMBEDDING_DIMENSIONS).fill(0);
-  for (let index = 0; index < text.length; index += 1) {
-    const slot = text.charCodeAt(index) % EMBEDDING_DIMENSIONS;
-    vector[slot] = (vector[slot] ?? 0) + 1;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return vector.map((value) => value / magnitude);
-}
-
-type EpisodeRow = Record<string, unknown>;
-
-async function openTable(rows: EpisodeRow[]): Promise<Table> {
-  const store = await vectorStore();
-  const names = await store.tableNames();
-  if (!names.includes(TABLE_NAME)) return store.createTable(TABLE_NAME, rows);
-  return store.openTable(TABLE_NAME);
-}
-
-export async function rememberEpisode(job: Job<MemoryJob>): Promise<number> {
-  const payload = memoryJobSchema.parse(job.data);
-  const rows = splitIntoSentences(payload.narrativeText).map((text) => ({
+async function summarise(
+  payload: MemoryJob,
+  request: NonNullable<MemoryJob["summarise"]>,
+): Promise<MemoryReady> {
+  const turns = [...request.earlierTurns, episodeText(payload.playerAction, payload.narrativeText)];
+  const result = await completeStructured(
+    [
+      {
+        role: "system",
+        content: `${MEMORY.summariser.join(" ")} Character limit: ${MEMORY.summaryMaxChars}.`,
+      },
+      {
+        role: "user",
+        content: `Summary so far:\n${request.previous || "(none yet)"}\n\nNew turns:\n${turns.join("\n\n")}`,
+      },
+    ],
+    "story_summary",
+    SUMMARY_JSON_SCHEMA,
+    (raw) => summarySchema.parse(raw),
+  );
+  return {
     turnId: payload.turnId,
-    characterId: payload.characterId,
-    worldId: payload.worldId,
-    text,
-    vector: embed(text),
-  }));
-  if (rows.length === 0) return 0;
-
-  const table = await openTable(rows);
-  const existing = await table.countRows();
-  if (existing > 0) await table.add(rows);
-  return rows.length;
+    summary: result.summary.slice(0, MEMORY.summaryMaxChars),
+    factsAdded: result.factsAdded.map((fact) => fact.trim()).filter((fact) => fact.length > 0),
+  };
 }
 
-export async function recallEpisodes(
-  characterId: string,
-  query: string,
-  limit: number,
-): Promise<string[]> {
-  const store = await vectorStore();
-  const names = await store.tableNames();
-  if (!names.includes(TABLE_NAME)) return [];
-  const table = await store.openTable(TABLE_NAME);
-  const results = await table
-    .search(embed(query))
-    .where(`characterId = '${characterId.replace(/'/gu, "")}'`)
-    .limit(limit)
-    .toArray();
-  return results.map((row) => String((row as { text?: unknown }).text ?? ""));
+export async function rememberTurn(job: Job<MemoryJob>): Promise<void> {
+  const payload = memoryJobSchema.parse(job.data);
+  const text = episodeText(payload.playerAction, payload.narrativeText);
+  const [vector] = await embedTexts([text], "document");
+  if (vector === undefined) throw new Error("Embedding server returned no vector");
+
+  await rememberEpisode(
+    {
+      turnId: payload.turnId,
+      worldId: payload.worldId,
+      characterId: payload.characterId,
+      text,
+      createdAt: Date.now(),
+    },
+    vector,
+  );
+
+  if (payload.summarise === null) return;
+  const ready = await summarise(payload, payload.summarise);
+  await publisher().publish(MEMORY_CHANNEL, JSON.stringify(ready));
 }

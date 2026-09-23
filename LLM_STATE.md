@@ -25,7 +25,59 @@ style, and PuLID holds faces across scenes. Waves 7B-7D still have the open item
 | 7E | Image identity, world art direction, render styles, world and portrait editing | done |
 | 7F | WebP assets, TanStack Query, grouped authoring forms | done |
 | 8 | Narrator prompt, voices, character personality, opt-in ensemble | waves 1-3 done, verified live |
-| 9 | Vector memory: real embeddings, rolling summaries, recall in prompts | planned |
+| 9 | Vector memory: real embeddings, rolling summaries, recall in prompts | built, verified live 2026-09-24 |
+
+## Wave 9 — Vector memory (decisions locked 2026-09-24)
+
+Decided at the gate: LanceDB connection lives in `packages/db` (crew writes, director reads);
+the summariser is a **separate crew job**, not folded into the plan call; the embed server is
+part of the default `bun ai` stack (the `-WithEmbeddings` switch is gone).
+
+### Built
+
+- `EMBED_ENDPOINT` (default `http://127.0.0.1:8081/v1`), nomic-embed-text-v1.5, 768 dims,
+  `search_document:` / `search_query:` prefixes in one place (`packages/db/src/memory/embed.ts`).
+- `packages/db/src/memory/store.ts`: one row per turn (`Player: …
+Narrator: …`), keyed by
+  `turnId`. A table with the wrong vector width is dropped on open — the old 384-dim hash table
+  was garbage. A rewritten turn replaces its own row.
+- Recall (`engine/recall.ts`) runs once per turn in `runTurn`, embeds the player action, and
+  searches only the current ancestry minus the last `prompt.historyDepth` turns — branch-safe,
+  never repeats what the history block already carries. Results are re-sorted into story order
+  and rendered as "Earlier in this story…" in both the solo and ensemble system context. The
+  embed server being down logs a warning and the turn narrates without memory.
+- Summariser: every `memory.summaryEvery` turns the director enqueues the previous summary plus
+  the window of turns; crew calls the LLM with a JSON schema and publishes `MEMORY_CHANNEL`;
+  `startMemoryWriter` merges `summary` + `factsAdded` into that turn's `stateDiffJson`. The
+  fold in `loader.ts` then carries it forward, so `describeState` finally has a live summary.
+- The summary can arrive before the turn row is committed (it did, on the first live run). It is
+  buffered and merged at commit exactly like early sentence audio.
+- `memory` runtime settings group (`recallDepth` 0–8 default 3, `summaryEvery` 1–10 default 3)
+  with an admin card; `SETTING_BOUNDS` now carries `ensemble` and `memory`, which the admin
+  sliders read. `prompt.recentFacts` blurb corrected — it was never vector memory.
+- `bun run --filter @chronicle/director backfill` enqueues one memory job per existing turn.
+  Ran once: 145 turns embedded.
+- Crew has its own 40-line structured LLM client (`apps/crew/src/llm.ts`); apps cannot import
+  the director's.
+
+### Verified live (Kaelen Thorne, 63 → 65 turns)
+
+- Direct recall for "corrosion data from the aqueduct" returned three episodes from beyond the
+  last eight turns, in story order.
+- A played turn logged `recalled 3 of 56 older turns`; the next turn's `state_diff_json`
+  gained a 600-character summary and four facts. Vector rows 145 → 147.
+- Memory admin card at 390 and 1440: labels, hints, units and ranges render; sliders save.
+
+### Open
+
+- Summary quality is the 9B model's: the first one invented "the couple's love" from the world
+  opening. Tune `MEMORY.summariser` before trusting facts as canon.
+- Regenerating a turn re-embeds it but never re-summarises; the previous summary stands until
+  the next window.
+- Elara is still in Kaelen's `cast_json` from the earlier presence bug and answered a question
+  addressed to Nia. Clearing it is a one-row update, waiting on a yes.
+- Backfill is manual. A story played before this wave on another machine has no episodes until
+  someone runs it.
 
 ## Wave 8 — Ensemble (decisions locked 2026-09-22, Wave 0 gate)
 

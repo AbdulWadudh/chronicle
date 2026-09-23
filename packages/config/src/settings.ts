@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { ensembleSettingsSchema } from "./ensemble";
+import { ENSEMBLE_BOUNDS, ensembleSettingsSchema } from "./ensemble";
+import { MEMORY_BOUNDS, memorySettingsSchema } from "./memory";
 
 export const SETTINGS_CHANNEL = "settings:changed";
 export const SETTINGS_ROW_ID = "runtime";
@@ -46,6 +47,8 @@ export const SETTING_BOUNDS = {
   dice: {
     defaultDifficulty: { min: 5, max: 30, step: 1 },
   },
+  ensemble: ENSEMBLE_BOUNDS,
+  memory: MEMORY_BOUNDS,
 } as const satisfies Record<string, Record<string, SettingBound>>;
 
 const bound = (limits: SettingBound) => z.number().min(limits.min).max(limits.max);
@@ -86,51 +89,6 @@ export const checkpointSchema = z
     (value) => CHECKPOINT_EXTENSIONS.some((extension) => value.toLowerCase().endsWith(extension)),
     `Checkpoint must end in ${CHECKPOINT_EXTENSIONS.join(", ")}`,
   );
-
-export const SAMPLERS = [
-  "dpmpp_sde",
-  "dpmpp_2m",
-  "dpmpp_2m_sde",
-  "dpmpp_3m_sde",
-  "euler",
-  "euler_ancestral",
-  "heun",
-  "lms",
-  "ddim",
-  "uni_pc",
-] as const;
-
-export const SCHEDULERS = [
-  "karras",
-  "exponential",
-  "normal",
-  "simple",
-  "sgm_uniform",
-  "beta",
-  "turbo",
-] as const;
-
-export interface DiffusionPreset {
-  id: string;
-  label: string;
-  summary: string;
-  values: { steps: number; cfg: number; sampler: string; scheduler: string };
-}
-
-export const DIFFUSION_PRESETS: DiffusionPreset[] = [
-  {
-    id: "lightning",
-    label: "Lightning model",
-    summary: "Few steps, low guidance. For SDXL-Lightning and Turbo checkpoints.",
-    values: { steps: 8, cfg: 2.5, sampler: "dpmpp_sde", scheduler: "karras" },
-  },
-  {
-    id: "full",
-    label: "Full SDXL model",
-    summary: "Many steps, normal guidance. For standard SDXL checkpoints.",
-    values: { steps: 26, cfg: 7, sampler: "dpmpp_2m", scheduler: "karras" },
-  },
-];
 
 const imageSchema = z.object({
   checkpoint: checkpointSchema.prefault("RealVisXL_V5.0_Lightning_fp16.safetensors"),
@@ -212,6 +170,7 @@ export const runtimeSettingsSchema = z.object({
   tts: ttsSchema.prefault({}),
   dice: diceSchema.prefault({}),
   ensemble: ensembleSettingsSchema.prefault({}),
+  memory: memorySettingsSchema.prefault({}),
 });
 
 function patchOf<T extends z.ZodRawShape>(group: z.ZodObject<T>) {
@@ -235,6 +194,7 @@ export const runtimeSettingsPatchSchema = z.object({
   tts: patchOf(ttsSchema),
   dice: patchOf(diceSchema),
   ensemble: patchOf(ensembleSettingsSchema),
+  memory: patchOf(memorySettingsSchema),
 });
 
 export type RuntimeSettings = z.infer<typeof runtimeSettingsSchema>;

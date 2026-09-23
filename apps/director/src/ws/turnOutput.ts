@@ -9,6 +9,7 @@ import {
 import { takeEarlyAudio } from "~/assets";
 import type { ResolvedCheck } from "~/engine/adjudicator";
 import type { TurnPlan } from "~/engine/choices";
+import { takeEarlySummary } from "~/memory";
 import { memoryQueue, ttsQueue } from "~/queue";
 import type { TurnContext } from "~/ws/context";
 import type { StartTurnInput } from "~/ws/turnSession";
@@ -53,11 +54,33 @@ export async function dispatchAudio(
   voices?: VoiceIndex,
 ): Promise<void> {
   await enqueueSentenceAudio(context, turnId, sentences ?? narratedSentences(narrative), voices);
+}
+
+export async function enqueueMemory(
+  context: TurnContext,
+  turnId: string,
+  action: string,
+  narrative: string,
+  isNewTurn = true,
+): Promise<void> {
+  const { summaryEvery } = (await loadSettings()).memory;
+  const ordinal = context.ancestry.length + 1;
+  const summarise =
+    isNewTurn && ordinal % summaryEvery === 0
+      ? {
+          previous: context.state.summary,
+          earlierTurns: context.ancestry
+            .slice(Math.max(0, context.ancestry.length - (summaryEvery - 1)))
+            .map((turn) => `Player: ${turn.playerAction}\nNarrator: ${turn.narrativeText}`),
+        }
+      : null;
   await memoryQueue.add("episode", {
     turnId,
     characterId: context.character.id,
     worldId: context.world.id,
+    playerAction: action,
     narrativeText: narrative,
+    summarise,
   });
 }
 
@@ -82,7 +105,7 @@ export async function commitTurn(
     sceneImageUrl: null,
     sceneShape: plan.sceneShape,
     audioUrlsJson: takeEarlyAudio(turnId),
-    stateDiffJson: stateDiff,
+    stateDiffJson: takeEarlySummary(turnId, stateDiff),
     diceCheckJson: check,
     castJson: cast,
     branchIndex: context.branchIndex,

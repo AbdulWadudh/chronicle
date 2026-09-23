@@ -4,6 +4,7 @@ import type { ChatMessage } from "~/engine/llm";
 import {
   buildHistory,
   describePersona,
+  describeRecall,
   describeState,
   describeStats,
   type NarrativeRequest,
@@ -121,6 +122,7 @@ export function buildEnsemblePrompt(
     `Protagonist: ${character.name} (${pronounPhrase(character.pronouns)}). ${character.bio} ${describePersona(character)}`.trim(),
     `Abilities: ${describeStats(world, character)}`,
     describeState(state, prompt.recentFacts),
+    describeRecall(request.recalled ?? []),
     describeCast(request.speakers, request.present),
     describeAbsent(request.absent),
     describeFeelings(state, cast),

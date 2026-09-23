@@ -8,7 +8,7 @@ import {
 import { invalidateSettings } from "@chronicle/db";
 import { Worker } from "bullmq";
 import { renderImage } from "~/processors/diffusion";
-import { rememberEpisode } from "~/processors/memory";
+import { rememberTurn } from "~/processors/memory";
 import { synthesize } from "~/processors/tts";
 import { connection, disconnectRedis, subscriber } from "~/redis";
 
@@ -21,7 +21,7 @@ const shared = { connection: connection(), prefix: QUEUE_PREFIX };
 const workers = [
   new Worker(QUEUE_DIFFUSION, renderImage, { ...shared, concurrency: DIFFUSION_CONCURRENCY }),
   new Worker(QUEUE_TTS, synthesize, { ...shared, concurrency: TTS_CONCURRENCY }),
-  new Worker(QUEUE_MEMORY, rememberEpisode, { ...shared, concurrency: MEMORY_CONCURRENCY }),
+  new Worker(QUEUE_MEMORY, rememberTurn, { ...shared, concurrency: MEMORY_CONCURRENCY }),
 ];
 
 for (const worker of workers) {

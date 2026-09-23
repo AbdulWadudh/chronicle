@@ -17,7 +17,7 @@ import {
   type StartTurnInput,
   streamMessages,
 } from "~/ws/narration";
-import { commitTurn, dispatchAudio } from "~/ws/turnOutput";
+import { commitTurn, dispatchAudio, enqueueMemory } from "~/ws/turnOutput";
 
 export async function playEnsembleTurn(
   input: StartTurnInput,
@@ -52,6 +52,7 @@ export async function playEnsembleTurn(
       mode: input.mode,
       checkOutcome: checkOutcomeOf(check),
       directorWhisper: input.directorWhisper,
+      recalled: input.recalled ?? [],
       speakers,
       present,
       absent,
@@ -65,6 +66,7 @@ export async function playEnsembleTurn(
   const sentences = parseAttributedLines(narrative, everyone);
 
   await dispatchAudio(context, turnId, narrative, sentences, voiceIndex(present));
+  await enqueueMemory(context, turnId, input.action, narrative);
 
   const plan = await planEnsembleTurn(narrative, signal, speakers, input.action, everyone);
   const spoke = new Set(

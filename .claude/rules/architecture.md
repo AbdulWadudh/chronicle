@@ -282,7 +282,7 @@ it, so `~/db` inside `packages/db` resolves against the *consuming* app and fail
 
 ## Running the AI stack
 
-`scripts\ai-servers.ps1 -Action start|stop|status [-WithEmbeddings]` launches everything
+`scripts\ai-servers.ps1 -Action start|stop|status` launches everything
 in Windows Terminal panes. It writes `.cmd` launchers to `%TEMP%\chronicle-ai` and runs
 those, because a long `cmd /k "... && ..."` string mangles when passed through
 `Start-Process -ArgumentList`.
@@ -309,8 +309,8 @@ until thinking ends, which starves a token stream and can burn the whole budget.
 request sends `chat_template_kwargs: { enable_thinking: <narrative.thinking> }`, default
 `false`. Turn it on only if the served model benefits and you accept no visible streaming.
 
-`nomic-embed-text-v1.5` on port 8081 (`-WithEmbeddings`) serves 768-dimension embeddings
-and is the intended replacement for the placeholder hash in `crew/processors/memory.ts`.
+`nomic-embed-text-v1.5` on port 8081 serves the 768-dimension embeddings behind vector
+memory (`EMBED_ENDPOINT`). Texts carry nomic's `search_document:` / `search_query:` prefixes.
 
 ## Infrastructure facts
 

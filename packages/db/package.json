@@ -16,6 +16,7 @@
   "dependencies": {
     "@chronicle/config": "workspace:*",
     "@chronicle/utils": "workspace:*",
+    "@lancedb/lancedb": "latest",
     "better-auth": "latest",
     "@better-auth/drizzle-adapter": "latest",
     "drizzle-orm": "latest"

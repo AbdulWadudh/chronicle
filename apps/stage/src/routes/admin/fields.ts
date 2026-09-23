@@ -1,5 +1,6 @@
 import type { RuntimeSettings, RuntimeSettingsGroup } from "@chronicle/config";
 import {
+  BrainIcon,
   BubbleChatIcon,
   DiceFaces05Icon,
   FlashIcon,
@@ -38,7 +39,7 @@ export const GROUP_META: Record<RuntimeSettingsGroup, GroupMeta> = {
   },
   prompt: {
     title: "Prompt assembly",
-    blurb: "How much history and recalled memory goes into every request.",
+    blurb: "How much history and established fact goes into every request.",
     icon: Layers01Icon,
   },
   turn: {
@@ -65,6 +66,11 @@ export const GROUP_META: Record<RuntimeSettingsGroup, GroupMeta> = {
     title: "Ensemble",
     blurb: "How a world's cast talk among themselves, for worlds with the group scene turned on.",
     icon: BubbleChatIcon,
+  },
+  memory: {
+    title: "Memory",
+    blurb: "What the story remembers once a turn has scrolled out of the prompt.",
+    icon: BrainIcon,
   },
 };
 
@@ -113,9 +119,9 @@ const prompt: FieldMetaFor<"prompt"> = {
     hint: "How many past turns are replayed into each prompt. More coherence, more context spent.",
   },
   recentFacts: {
-    label: "Recalled facts",
+    label: "Established facts",
     unit: "facts",
-    hint: "How many remembered details are retrieved from vector memory per turn.",
+    hint: "How many of the most recent facts the summariser recorded are restated in every prompt.",
   },
   sceneChars: {
     label: "Scene summary",
@@ -231,6 +237,19 @@ const ensemble: FieldMetaFor<"ensemble"> = {
   },
 };
 
+const memory: FieldMetaFor<"memory"> = {
+  recallDepth: {
+    label: "Recalled moments",
+    unit: "turns",
+    hint: "How many older turns, chosen by similarity to what you just did, are quoted back into the prompt. Zero switches recall off.",
+  },
+  summaryEvery: {
+    label: "Summarise every",
+    unit: "turns",
+    hint: "How often the running summary is rewritten in the background. Lower keeps it current at the cost of one extra model call.",
+  },
+};
+
 const FIELD_META: Record<string, Record<string, FieldMeta>> = {
   narrative,
   structured,
@@ -240,6 +259,7 @@ const FIELD_META: Record<string, Record<string, FieldMeta>> = {
   tts,
   dice,
   ensemble,
+  memory,
 };
 
 export function fieldMeta(group: string, field: string): FieldMeta {

@@ -24,6 +24,7 @@ export interface StartTurnInput {
   mode: "scratch" | "enhanced";
   directorWhisper: string | null;
   mentionedCharacterIds?: readonly string[];
+  recalled?: readonly string[];
 }
 
 export function toNarrativeRequest(
@@ -43,6 +44,7 @@ export function toNarrativeRequest(
     directorWhisper: input.directorWhisper,
     interactingCharacters,
     castSummary,
+    recalled: input.recalled ?? [],
   };
 }
 

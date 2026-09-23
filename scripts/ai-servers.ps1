@@ -4,7 +4,6 @@ param(
   [ValidateSet('start', 'stop', 'status', 'logs')]
   [string]$Action = 'start',
   [string]$Model = 'G:\AI\MODELS\Qwen3.5_9B\Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-Q6_K.gguf',
-  [switch]$WithEmbeddings,
   [switch]$NoWindow,
   [int]$Tail = 30,
   [string]$AiRoot = 'G:\AI\EIDOLON',
@@ -40,7 +39,7 @@ $Services = [ordered]@{
 }
 
 function Get-Names {
-  $Services.Keys | Where-Object { $WithEmbeddings -or $_ -ne 'embed' }
+  $Services.Keys
 }
 
 function Test-Port([int]$Port) {
@@ -118,7 +117,7 @@ function Open-LogWindow {
 
 function Start-Servers {
   if (-not (Test-Path $Model)) { throw "Model not found: $Model" }
-  if ($WithEmbeddings -and -not (Test-Path $EmbedModel)) { throw "Model not found: $EmbedModel" }
+  if (-not (Test-Path $EmbedModel)) { throw "Model not found: $EmbedModel" }
 
   Stop-Servers
   $stuck = @(Get-Names | Where-Object { Test-Port $Services[$_].Port })

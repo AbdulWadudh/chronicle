@@ -10,6 +10,7 @@ import { beginTurn, type ChronicleSocket, finishTurn, send, sendError } from "~/
 import {
   dispatchAudio,
   dispatchScene,
+  enqueueMemory,
   enqueueSentenceAudio,
   narratedSentences,
   streamNarrative,
@@ -147,6 +148,7 @@ export async function regenerateTurn(
       .set({ narrativeText: narrative, audioUrlsJson: [], sceneImageUrl: null })
       .where(eq(schema.turns.id, turnId));
     await dispatchAudio(context, turnId, narrative);
+    await enqueueMemory(context, turnId, row.playerAction, narrative, false);
     const plan = await planTurn(narrative, signal, [], row.playerAction);
     const [updated] = await db
       .update(schema.turns)
