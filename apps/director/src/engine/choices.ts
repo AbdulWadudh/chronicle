@@ -1,14 +1,32 @@
 import type { Character, ImageShape, TurnChoice } from "@chronicle/utils";
 import { completeStructured } from "~/engine/llm";
-import { buildChoicePrompt } from "~/engine/prompt";
+import { buildChoicePrompt, buildEnsembleChoicePrompt } from "~/engine/prompt";
 
 const CHOICE_COUNT = 3;
 const PLAN_TOKENS = 512;
+const ENSEMBLE_PLAN_TOKENS = 768;
+const BOND_DELTA_LIMIT = 8;
+
+const EMPTY_PLAN: TurnPlan = {
+  choices: [],
+  sceneShape: "square",
+  sceneVisual: "",
+  presentAfter: [],
+  bondDeltas: [],
+};
+
+export interface BondDelta {
+  from: string;
+  to: string;
+  delta: number;
+}
 
 export interface TurnPlan {
   choices: TurnChoice[];
   sceneShape: ImageShape;
   sceneVisual: string;
+  presentAfter: string[];
+  bondDeltas: BondDelta[];
 }
 
 const PLAN_SCHEMA = {
@@ -36,6 +54,35 @@ const PLAN_SCHEMA = {
   additionalProperties: false,
 } as const;
 
+function ensemblePlanSchema(names: readonly string[]) {
+  const who = { type: "string", enum: [...names] };
+  return {
+    type: "object",
+    properties: {
+      ...PLAN_SCHEMA.properties,
+      presentAfter: {
+        type: "array",
+        items: who,
+        description:
+          "Every character still in the scene when this moment ends. Drop anyone who left, add anyone who arrived. The player is never listed.",
+      },
+      bondDeltas: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { from: who, to: who, delta: { type: "integer" } },
+          required: ["from", "to", "delta"],
+          additionalProperties: false,
+        },
+        description:
+          "How this moment changed what one character feels about another, from -2 to 2. Being contradicted, corrected, defended, backed up, thanked, doubted or ignored all count. Return an empty array only when nobody interacted.",
+      },
+    },
+    required: ["choices", "sceneShape", "sceneVisual", "presentAfter", "bondDeltas"],
+    additionalProperties: false,
+  };
+}
+
 export async function planTurn(
   narrative: string,
   signal: AbortSignal,
@@ -59,8 +106,41 @@ export async function planTurn(
         .slice(0, CHOICE_COUNT),
       sceneShape: drafted.sceneShape,
       sceneVisual: drafted.sceneVisual ?? "",
+      presentAfter: drafted.presentAfter ?? [],
+      bondDeltas: drafted.bondDeltas ?? [],
     };
   } catch {
-    return { choices: [], sceneShape: "square", sceneVisual: "" };
+    return EMPTY_PLAN;
+  }
+}
+
+export async function planEnsembleTurn(
+  narrative: string,
+  signal: AbortSignal,
+  speakers: readonly Character[],
+  action?: string,
+  cast: readonly Character[] = speakers,
+): Promise<TurnPlan> {
+  try {
+    const drafted = await completeStructured<TurnPlan>(
+      buildEnsembleChoicePrompt(narrative, speakers, action),
+      {
+        schemaName: "ensemble_turn_plan",
+        schema: ensemblePlanSchema(cast.map((actor) => actor.name)),
+        maxTokens: ENSEMBLE_PLAN_TOKENS,
+        signal,
+      },
+    );
+    return {
+      choices: drafted.choices
+        .filter((choice) => choice.label.trim().length > 0)
+        .slice(0, CHOICE_COUNT),
+      sceneShape: drafted.sceneShape,
+      sceneVisual: drafted.sceneVisual ?? "",
+      presentAfter: drafted.presentAfter ?? [],
+      bondDeltas: (drafted.bondDeltas ?? []).slice(0, BOND_DELTA_LIMIT),
+    };
+  } catch {
+    return EMPTY_PLAN;
   }
 }

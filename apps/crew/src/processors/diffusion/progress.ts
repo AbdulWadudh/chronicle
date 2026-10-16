@@ -1,6 +1,6 @@
 import { env } from "@chronicle/config/env";
 import { type ImageStage, progressChannel } from "@chronicle/utils";
-import { NODE_HIRES_SAMPLER } from "~/processors/diffusion/workflow";
+import { NODE_HIRES_SAMPLER } from "~/processors/diffusion/workflows";
 import { publisher } from "~/redis";
 
 interface ComfyProgress {

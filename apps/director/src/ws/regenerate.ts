@@ -10,7 +10,9 @@ import { beginTurn, type ChronicleSocket, finishTurn, send, sendError } from "~/
 import {
   dispatchAudio,
   dispatchScene,
+  enqueueMemory,
   enqueueSentenceAudio,
+  narratedSentences,
   streamNarrative,
 } from "~/ws/turnSession";
 
@@ -47,7 +49,7 @@ export async function regenerateTurn(
 
   if (target === "audio") {
     await db.update(schema.turns).set({ audioUrlsJson: [] }).where(eq(schema.turns.id, turnId));
-    await enqueueSentenceAudio(context, turnId, row.narrativeText);
+    await enqueueSentenceAudio(context, turnId, narratedSentences(row.narrativeText));
     send(socket, { v: PROTOCOL_VERSION, replyTo, type: "TURN_COMMITTED", turn: toTurnNode(row) });
     return;
   }
@@ -146,6 +148,7 @@ export async function regenerateTurn(
       .set({ narrativeText: narrative, audioUrlsJson: [], sceneImageUrl: null })
       .where(eq(schema.turns.id, turnId));
     await dispatchAudio(context, turnId, narrative);
+    await enqueueMemory(context, turnId, row.playerAction, narrative, false);
     const plan = await planTurn(narrative, signal, [], row.playerAction);
     const [updated] = await db
       .update(schema.turns)

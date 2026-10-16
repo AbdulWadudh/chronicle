@@ -9,6 +9,7 @@ export const API = {
   themes: "/api/v1/themes",
   compose: "/api/v1/compose",
   assets: "/api/v1/assets",
+  voices: "/api/v1/voices",
   ws: "/api/v1/ws",
   health: "/health",
 } as const;

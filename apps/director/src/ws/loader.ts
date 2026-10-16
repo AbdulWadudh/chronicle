@@ -1,5 +1,6 @@
 import { db, schema, toCharacter, toWorld } from "@chronicle/db";
 import {
+  applyStatePatch,
   indexTurns,
   nextBranchIndex,
   pathToRoot,
@@ -45,16 +46,22 @@ export async function loadTurnContext(
         audioUrls: row.audioUrlsJson ?? [],
         stateDiff: row.stateDiffJson,
         diceCheck: row.diceCheckJson,
+        cast: row.castJson,
       }),
   );
 
   const ancestry = parentTurnId === null ? [] : pathToRoot(indexTurns(turns), parentTurnId);
 
+  const state = ancestry.reduce(
+    (folded, turn) => (turn.stateDiff === null ? folded : applyStatePatch(folded, turn.stateDiff)),
+    world.initialState,
+  );
+
   return {
     db,
     world,
     character,
-    state: world.initialState,
+    state,
     ancestry,
     branchIndex: nextBranchIndex(turns, parentTurnId),
   };

@@ -2,6 +2,7 @@ import {
   CHECK_RULES,
   CHOICE_BANNED_OPENERS,
   CHOICE_RULES,
+  MEMORY,
   NARRATOR_ENHANCED,
   NARRATOR_RULES,
 } from "@chronicle/config";
@@ -18,6 +19,22 @@ function narratorSystem(sentences: number): string {
   const [voice, tense, ...rest] = NARRATOR_RULES;
   const length = `Write at most ${sentences} ${sentences === 1 ? "sentence" : "sentences"}, then stop.`;
   return [voice, tense, length, ...rest].join(" ");
+}
+
+function sentence(lead: string, value: string): string {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return "";
+  return /[.!?]$/u.test(trimmed) ? `${lead}: ${trimmed}` : `${lead}: ${trimmed}.`;
+}
+
+export function describePersona(character: Character): string {
+  return [
+    sentence("Warms to", character.likes),
+    sentence("Bristles at", character.dislikes),
+    sentence("Speaks", character.responseStyle),
+  ]
+    .filter((part) => part.length > 0)
+    .join(" ");
 }
 
 export function describeStats(world: World, character: Character): string {
@@ -40,6 +57,11 @@ export function describeState(state: WorldState, recentFacts: number): string {
     .join("\n");
 }
 
+export function describeRecall(recalled: readonly string[]): string {
+  if (recalled.length === 0) return "";
+  return `${MEMORY.recallLead}\n${recalled.join("\n\n")}`;
+}
+
 export function buildContext(
   world: World,
   character: Character,
@@ -47,23 +69,25 @@ export function buildContext(
   recentFacts: number,
   interactingCharacters: readonly Character[] = [],
   castSummary: string | null = null,
+  recalled: readonly string[] = [],
 ): string {
   const parts = [
     `Setting: ${world.title}. ${world.description}`,
     `Genre: ${world.genre}`,
-    `Protagonist: ${character.name} (${pronounPhrase(character.pronouns)}). ${character.bio}`,
+    `Protagonist: ${character.name} (${pronounPhrase(character.pronouns)}). ${character.bio} ${describePersona(character)}`.trim(),
     `Abilities: ${describeStats(world, character)}`,
     describeState(state, recentFacts),
+    describeRecall(recalled),
   ];
   if (castSummary !== null && castSummary !== undefined && castSummary.length > 0) {
     parts.push(castSummary);
   }
   for (const other of interactingCharacters) {
     parts.push(
-      `Interacting Character: ${other.name} (${pronounPhrase(other.pronouns)}). ${other.bio}`,
+      `Interacting Character: ${other.name} (${pronounPhrase(other.pronouns)}). ${other.bio} ${describePersona(other)}`.trim(),
     );
   }
-  return parts.join("\n\n");
+  return parts.filter((part) => part.length > 0).join("\n\n");
 }
 
 export function buildHistory(ancestry: readonly TurnNode[], depth: number): ChatMessage[] {
@@ -84,6 +108,7 @@ export interface NarrativeRequest {
   directorWhisper: string | null;
   interactingCharacters?: readonly Character[];
   castSummary?: string | null;
+  recalled?: readonly string[];
 }
 
 export function buildNarrativePrompt(
@@ -92,6 +117,7 @@ export function buildNarrativePrompt(
 ): ChatMessage[] {
   const system = [
     narratorSystem(prompt.sentences),
+    request.world.narratorPrompt.trim(),
     request.mode === "enhanced" ? NARRATOR_ENHANCED : "",
     request.directorWhisper === null ? "" : `Hidden direction: ${request.directorWhisper}`,
   ]
@@ -105,6 +131,7 @@ export function buildNarrativePrompt(
     prompt.recentFacts,
     request.interactingCharacters ?? [],
     request.castSummary,
+    request.recalled ?? [],
   );
 
   const history = buildHistory(request.ancestry, prompt.historyDepth);

@@ -5,6 +5,7 @@ export const QUEUE_TTS = "chronicle-tts";
 export const QUEUE_MEMORY = "chronicle-memory";
 
 export const ASSET_CHANNEL = "asset:image";
+export const MEMORY_CHANNEL = "memory:summary";
 
 export const JOB_PRIORITY = {
   scene: 1,

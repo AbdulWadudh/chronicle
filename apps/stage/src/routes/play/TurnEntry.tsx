@@ -1,7 +1,9 @@
 import { IMAGE_SHAPES } from "@chronicle/config";
-import type { ImageShape, TurnNode } from "@chronicle/utils";
+import { type ImageShape, parseAttributedLines, type TurnNode } from "@chronicle/utils";
 import { motion } from "motion/react";
-import type { ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
+import { useCast } from "~/components/story/CastContext";
+import { Passage } from "~/components/story/Passage";
 import { SceneFrame } from "./SceneFrame";
 
 export interface TurnEntryProps {
@@ -53,6 +55,15 @@ export function TurnEntry({
   sceneCorner,
   children,
 }: TurnEntryProps) {
+  const cast = useCast();
+  const sentences = useMemo(
+    () =>
+      parseAttributedLines(turn.narrativeText, cast).map((sentence, index) => ({
+        key: `s${index}`,
+        ...sentence,
+      })),
+    [turn.narrativeText, cast],
+  );
   return (
     <article className={TURN_GRID}>
       <div className="md:col-start-2 md:row-start-1">
@@ -70,13 +81,13 @@ export function TurnEntry({
       <div className="flex min-w-0 flex-col gap-3 md:col-start-1 md:row-start-1">
         <PlayerActionLine action={turn.playerAction} focal={focal} />
 
-        <p
-          className={`leading-(--leading-narrative) ${
+        <Passage
+          sentences={sentences}
+          animate={false}
+          textClass={`leading-(--leading-narrative) ${
             focal ? "text-[1.0625rem] text-text-secondary" : "text-[0.9375rem] text-text-muted"
           }`}
-        >
-          {turn.narrativeText}
-        </p>
+        />
 
         {children}
       </div>

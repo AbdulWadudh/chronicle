@@ -12,7 +12,7 @@ const earlyAudio = new Map<string, SentenceAudio[]>();
 function merge(existing: readonly SentenceAudio[], audio: AudioReady): SentenceAudio[] {
   return [
     ...existing.filter((entry) => entry.sentenceIndex !== audio.sentenceIndex),
-    { sentenceIndex: audio.sentenceIndex, audioUrl: audio.audioUrl },
+    { sentenceIndex: audio.sentenceIndex, audioUrl: audio.audioUrl, speakerId: audio.speakerId },
   ].sort((left, right) => left.sentenceIndex - right.sentenceIndex);
 }
 

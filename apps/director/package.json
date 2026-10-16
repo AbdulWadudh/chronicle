@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "bun --watch --env-file=../../.env run src/index.ts",
     "start": "bun --env-file=../../.env run src/index.ts",
+    "backfill": "bun --env-file=../../.env run src/backfill.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

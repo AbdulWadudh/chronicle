@@ -16,6 +16,7 @@ import { Segmented, type SegmentedOption } from "~/components/ui/segmented";
 import { ThemeStudio } from "~/components/world/ThemeStudio";
 import { WorldCoverPanel } from "~/components/world/WorldCoverPanel";
 import { WorldLookFields } from "~/components/world/WorldLookFields";
+import { WorldNarrationFields } from "~/components/world/WorldNarrationFields";
 import { WorldThemeFields } from "~/components/world/WorldThemeFields";
 import { useCompose } from "~/hooks/useCompose";
 import { patch } from "~/lib/api";
@@ -44,6 +45,9 @@ export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProp
   const [artStyle, setArtStyle] = useState<RenderStyle>("photoreal");
   const [themeOverrides, setThemeOverrides] = useState<PaletteOverrides | null>(null);
   const [visibility, setVisibility] = useState<WorldVisibility>("private");
+  const [narratorPrompt, setNarratorPrompt] = useState("");
+  const [narratorVoiceId, setNarratorVoiceId] = useState<string | null>(null);
+  const [ensembleEnabled, setEnsembleEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,18 +62,27 @@ export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProp
     setArtStyle(world.artStyle);
     setThemeOverrides(world.themeOverrides);
     setVisibility(world.visibility);
+    setNarratorPrompt(world.narratorPrompt);
+    setNarratorVoiceId(world.narratorVoiceId);
+    setEnsembleEnabled(world.ensembleEnabled);
     setError(null);
   }, [world]);
 
   async function fill(
-    target: "world.title" | "world.genre" | "world.description",
+    target: "world.title" | "world.genre" | "world.description" | "world.narratorPrompt",
     mode: ComposeMode,
   ) {
-    const value = await compose.run(target, mode, { title, genre, description }, world?.id ?? null);
+    const value = await compose.run(
+      target,
+      mode,
+      { title, genre, description, narratorPrompt },
+      world?.id ?? null,
+    );
     if (value === null) return;
     if (target === "world.title") setTitle(value);
     if (target === "world.genre") setGenre(value);
     if (target === "world.description") setDescription(value);
+    if (target === "world.narratorPrompt") setNarratorPrompt(value);
   }
 
   async function save(): Promise<void> {
@@ -86,6 +99,9 @@ export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProp
         artStyle,
         themeOverrides,
         visibility,
+        narratorPrompt: narratorPrompt.trim(),
+        narratorVoiceId,
+        ensembleEnabled,
       });
       void queryClient.invalidateQueries({ queryKey: ["worlds"] });
       void queryClient.invalidateQueries({ queryKey: queryKeys.world(world.id) });
@@ -173,6 +189,17 @@ export function EditWorldDialog({ world, onClose, onSaved }: EditWorldDialogProp
               if (value !== null) setVisualStyle(value);
             });
         }}
+      />
+
+      <WorldNarrationFields
+        narratorPrompt={narratorPrompt}
+        narratorVoiceId={narratorVoiceId}
+        ensembleEnabled={ensembleEnabled}
+        onNarratorPromptChange={setNarratorPrompt}
+        onNarratorVoiceChange={setNarratorVoiceId}
+        onEnsembleChange={setEnsembleEnabled}
+        busyMode={compose.modeFor("world.narratorPrompt")}
+        onCompose={(mode) => void fill("world.narratorPrompt", mode)}
       />
 
       <WorldThemeFields

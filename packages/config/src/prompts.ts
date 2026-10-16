@@ -106,8 +106,30 @@ export const SHOT_NEGATIVES = {
 
 export type ShotSize = keyof typeof SHOT_SIZES;
 
+export const PROSE = {
+  shot: {
+    closeUp: "close-up, head and shoulders filling the frame",
+    waistUp: "waist-up framing, head and torso in frame",
+    threeQuarter: "framed from the head to the knees",
+    fullBody: "full body, head to feet inside the frame",
+  },
+  scene: {
+    solo: "One person in frame and nobody else.",
+    pair: (names: readonly string[]): string =>
+      `Exactly ${names.length} people in frame, ${names.join(" and ")}, each clearly a different person; no one else.`,
+    expression:
+      "Their faces and body language react to this exact moment, with natural candid gestures. Nobody looks into the camera.",
+    anatomy:
+      "Every hand has five fingers and grips objects naturally; limbs, joints and proportions are correct.",
+  },
+  portrait:
+    "Framed from the top of the head down to the chest, head fully in frame, facing the camera, shallow depth of field, dramatic lighting.",
+  cover: "A sweeping establishing shot with no people, dramatic lighting, highly detailed.",
+} as const;
+
 export const IMAGERY = {
   scene: {
+    maxSubjects: 2,
     lead: "cinematic photo",
     framing: "natural depth of field",
     expression:

@@ -3,6 +3,7 @@ import type {
   ImageShape,
   SentenceAudio,
   StatePatch,
+  TurnCast,
   TurnChoice,
   WorldState,
 } from "@chronicle/utils";
@@ -34,6 +35,7 @@ export const turns = sqliteTable(
     audioUrlsJson: text("audio_urls_json", { mode: "json" }).$type<SentenceAudio[]>(),
     stateDiffJson: text("state_diff_json", { mode: "json" }).$type<StatePatch>(),
     diceCheckJson: text("dice_check_json", { mode: "json" }).$type<DiceCheck>(),
+    castJson: text("cast_json", { mode: "json" }).$type<TurnCast>(),
     branchIndex: integer("branch_index").notNull().default(0),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()

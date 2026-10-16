@@ -1,6 +1,5 @@
-import type { ImageParams } from "@chronicle/utils";
-
-export const NODE_SAVE = "9";
+import type { SdxlRender } from "@chronicle/utils";
+import { NODE_SAVE, saveNode } from "./save";
 
 const NODE_BASE_SAMPLER = "5";
 const NODE_UPSCALE_LATENT = "6";
@@ -10,10 +9,10 @@ function roundToEight(value: number): number {
   return Math.round(value / 8) * 8;
 }
 
-export function buildWorkflow(
-  job: ImageParams,
+export function buildSdxlWorkflow(
+  job: SdxlRender,
   prefix: string,
-  portraitFilenames: string[] = [],
+  portraitFilenames: readonly string[] = [],
 ): Record<string, unknown> {
   const hires = job.upscale > 1 && job.upscaleDenoise > 0;
 
@@ -38,17 +37,7 @@ export function buildWorkflow(
       class_type: "VAEDecode",
       inputs: { samples: [hires ? NODE_HIRES_SAMPLER : NODE_BASE_SAMPLER, 0], vae: ["1", 2] },
     },
-    [NODE_SAVE]: {
-      class_type: "SaveAnimatedWEBP",
-      inputs: {
-        filename_prefix: `chronicle/${prefix}`,
-        images: ["8", 0],
-        fps: 1,
-        lossless: false,
-        quality: job.quality,
-        method: "default",
-      },
-    },
+    [NODE_SAVE]: saveNode(prefix, job.quality, ["8", 0]),
   };
 
   let currentModel: [string, number] = ["1", 0];

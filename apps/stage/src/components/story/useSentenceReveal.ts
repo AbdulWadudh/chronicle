@@ -1,11 +1,13 @@
-import { splitIntoSentences } from "@chronicle/utils";
+import { type CastName, parseAttributedLines } from "@chronicle/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const TYPE_MS = 26;
+const AUDIO_FILL = 0.72;
 
 export interface RevealedSentence {
   key: string;
   text: string;
+  speakerId: string | null;
 }
 
 export interface SentenceReveal {
@@ -19,8 +21,10 @@ export interface SentenceReveal {
 export interface SentenceRevealOptions {
   cinemaMode: boolean;
   playingSentenceIndex: number | null;
+  playingSentenceSeconds?: number | null;
   typing: boolean;
   held?: boolean;
+  cast?: readonly CastName[];
 }
 
 interface Cursor {
@@ -29,18 +33,26 @@ interface Cursor {
 }
 
 const START: Cursor = { index: 0, chars: 0 };
+const NO_CAST: readonly CastName[] = [];
 
 export function useSentenceReveal(text: string, options: SentenceRevealOptions): SentenceReveal {
-  const { cinemaMode, playingSentenceIndex, typing, held = false } = options;
+  const {
+    cinemaMode,
+    playingSentenceIndex,
+    playingSentenceSeconds = null,
+    typing,
+    held = false,
+    cast = NO_CAST,
+  } = options;
 
   const sentences = useMemo(() => {
     let offset = 0;
-    return splitIntoSentences(text).map((sentence) => {
+    return parseAttributedLines(text, cast).map((sentence): RevealedSentence => {
       const key = `s${offset}`;
-      offset += sentence.length;
-      return { key, text: sentence };
+      offset += sentence.text.length;
+      return { key, text: sentence.text, speakerId: sentence.speakerId };
     });
-  }, [text]);
+  }, [text, cast]);
 
   const [skipped, setSkipped] = useState(false);
   const [cursor, setCursor] = useState<Cursor>(START);
@@ -63,6 +75,11 @@ export function useSentenceReveal(text: string, options: SentenceRevealOptions):
   const sentenceDone = cursor.chars >= target.length;
   const canAdvance = sentenceDone && cursor.index + 1 < limit;
   const typingActive = !instant && cursor.index < limit && (!sentenceDone || canAdvance);
+  const paced =
+    cinemaMode && playingSentenceSeconds !== null && cursor.index === playingSentenceIndex;
+  const stepMs = paced
+    ? Math.max(TYPE_MS, (playingSentenceSeconds * 1000 * AUDIO_FILL) / Math.max(1, target.length))
+    : TYPE_MS;
 
   useEffect(() => {
     if (!typingActive) return;
@@ -73,9 +90,9 @@ export function useSentenceReveal(text: string, options: SentenceRevealOptions):
         if (current.index + 1 < limit) return { index: current.index + 1, chars: 0 };
         return current;
       });
-    }, TYPE_MS);
+    }, stepMs);
     return () => clearInterval(timer);
-  }, [typingActive, sentences, limit]);
+  }, [typingActive, sentences, limit, stepMs]);
 
   const revealAll = useCallback(() => setSkipped(true), []);
 
@@ -84,7 +101,7 @@ export function useSentenceReveal(text: string, options: SentenceRevealOptions):
     const shown = sentences.slice(0, Math.min(cursor.index + 1, limit));
     const last = shown.at(-1);
     if (last === undefined) return shown;
-    return [...shown.slice(0, -1), { key: last.key, text: last.text.slice(0, cursor.chars) }];
+    return [...shown.slice(0, -1), { ...last, text: last.text.slice(0, cursor.chars) }];
   }, [sentences, limit, instant, cursor]);
 
   const lastIndex = sentences.length - 1;

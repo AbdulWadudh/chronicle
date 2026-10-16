@@ -12,6 +12,13 @@ export {
 export { AUTH_BASE_PATH, type ChronicleAuth, createAuth } from "./auth";
 export { type ChronicleDatabase, db } from "./db";
 export { newId } from "./ids";
+export {
+  type EmbedKind,
+  type Episode,
+  embedTexts,
+  recallEpisodes,
+  rememberEpisode,
+} from "./memory";
 export { runMigrations } from "./migrate";
 export {
   type CharacterRow,

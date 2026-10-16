@@ -18,6 +18,7 @@ export const environmentSchema = z.object({
   REDIS_URL: z.url(),
   LLM_ENDPOINT: endpoint,
   LLM_MODEL: z.string().min(1).default("local"),
+  EMBED_ENDPOINT: endpoint.default("http://127.0.0.1:8081/v1"),
   DIFFUSION_ENDPOINT: endpoint,
   TTS_ENDPOINT: endpoint,
   AUTH_SECRET: z.string().min(32),

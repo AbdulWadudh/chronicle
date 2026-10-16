@@ -9,6 +9,7 @@ export const composeTargetSchema = z.enum([
   "world.opening",
   "world.ability",
   "world.visualStyle",
+  "world.narratorPrompt",
   "world.cover",
   "character.name",
   "character.bio",
@@ -18,6 +19,9 @@ export const composeTargetSchema = z.enum([
   "character.portrait",
   "character.appearance",
   "character.outfit",
+  "character.likes",
+  "character.dislikes",
+  "character.responseStyle",
 ]);
 
 export const composeModeSchema = z.enum(["generate", "enhance"]);
@@ -32,6 +36,7 @@ export const composeContextSchema = z.object({
   abilityLabel: z.string().default(""),
   abilityDescription: z.string().default(""),
   visualStyle: z.string().default(""),
+  narratorPrompt: z.string().default(""),
   coverPrompt: z.string().default(""),
   name: z.string().default(""),
   bio: z.string().default(""),
@@ -42,6 +47,9 @@ export const composeContextSchema = z.object({
   portraitPrompt: z.string().default(""),
   appearance: z.string().default(""),
   outfit: z.string().default(""),
+  likes: z.string().default(""),
+  dislikes: z.string().default(""),
+  responseStyle: z.string().default(""),
   scenePrompt: z.string().default(""),
   whisper: z.string().default(""),
   pronouns: pronounsSchema.default("they"),
@@ -73,6 +81,7 @@ export const COMPOSE_FIELD: Record<ComposeTarget, TextField> = {
   "world.opening": "opening",
   "world.ability": "abilityDescription",
   "world.visualStyle": "visualStyle",
+  "world.narratorPrompt": "narratorPrompt",
   "world.cover": "coverPrompt",
   "character.name": "name",
   "character.bio": "bio",
@@ -82,4 +91,7 @@ export const COMPOSE_FIELD: Record<ComposeTarget, TextField> = {
   "character.portrait": "portraitPrompt",
   "character.appearance": "appearance",
   "character.outfit": "outfit",
+  "character.likes": "likes",
+  "character.dislikes": "dislikes",
+  "character.responseStyle": "responseStyle",
 };

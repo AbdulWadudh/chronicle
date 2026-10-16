@@ -33,6 +33,9 @@ export const worlds = sqliteTable(
     visibility: text("visibility", { enum: ["private", "public"] })
       .notNull()
       .default("private"),
+    narratorPrompt: text("narrator_prompt").notNull().default(""),
+    narratorVoiceId: text("narrator_voice_id"),
+    ensembleEnabled: integer("ensemble_enabled", { mode: "boolean" }).notNull().default(false),
     statDefinitionsJson: text("stat_definitions_json", { mode: "json" })
       .$type<StatDefinition[]>()
       .notNull(),
@@ -68,6 +71,11 @@ export const characters = sqliteTable(
       .default("they"),
     portraitUrl: text("portrait_url"),
     draftPortraitUrl: text("draft_portrait_url"),
+    likes: text("likes").notNull().default(""),
+    dislikes: text("dislikes").notNull().default(""),
+    responseStyle: text("response_style").notNull().default(""),
+    eagerness: integer("eagerness").notNull().default(50),
+    voiceId: text("voice_id"),
     statsJson: text("stats_json", { mode: "json" }).$type<StatBlock>().notNull(),
     inventoryJson: text("inventory_json", { mode: "json" }).$type<Inventory>().notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })

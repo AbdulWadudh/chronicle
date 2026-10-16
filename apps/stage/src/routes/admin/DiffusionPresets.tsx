@@ -1,14 +1,14 @@
-import { DIFFUSION_PRESETS, type DiffusionPreset, type RuntimeSettings } from "@chronicle/config";
+import { DIFFUSION_PRESETS, type DiffusionPreset, type SdxlSettings } from "@chronicle/config";
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "~/components/ui/button";
 
 export interface DiffusionPresetsProps {
-  image: RuntimeSettings["image"];
+  sdxl: SdxlSettings;
   onApply: (values: DiffusionPreset["values"]) => void;
 }
 
-function matches(image: RuntimeSettings["image"], preset: DiffusionPreset): boolean {
+function matches(image: SdxlSettings, preset: DiffusionPreset): boolean {
   return (
     image.steps === preset.values.steps &&
     image.cfg === preset.values.cfg &&
@@ -19,7 +19,7 @@ function matches(image: RuntimeSettings["image"], preset: DiffusionPreset): bool
 
 const FAST_CHECKPOINT = /lightning|turbo|lcm|hyper/iu;
 
-export function DiffusionPresets({ image, onApply }: DiffusionPresetsProps) {
+export function DiffusionPresets({ sdxl: image, onApply }: DiffusionPresetsProps) {
   const active = DIFFUSION_PRESETS.find((preset) => matches(image, preset));
   const mismatched = FAST_CHECKPOINT.test(image.checkpoint) && image.steps > 12;
 

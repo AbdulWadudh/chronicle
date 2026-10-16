@@ -9,6 +9,7 @@ const FOLEY_VOLUME = 0.7;
 export interface AudioQueue {
   enqueueSentence: (sentenceIndex: number, url: string) => void;
   playingSentenceIndex: number | null;
+  playingSentenceSeconds: number | null;
   skipToEnd: () => void;
   playAmbience: (url: string) => void;
   stopAmbience: () => void;
@@ -25,6 +26,7 @@ function release(element: HTMLAudioElement | null): void {
 
 export function useAudioQueue(held: boolean): AudioQueue {
   const [playingSentenceIndex, setPlayingSentenceIndex] = useState<number | null>(null);
+  const [playingSentenceSeconds, setPlayingSentenceSeconds] = useState<number | null>(null);
 
   const pending = useRef(new Map<number, string>());
   const nextIndex = useRef(0);
@@ -33,21 +35,27 @@ export function useAudioQueue(held: boolean): AudioQueue {
   const foley = useRef<HTMLAudioElement | null>(null);
   const draining = useRef(false);
   const generation = useRef(0);
-  const settleVoice = useRef<(() => void) | null>(null);
+  const settleVoice = useRef<((finished: boolean) => void) | null>(null);
+  const heldRef = useRef(held);
+  heldRef.current = held;
 
   const releaseVoice = useCallback(() => {
     release(voice.current);
     voice.current = null;
-    settleVoice.current?.();
+    settleVoice.current?.(false);
     settleVoice.current = null;
   }, []);
 
   const drain = useCallback(async (): Promise<void> => {
-    if (draining.current || held) return;
+    if (draining.current || heldRef.current) return;
     draining.current = true;
     const run = generation.current;
 
-    while (run === generation.current && pending.current.has(nextIndex.current)) {
+    while (
+      run === generation.current &&
+      !heldRef.current &&
+      pending.current.has(nextIndex.current)
+    ) {
       const index = nextIndex.current;
       const url = pending.current.get(index);
       pending.current.delete(index);
@@ -57,29 +65,45 @@ export function useAudioQueue(held: boolean): AudioQueue {
       const player = new Audio(assetUrl(url));
       voice.current = player;
       setPlayingSentenceIndex(index);
+      setPlayingSentenceSeconds(null);
+      player.addEventListener(
+        "loadedmetadata",
+        () => {
+          if (voice.current === player && Number.isFinite(player.duration)) {
+            setPlayingSentenceSeconds(player.duration);
+          }
+        },
+        { once: true },
+      );
 
-      await new Promise<void>((resolve) => {
-        const settle = (): void => {
+      const finished = await new Promise<boolean>((resolve) => {
+        const settle = (done: boolean): void => {
           settleVoice.current = null;
-          resolve();
+          resolve(done);
         };
         settleVoice.current = settle;
-        player.addEventListener("ended", settle, { once: true });
-        player.addEventListener("error", settle, { once: true });
-        void player.play().catch(settle);
+        player.addEventListener("ended", () => settle(true), { once: true });
+        player.addEventListener("error", () => settle(true), { once: true });
+        void player.play().catch(() => settle(true));
       });
 
+      if (!finished) {
+        if (run === generation.current) pending.current.set(index, url);
+        break;
+      }
       nextIndex.current = index + 1;
     }
 
     if (run !== generation.current) return;
     setPlayingSentenceIndex(null);
+    setPlayingSentenceSeconds(null);
     draining.current = false;
-  }, [held, releaseVoice]);
+  }, [releaseVoice]);
 
   useEffect(() => {
-    if (!held) void drain();
-  }, [held, drain]);
+    if (held) releaseVoice();
+    else void drain();
+  }, [held, drain, releaseVoice]);
 
   const enqueueSentence = useCallback(
     (sentenceIndex: number, url: string) => {
@@ -95,6 +119,7 @@ export function useAudioQueue(held: boolean): AudioQueue {
     releaseVoice();
     draining.current = false;
     setPlayingSentenceIndex(null);
+    setPlayingSentenceSeconds(null);
   }, [releaseVoice]);
 
   const playAmbience = useCallback((url: string) => {
@@ -132,6 +157,7 @@ export function useAudioQueue(held: boolean): AudioQueue {
   return {
     enqueueSentence,
     playingSentenceIndex,
+    playingSentenceSeconds,
     skipToEnd,
     playAmbience,
     stopAmbience,

@@ -1,6 +1,7 @@
 import { API } from "@chronicle/config";
 import type { ImageShape, ServerMessage, TurnNode } from "@chronicle/utils";
 import { useCallback, useState } from "react";
+import { mergeSentenceAudio } from "~/hooks/mergeSentenceAudio";
 import { post } from "~/lib/api";
 import { assetUrl } from "~/lib/assets";
 import { useAudioQueue } from "./useAudioQueue";
@@ -25,6 +26,7 @@ export interface TurnStream {
   status: SocketStatus;
   phase: PlayPhase;
   replayTurnId: string | null;
+  replayRevealing: boolean;
   replayKey: number;
   sceneReady: boolean;
   holdNarration: boolean;
@@ -35,6 +37,7 @@ export interface TurnStream {
   sceneShape: ImageShape | null;
   pendingCheck: PendingDiceCheck | null;
   playingSentenceIndex: number | null;
+  playingSentenceSeconds: number | null;
   error: string | null;
   isRerollingChoices: boolean;
   hasOlderTurns: boolean;
@@ -88,7 +91,8 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
       ? sceneImageUrl !== null
       : latest === undefined || !painting.isPainting(latest.id);
   const cinematic = useCinematic(activeTurnId, immersive);
-  const holdNarration = cinematic.cinematicTurnId !== null && !sceneReady;
+  const holdNarration =
+    (cinematic.cinematicTurnId !== null && !sceneReady) || cinematic.replayRevealing;
   const audio = useAudioQueue(holdNarration);
 
   const handleMessage = useCallback(
@@ -112,19 +116,11 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
         case "SENTENCE_AUDIO_READY":
           audio.enqueueSentence(message.sentenceIndex, message.audioUrl);
           setCommittedTurns((previous) =>
-            previous.map((turn) =>
-              turn.id === message.turnId
-                ? {
-                    ...turn,
-                    audioUrls: [
-                      ...turn.audioUrls.filter(
-                        (clip) => clip.sentenceIndex !== message.sentenceIndex,
-                      ),
-                      { sentenceIndex: message.sentenceIndex, audioUrl: message.audioUrl },
-                    ].sort((left, right) => left.sentenceIndex - right.sentenceIndex),
-                  }
-                : turn,
-            ),
+            mergeSentenceAudio(previous, message.turnId, {
+              sentenceIndex: message.sentenceIndex,
+              audioUrl: message.audioUrl,
+              speakerId: message.speakerId,
+            }),
           );
           break;
         case "SCENE_PROGRESS":
@@ -263,6 +259,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
     status: socket.status,
     phase: cinematic.cinematicTurnId === null ? "decision" : "cinematic",
     replayTurnId: cinematic.replayTurnId,
+    replayRevealing: cinematic.replayRevealing,
     replayKey: cinematic.replayKey,
     sceneReady,
     holdNarration,
@@ -273,6 +270,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
     sceneShape,
     pendingCheck,
     playingSentenceIndex: audio.playingSentenceIndex,
+    playingSentenceSeconds: audio.playingSentenceSeconds,
     error: error ?? history.error ?? socket.lastError,
     isRerollingChoices,
     hasOlderTurns: history.hasOlderTurns,

@@ -22,7 +22,7 @@ import {
   waitForImages,
 } from "~/processors/diffusion/client";
 import { forgetPrompt, listenForProgress, watchPrompt } from "~/processors/diffusion/progress";
-import { buildWorkflow } from "~/processors/diffusion/workflow";
+import { buildWorkflow } from "~/processors/diffusion/workflows";
 import { publisher } from "~/redis";
 import { upload } from "~/storage";
 
@@ -74,17 +74,17 @@ export async function renderImage(job: Job<DiffusionJob>): Promise<string> {
   const payload = diffusionJobSchema.parse(job.data);
   const label = payload.kind === "scene" ? payload.turnId : payload.worldId;
 
-  const checkpoint = await resolveCheckpoint(payload.checkpoint);
+  const render =
+    payload.render.engine === "sdxl"
+      ? { ...payload.render, checkpoint: await resolveCheckpoint(payload.render.checkpoint) }
+      : payload.render;
   const portraitFilenames =
-    payload.kind === "scene" && payload.portraitUrls.length > 0
-      ? await preparePortraits(payload.portraitUrls)
+    payload.render.portraitUrls.length > 0
+      ? await preparePortraits(payload.render.portraitUrls)
       : [];
 
   listenForProgress(CLIENT_ID);
-  const promptId = await submit(
-    buildWorkflow({ ...payload, checkpoint }, label, portraitFilenames),
-    CLIENT_ID,
-  );
+  const promptId = await submit(buildWorkflow(render, label, portraitFilenames), CLIENT_ID);
   if (payload.kind === "scene") watchPrompt(promptId, payload.turnId);
 
   let images: ComfyImage[];
@@ -111,5 +111,3 @@ export async function renderImage(job: Job<DiffusionJob>): Promise<string> {
   }
   return imageUrl;
 }
-
-export { buildWorkflow } from "~/processors/diffusion/workflow";

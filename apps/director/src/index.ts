@@ -4,6 +4,7 @@ import { promoteFirstAccount, runMigrations, seedThemePalettes } from "@chronicl
 import { createApp } from "~/app";
 import { startAssetWriter } from "~/assets";
 import { verifyToken } from "~/auth";
+import { startMemoryWriter } from "~/memory";
 import { websocketHandlers } from "~/ws/gateway";
 import type { SocketData } from "~/ws/session";
 
@@ -11,6 +12,7 @@ runMigrations();
 await seedThemePalettes();
 await promoteFirstAccount();
 startAssetWriter();
+startMemoryWriter();
 
 const app = createApp();
 const configuration = env();

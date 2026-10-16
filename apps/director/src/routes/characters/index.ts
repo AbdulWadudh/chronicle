@@ -3,59 +3,22 @@ import {
   characterDraftPortraitKey,
   characterPortraitKey,
   fetchBytes,
-  inventorySchema,
   isValidBuild,
   PORTRAIT_CONTENT_TYPE,
-  pronounsSchema,
-  statBlockSchema,
 } from "@chronicle/utils";
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 import { type AuthEnv, requireSession } from "~/auth";
 import { enqueuePortrait } from "~/engine/imagery";
+import { voiceRejection } from "~/engine/voices";
+import {
+  createCharacterSchema,
+  ownedCharacter,
+  patchCharacterSchema,
+  portraitSchema,
+  readableWorld,
+} from "~/routes/characters/schemas";
 import { UPLOAD_MAX_BYTES, UPLOAD_TYPES, upload } from "~/storage";
-
-const LOOK_MAX = 400;
-
-const portraitSchema = z.object({
-  prompt: z.string().min(1).max(600).optional(),
-  name: z.string().min(1).optional(),
-  pronouns: pronounsSchema.optional(),
-  bio: z.string().optional(),
-  appearance: z.string().max(LOOK_MAX).optional(),
-  outfit: z.string().max(LOOK_MAX).optional(),
-});
-
-const patchCharacterSchema = z.object({
-  name: z.string().min(1).optional(),
-  bio: z.string().optional(),
-  appearance: z.string().max(LOOK_MAX).optional(),
-  outfit: z.string().max(LOOK_MAX).optional(),
-  outfitLocked: z.boolean().optional(),
-  pronouns: pronounsSchema.optional(),
-  stats: statBlockSchema.optional(),
-});
-
-const createCharacterSchema = z.object({
-  worldId: z.string().min(1),
-  name: z.string().min(1),
-  bio: z.string().default(""),
-  appearance: z.string().max(LOOK_MAX).default(""),
-  outfit: z.string().max(LOOK_MAX).default(""),
-  outfitLocked: z.boolean().default(true),
-  pronouns: pronounsSchema.default("they"),
-  portraitUrl: z.string().nullable().default(null),
-  stats: statBlockSchema,
-  inventory: inventorySchema.default([]),
-});
-
-async function readableWorld(worldId: string, userId: string) {
-  const row = await db.select().from(schema.worlds).where(eq(schema.worlds.id, worldId)).get();
-  if (row === undefined) return null;
-  if (row.visibility === "private" && row.userId !== userId) return null;
-  return row;
-}
 
 export const characterRoutes = new Hono<AuthEnv>()
   .use("*", requireSession)
@@ -84,22 +47,13 @@ export const characterRoutes = new Hono<AuthEnv>()
     if (!isValidBuild(body.data.stats, worldRow.statDefinitionsJson, worldRow.pointBudget)) {
       return context.json({ error: "Stat build exceeds the point budget." }, 400);
     }
+    const rejected = await voiceRejection(body.data.voiceId);
+    if (rejected !== null) return context.json({ error: rejected }, 400);
 
+    const { worldId, stats, inventory, ...fields } = body.data;
     const [row] = await db
       .insert(schema.characters)
-      .values({
-        worldId: body.data.worldId,
-        userId: user.id,
-        name: body.data.name,
-        bio: body.data.bio,
-        appearance: body.data.appearance,
-        outfit: body.data.outfit,
-        outfitLocked: body.data.outfitLocked,
-        pronouns: body.data.pronouns,
-        portraitUrl: body.data.portraitUrl,
-        statsJson: body.data.stats,
-        inventoryJson: body.data.inventory,
-      })
+      .values({ ...fields, worldId, userId: user.id, statsJson: stats, inventoryJson: inventory })
       .returning();
     if (row === undefined) return context.json({ error: "The character was not written." }, 500);
 
@@ -111,20 +65,14 @@ export const characterRoutes = new Hono<AuthEnv>()
     if (!body.success) return context.json({ error: "Invalid character." }, 400);
 
     const user = context.get("user");
-    const row = await db
-      .select()
-      .from(schema.characters)
-      .where(
-        and(
-          eq(schema.characters.id, context.req.param("id")),
-          eq(schema.characters.userId, user.id),
-        ),
-      )
-      .get();
-    if (row === undefined) return context.json({ error: "Not found." }, 404);
+    const row = await ownedCharacter(context.req.param("id"), user.id);
+    if (row === null) return context.json({ error: "Not found." }, 404);
 
     const worldRow = await readableWorld(row.worldId, user.id);
     if (worldRow === null) return context.json({ error: "World not found." }, 404);
+
+    const rejected = await voiceRejection(body.data.voiceId);
+    if (rejected !== null) return context.json({ error: rejected }, 400);
 
     let portraitUrl = row.portraitUrl;
     let draftPortraitUrl = row.draftPortraitUrl;
@@ -152,6 +100,11 @@ export const characterRoutes = new Hono<AuthEnv>()
         appearance: body.data.appearance ?? row.appearance,
         outfit: body.data.outfit ?? row.outfit,
         outfitLocked: body.data.outfitLocked ?? row.outfitLocked,
+        likes: body.data.likes ?? row.likes,
+        dislikes: body.data.dislikes ?? row.dislikes,
+        responseStyle: body.data.responseStyle ?? row.responseStyle,
+        eagerness: body.data.eagerness ?? row.eagerness,
+        voiceId: body.data.voiceId === undefined ? row.voiceId : body.data.voiceId,
         portraitUrl,
         draftPortraitUrl,
         pronouns: body.data.pronouns ?? row.pronouns,
@@ -175,33 +128,13 @@ export const characterRoutes = new Hono<AuthEnv>()
     return context.body(null, 204);
   })
   .get("/:id", async (context) => {
-    const user = context.get("user");
-    const row = await db
-      .select()
-      .from(schema.characters)
-      .where(
-        and(
-          eq(schema.characters.id, context.req.param("id")),
-          eq(schema.characters.userId, user.id),
-        ),
-      )
-      .get();
-    if (row === undefined) return context.json({ error: "Not found." }, 404);
+    const row = await ownedCharacter(context.req.param("id"), context.get("user").id);
+    if (row === null) return context.json({ error: "Not found." }, 404);
     return context.json(row);
   })
   .put("/:id/portrait", async (context) => {
-    const user = context.get("user");
-    const row = await db
-      .select()
-      .from(schema.characters)
-      .where(
-        and(
-          eq(schema.characters.id, context.req.param("id")),
-          eq(schema.characters.userId, user.id),
-        ),
-      )
-      .get();
-    if (row === undefined) return context.json({ error: "Not found." }, 404);
+    const row = await ownedCharacter(context.req.param("id"), context.get("user").id);
+    if (row === null) return context.json({ error: "Not found." }, 404);
 
     const type = context.req.header("content-type") ?? "";
     const extension = UPLOAD_TYPES[type.split(";")[0]?.trim() ?? ""];
@@ -227,18 +160,8 @@ export const characterRoutes = new Hono<AuthEnv>()
     return context.json({ draftPortraitUrl });
   })
   .delete("/:id/portrait/draft", async (context) => {
-    const user = context.get("user");
-    const row = await db
-      .select()
-      .from(schema.characters)
-      .where(
-        and(
-          eq(schema.characters.id, context.req.param("id")),
-          eq(schema.characters.userId, user.id),
-        ),
-      )
-      .get();
-    if (row === undefined) return context.json({ error: "Not found." }, 404);
+    const row = await ownedCharacter(context.req.param("id"), context.get("user").id);
+    if (row === null) return context.json({ error: "Not found." }, 404);
     await db
       .update(schema.characters)
       .set({ draftPortraitUrl: null })
@@ -247,21 +170,11 @@ export const characterRoutes = new Hono<AuthEnv>()
   })
   .post("/:id/portrait", async (context) => {
     const user = context.get("user");
-    const row = await db
-      .select()
-      .from(schema.characters)
-      .where(
-        and(
-          eq(schema.characters.id, context.req.param("id")),
-          eq(schema.characters.userId, user.id),
-        ),
-      )
-      .get();
-    if (row === undefined) return context.json({ error: "Not found." }, 404);
+    const row = await ownedCharacter(context.req.param("id"), user.id);
+    if (row === null) return context.json({ error: "Not found." }, 404);
     const worldRow = await readableWorld(row.worldId, user.id);
     if (worldRow === null) return context.json({ error: "World not found." }, 404);
-    const body = await context.req.json().catch(() => null);
-    const override = portraitSchema.safeParse(body);
+    const override = portraitSchema.safeParse(await context.req.json().catch(() => null));
     const unsaved = override.success ? override.data : {};
     await enqueuePortrait(
       toWorld(worldRow),
