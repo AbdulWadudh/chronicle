@@ -1,6 +1,7 @@
 import type { TurnNode } from "@chronicle/utils";
 import { motion } from "motion/react";
 import { useEffect } from "react";
+import { useCast } from "~/components/story/CastContext";
 import { useSentenceReveal } from "~/components/story/useSentenceReveal";
 import type { TurnStream } from "~/hooks/useTurnStream";
 import { SceneStage } from "./SceneStage";
@@ -17,10 +18,14 @@ export interface ReplayOverlayProps {
 }
 
 export function ReplayOverlay({ turn, stream, reduceMotion, typing, onClose }: ReplayOverlayProps) {
+  const cast = useCast();
   const reveal = useSentenceReveal(turn.narrativeText, {
     cinemaMode: true,
     playingSentenceIndex: stream.playingSentenceIndex,
+    playingSentenceSeconds: stream.playingSentenceSeconds,
     typing,
+    held: stream.replayRevealing,
+    cast,
   });
   const done = reveal.isComplete && stream.playingSentenceIndex === null;
 

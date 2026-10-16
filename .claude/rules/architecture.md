@@ -200,7 +200,7 @@ Tier rules are global, in `~/.claude/rules/config.md`. Chronicle places them as:
 | --- | --- | --- |
 | Constants | `@chronicle/config` | `DICE`, `STATS`, `API` routes, theme defaults, queue names |
 | Environment | `@chronicle/config/env`, `@chronicle/config/paths` | ports, `DATABASE_PATH`, `STAGE_DIST`, `AUTH_SECRET`, the four endpoints |
-| Runtime | `@chronicle/config` schema (`runtimeSettingsSchema`), merged in `@chronicle/utils`, stored by `@chronicle/db` | `image.*`, `tts.*`, `narrative.*`, `prompt.*`, `turn.*`, `dice.*` |
+| Runtime | `@chronicle/config` schema (`runtimeSettingsSchema`), merged in `@chronicle/utils`, stored by `@chronicle/db` | `image.*` (per engine), `tts.*`, `narrative.*`, `prompt.*`, `turn.*`, `dice.*`, `memory.*` |
 
 - Constants and runtime-settings schemas are plain data, so they live at the main
   `@chronicle/config` entry, importable by `apps/stage`. The environment loader touches
@@ -232,12 +232,33 @@ model tree is not on the `DIFFUSION_ENDPOINT` path. An earlier version of this f
 it as the server; confirmed wrong on 2026-09-21 against `scripts/ai-servers.ps1`, which
 launches `G:\AI\EIDOLON\COMFY_UI` on port 8188.
 
-Installed checkpoints, confirmed against `GET /object_info/CheckpointLoaderSimple`
+## Image engines
+
+`IMAGE_ENGINES` in `packages/config/src/imageEngines.ts` is the registry: one entry per model
+family with its own Zod settings schema and bounds. `image.engine` (scenes and covers) and
+`image.portraitEngine` (portraits) pick an entry; `image.klein` and `image.sdxl` hold each
+engine's tunables, so switching never rewrites the other's config. The director builds a
+`RenderParams` discriminated on `engine`, the crew dispatches to `workflows/klein.ts` or
+`workflows/sdxl.ts`, and the prompt dialect follows the engine: prose for klein
+(`prompt/prose.ts`), weighted tags plus a negative for SDXL (`prompt/scene.ts`).
+
+Defaults since 2026-09-24: **klein for scenes, SDXL for portraits.** Flux.2 klein 4B fp8 takes
+the cast's portraits as `ReferenceLatent` inputs and keeps faces, hair and outfits without a
+face adapter, at 4 steps; rendered natively at `klein.renderScale` (1.5) because a latent hires
+pass only interpolates. RealVis still authors portraits because its idealised faces are the
+look Abdul wants, and klein copies them faithfully into scenes. Measured on the 5070 Ti with
+the LLM resident: two-reference scene at 1248x1824 in 9 s, peak 13.8 GB.
+
+Klein files live under ComfyUI `models/`: `diffusion_models/flux-2-klein-4b-fp8.safetensors`,
+`text_encoders/qwen_3_4b.safetensors` (8 GB bf16, sets the VRAM peak), `vae/flux2-vae.safetensors`.
+ComfyUI 0.37+ has the nodes in core.
+
+Installed SDXL checkpoints, confirmed against `GET /object_info/CheckpointLoaderSimple`
 on 2026-09-20. Both are Lightning; no full-step SDXL checkpoint is installed.
 
 | File | Kind | Steps | CFG | Sampler |
 | --- | --- | --- | --- | --- |
-| `RealVisXL_V5.0_Lightning_fp16.safetensors` | Lightning, **the default** | 8 | 2 | `dpmpp_sde` / karras |
+| `RealVisXL_V5.0_Lightning_fp16.safetensors` | Lightning, **the SDXL default** | 8 | 2 | `dpmpp_sde` / karras |
 | `DreamShaperXL_Lightning.safetensors` | Lightning, stylised | 6 | 2 | `dpmpp_sde` / karras |
 
 RealVis holds faces, hands and skin far better than DreamShaper and is the default for
@@ -246,15 +267,15 @@ file claimed it was. Never name a checkpoint here without asking ComfyUI first.
 
 Lightning settings on a full model produce mush, and full-model settings on Lightning
 produce burnt output — the rows are not interchangeable. Checkpoint, steps, cfg,
-sampler and scheduler are all runtime settings (`image.*`), so switching models is a
+sampler and scheduler are all runtime settings (`image.sdxl.*`), so switching models is a
 settings change, never a code change.
 
-`image.upscale` adds a hires pass: the base latent is upscaled by that multiple and run
-through a second `KSampler` at `image.upscaleDenoise`. At 1.5 it is the difference
+`image.sdxl.upscale` adds a hires pass: the base latent is upscaled by that multiple and run
+through a second `KSampler` at `image.sdxl.upscaleDenoise`. At 1.5 it is the difference
 between a soft 1024 and a sharp 1536. Measured 2026-09-20 on the 16 GB card: 1536x1536 in
 **21 s**, 3.19 MB, no OOM with the LLM resident. `1` turns the pass off.
 
-`image.checkpoint` accepts either a bare filename or a path relative to ComfyUI's
+`image.sdxl.checkpoint` accepts either a bare filename or a path relative to ComfyUI's
 checkpoints root. `G:\AI\EIDOLON\COMFY_UI` carries no `extra_model_paths.yaml`, so that
 root is its own `ComfyUI\models\checkpoints`, not a Stability Matrix path.
 

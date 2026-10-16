@@ -44,6 +44,7 @@ async function summarise(
     "story_summary",
     SUMMARY_JSON_SCHEMA,
     (raw) => summarySchema.parse(raw),
+    MEMORY.summaryMaxTokens,
   );
   return {
     turnId: payload.turnId,

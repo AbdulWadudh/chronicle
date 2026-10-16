@@ -12,31 +12,44 @@ export function progressChannel(turnId: string): string {
   return `stream:progress:${turnId}`;
 }
 
-const imageParamsSchema = z.object({
+const renderBaseSchema = z.object({
   prompt: z.string().min(1),
-  negativePrompt: z.string(),
   seed: z.number().int().nonnegative(),
-  checkpoint: z.string().min(1),
   width: z.number().int().positive(),
   height: z.number().int().positive(),
-  steps: z.number().int().positive(),
-  cfg: z.number().positive(),
-  sampler: z.string().min(1),
-  scheduler: z.string().min(1),
   quality: z.number().int().min(1).max(100).default(90),
-  upscale: z.number().positive(),
-  upscaleDenoise: z.number().positive(),
   portraitUrls: z.array(z.string()).default([]),
-  identity: z
-    .object({
+});
+
+export const renderParamsSchema = z.discriminatedUnion("engine", [
+  renderBaseSchema.extend({
+    engine: z.literal("klein"),
+    model: z.string().min(1),
+    textEncoder: z.string().min(1),
+    vae: z.string().min(1),
+    steps: z.number().int().positive(),
+  }),
+  renderBaseSchema.extend({
+    engine: z.literal("sdxl"),
+    negativePrompt: z.string(),
+    checkpoint: z.string().min(1),
+    steps: z.number().int().positive(),
+    cfg: z.number().positive(),
+    sampler: z.string().min(1),
+    scheduler: z.string().min(1),
+    upscale: z.number().positive(),
+    upscaleDenoise: z.number().positive(),
+    identity: z.object({
       method: z.enum(["fidelity", "style", "neutral"]),
       weight: z.number(),
       castWeight: z.number(),
       startAt: z.number(),
       endAt: z.number(),
-    })
-    .default({ method: "style", weight: 0.65, castWeight: 0.35, startAt: 0.15, endAt: 0.7 }),
-});
+    }),
+  }),
+]);
+
+const imageParamsSchema = z.object({ render: renderParamsSchema });
 
 export const diffusionJobSchema = z.discriminatedUnion("kind", [
   imageParamsSchema.extend({
@@ -117,7 +130,9 @@ export const assetReadySchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
-export type ImageParams = z.infer<typeof imageParamsSchema>;
+export type RenderParams = z.infer<typeof renderParamsSchema>;
+export type KleinRender = Extract<RenderParams, { engine: "klein" }>;
+export type SdxlRender = Extract<RenderParams, { engine: "sdxl" }>;
 export type DiffusionJob = z.infer<typeof diffusionJobSchema>;
 export type DiffusionKind = DiffusionJob["kind"];
 export type TtsJob = z.infer<typeof ttsJobSchema>;

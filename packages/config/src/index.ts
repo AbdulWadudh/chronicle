@@ -1,6 +1,7 @@
 export * from "./diffusion";
 export * from "./ensemble";
 export * from "./icons";
+export * from "./imageEngines";
 export * from "./memory";
 export * from "./palettes";
 export * from "./prompts";

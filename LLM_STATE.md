@@ -26,6 +26,101 @@ style, and PuLID holds faces across scenes. Waves 7B-7D still have the open item
 | 7F | WebP assets, TanStack Query, grouped authoring forms | done |
 | 8 | Narrator prompt, voices, character personality, opt-in ensemble | waves 1-3 done, verified live |
 | 9 | Vector memory: real embeddings, rolling summaries, recall in prompts | built, verified live 2026-09-24 |
+| 10 | Speaker treatment on screen, per-character voices assigned | built, verified live 2026-09-24 |
+
+## Wave 11 — Image engine registry, klein scenes (built 2026-09-24)
+
+Trial of FLUX.2 [klein] 4B fp8 as the scene engine, on the 5070 Ti with the LLM resident
+(11.9 GB in use). Files under ComfyUI `models/`: `diffusion_models/flux-2-klein-4b-fp8.safetensors`
+(4.1 GB), `text_encoders/qwen_3_4b.safetensors` (8 GB bf16), `vae/flux2-vae.safetensors`.
+ComfyUI 0.37 has the nodes in core: `EmptyFlux2LatentImage`, `Flux2Scheduler`, `ReferenceLatent`,
+`CLIPLoader type=flux2`, `CFGGuider cfg=1`, `ConditioningZeroOut` as the negative.
+
+| Render (832x1216) | Wall | Peak VRAM |
+| --- | --- | --- |
+| two portraits as references, 4 steps | 6.7-8.8 s | 14.7 GB |
+| one reference, 4 steps | 4.5 s | 14.7 GB |
+| text only, 4 steps | 2.5 s | 14.6 GB |
+| two refs, 8 steps | 10.8 s | 13.2 GB |
+| two refs + 1.5x latent hires pass, 8 sigmas at denoise 0.45 | 11.2 s | 14.4 GB |
+| two refs, anime prompt | 18.1 s | 14.4 GB |
+| two refs, painterly prompt | 11.6 s | 14.4 GB |
+
+- Identity: both Kaelen and Elara recognisable from their portraits, correct genders, jackets and
+  hair carried over, in every variant including anime and painterly. The SDXL+PuLID baseline for
+  the same moment drew two women and lost Kaelen.
+- Quality: prompt adherence far above SDXL Lightning (framing, background action, expression).
+  4-step skin is slightly smooth; the 1.5x hires pass at denoise 0.45 restores pore and leather
+  detail and is the recommended production setting. Denoise 0.6 drifts the background. 8 base
+  steps alone sharpen less than the hires pass for the same cost.
+- Stylised: anime and painterly both hold identity and the style. Anime lost the leather jacket
+  and dressed Kaelen in a shirt; painterly kept everything.
+- Reference images are addressed as "the man from image 1"; the scene prompt contract changes.
+- Same seed reproduces pixel-identically.
+- Detail test with 512 px face crops (Abdul judged the latent hires pass "just bigger, still
+  pixelated", correctly): a latent upsample at low denoise interpolates, it does not add detail.
+  What does: **native resolution**. 1248x1824 in 4 steps took 9.1 s at 13.8 GB peak and is the
+  sharpest of every variant (hair strands, pores, stubble, fabric weave). 1664x2432 took 16.6 s at
+  14.4 GB, sharper still, with a wider environment. ESRGAN 4x-UltraSharp plus a denoise 0.35
+  refine (18.4 s) is close behind but slightly plastic; bicubic latent at denoise 0.55 (15.1 s)
+  adds grain more than detail. Production setting: render natively at 1.5x the shape, no second
+  pass. `4x-UltraSharp.pth` is now in `models/upscale_models/` but unused.
+
+### Built
+
+- Abdul chose: a registry with one config object per model, klein default, switchable without
+  config rewrites. `IMAGE_ENGINES` in `packages/config/src/imageEngines.ts`; `image.engine`
+  (scenes, covers) and `image.portraitEngine` (portraits) select; `image.klein` / `image.sdxl`
+  hold each engine's tunables. Old flat `image.*` values are gone from the stored row (they
+  matched the defaults except cfg 2 and denoise 0.25, both back to default).
+- `RenderParams` is a discriminated union on `engine` in `jobs.ts`; the job carries `render`.
+  Crew dispatches in `processors/diffusion/workflows/{index,klein,sdxl,save}.ts`.
+- Prose prompt dialect for klein in `engine/prompt/prose.ts`: "The man in image 1 is Kaelen
+  Thorne, …" in portrait order, plain sentences, no weights, no negative. SDXL keeps the tag
+  builder untouched.
+- Native `renderScale` (1.5) on klein; dimensions rounded to the 16-px latent grid.
+- Admin Illustration card: two engine pickers (scenes+covers, portraits), quality, then the
+  settings of every engine in use, each under its own heading. `patchOf` stays flat; the image
+  group has an explicit deep patch schema and `mergeRuntimeSettings` deep-merges.
+- Portraits stay on RealVis. Klein's own portraits are real-looking people; prompted toward
+  beauty they get close (`.freebuff/klein/p-elara-k.png`) but Abdul prefers RealVis's idealised
+  faces, and klein copies a reference face faithfully, so the hybrid gives both.
+- Live: a turn on Kaelen rendered 1248x1824 through klein with both SDXL portraits as
+  references; both recognisable, correct outfits.
+- Fixed on the way: the summariser overran `structured.maxTokens` (400) and failed one memory
+  job with a JSON parse error; it now has `MEMORY.summaryMaxTokens` (900).
+
+### Open
+
+- Klein chose full-body over the waist-up shot phrase on the live turn when the action was
+  physical. Shot size is advisory on klein as it was on SDXL.
+- The 8 GB bf16 text encoder sets the peak; an fp8 encoder would return ~4 GB if needed.
+- Two-women renders no longer occur on klein; the SDXL PuLID limit in Wave 7E only applies
+  when `image.engine` is switched back.
+
+## Wave 10 — The cast on screen and in the ear (2026-09-24)
+
+- The client now parses narration with the same `parseAttributedLines` the director uses, with
+  the world cast from `useCharacterSheet` supplied through `CastProvider`. Sentence indices
+  therefore line up with the director's audio indices on ensemble turns, which the old
+  `splitIntoSentences` path only did by luck.
+- `Passage` groups consecutive sentences by speaker: narration is a paragraph; a spoken run gets
+  a portrait chip with the name in small caps, a primary-tinted left rule and italic text. Used
+  by the live stream, the cinema caption, the history entries and the replay overlay. Raw
+  `Name:` prefixes no longer appear anywhere.
+- Elara Voss speaks with `af_heart`, Nia Solace with `af_bella`; the narrator stays on
+  `af_v0nicole`. Verified from the TTS queue: Elara's sentences carry `voice: af_heart`, the
+  narrator's carry the world voice. Set through `PATCH /api/v1/characters/:id`, which the
+  character dialog's voice picker also drives.
+- Cleared Elara from the leaf of Kaelen's story (`cast_json.present = []`), so the next turn
+  re-seeds presence from the narration instead of inheriting the teleport.
+
+### Open
+
+- Two-women renders persist on this world whenever Elara is in shot (PuLID two-subject bleed,
+  see Wave 7E). The speaker treatment makes it more visible, not worse.
+- A protagonist's own name in a `Name:` prefix would attribute to them on the client but never
+  on the director, which excludes the player from speaking. Not observed; noted.
 
 ## Wave 9 — Vector memory (decisions locked 2026-09-24)
 

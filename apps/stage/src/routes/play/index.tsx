@@ -5,6 +5,7 @@ import { AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { EmptyState } from "~/components/common/EmptyState";
+import { CastProvider } from "~/components/story/CastContext";
 import { Composer } from "~/components/story/Composer";
 import { DirectorConsoleModal } from "~/components/story/DirectorConsoleModal";
 import { useFollowScroll } from "~/components/story/useFollowScroll";
@@ -71,8 +72,10 @@ export function Play() {
   const reveal = useSentenceReveal(stageText, {
     cinemaMode: cinemaMode || cinematic,
     playingSentenceIndex: replaying === null ? stream.playingSentenceIndex : null,
+    playingSentenceSeconds: replaying === null ? stream.playingSentenceSeconds : null,
     typing: immersive && !reduceMotion,
     held: stream.holdNarration,
+    cast: sheet.cast,
   });
   const cinematicDone =
     cinematic &&
@@ -146,126 +149,130 @@ export function Play() {
   }
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden pt-(--safe-top) pb-(--safe-bottom)">
-      <SceneBackdrop imageUrl={backdropUrl} />
-      <PlayHeader
-        status={stream.status}
-        worldTitle={sheet.worldTitle}
-        characterName={sheet.name}
-        onBack={() => void navigate(-1)}
-        onOpenMap={() => setMapOpen(true)}
-        onOpenConsole={() => setConsoleOpen(true)}
-      />
+    <CastProvider cast={sheet.cast}>
+      <div className="relative flex h-full flex-col overflow-hidden pt-(--safe-top) pb-(--safe-bottom)">
+        <SceneBackdrop imageUrl={backdropUrl} />
+        <PlayHeader
+          status={stream.status}
+          worldTitle={sheet.worldTitle}
+          characterName={sheet.name}
+          onBack={() => void navigate(-1)}
+          onOpenMap={() => setMapOpen(true)}
+          onOpenConsole={() => setConsoleOpen(true)}
+        />
 
-      {stream.error !== null || compose.error !== null ? (
-        <p
-          role="alert"
-          className="relative shrink-0 border-b border-danger/20 bg-danger/10 px-4 py-2 text-[0.8125rem] text-danger"
+        {stream.error !== null || compose.error !== null ? (
+          <p
+            role="alert"
+            className="relative shrink-0 border-b border-danger/20 bg-danger/10 px-4 py-2 text-[0.8125rem] text-danger"
+          >
+            {stream.error ?? compose.error}
+          </p>
+        ) : null}
+
+        <div
+          ref={follow.ref}
+          onScroll={follow.onScroll}
+          style={{ paddingBottom: cinematic ? undefined : composerSize.height }}
+          className={`scrollbar-none relative flex min-h-0 flex-1 flex-col px-4 ${
+            cinematic ? "overflow-hidden" : "overflow-y-auto"
+          }`}
         >
-          {stream.error ?? compose.error}
-        </p>
-      ) : null}
+          {empty ? (
+            <EmptyState
+              icon={BookOpen01Icon}
+              title="Your story has not begun"
+              body="Describe what your character does and the world will answer."
+            />
+          ) : (
+            <>
+              <PlayScript
+                scrollRef={follow.ref}
+                turns={history}
+                stream={stream}
+                busy={busy}
+                composingScene={compose.modeFor("turn.scene")}
+                onComposeScene={composeScene}
+              />
+              <SceneStage
+                phase={phase}
+                stream={stream}
+                turn={stageTurn}
+                previous={previous}
+                reveal={reveal}
+                busy={busy}
+                reduceMotion={reduceMotion}
+                cinemaMode={cinemaMode}
+                composingScene={compose.modeFor("turn.scene")}
+                onComposeScene={composeScene}
+                onEndCinematic={endCinematic}
+              />
+            </>
+          )}
+        </div>
 
-      <div
-        ref={follow.ref}
-        onScroll={follow.onScroll}
-        style={{ paddingBottom: cinematic ? undefined : composerSize.height }}
-        className={`scrollbar-none relative flex min-h-0 flex-1 flex-col px-4 ${
-          cinematic ? "overflow-hidden" : "overflow-y-auto"
-        }`}
-      >
-        {empty ? (
-          <EmptyState
-            icon={BookOpen01Icon}
-            title="Your story has not begun"
-            body="Describe what your character does and the world will answer."
+        <div
+          ref={composerRef}
+          className="pointer-events-none absolute inset-x-0 bottom-(--safe-bottom) z-20 flex flex-col"
+        >
+          <Composer
+            choices={choices}
+            offered={offered}
+            busy={busy}
+            composing={compose.modeFor("turn.action")}
+            whisper={whisper}
+            composingWhisper={compose.modeFor("turn.whisper")}
+            cast={sheet.cast}
+            isRerollingChoices={stream.isRerollingChoices}
+            onWhisperChange={setWhisper}
+            onComposeWhisper={composeWhisper}
+            onSelectChoice={selectChoice}
+            onSubmitAction={submitAction}
+            onCompose={composeAction}
+            onAbort={stream.abort}
+            onRerollChoices={
+              stageTurn ? () => stream.regenerate(stageTurn.id, "choices") : undefined
+            }
           />
-        ) : (
-          <>
-            <PlayScript
-              scrollRef={follow.ref}
-              turns={history}
-              stream={stream}
-              busy={busy}
-              composingScene={compose.modeFor("turn.scene")}
-              onComposeScene={composeScene}
-            />
-            <SceneStage
-              phase={phase}
-              stream={stream}
-              turn={stageTurn}
-              previous={previous}
-              reveal={reveal}
-              busy={busy}
-              reduceMotion={reduceMotion}
-              cinemaMode={cinemaMode}
-              composingScene={compose.modeFor("turn.scene")}
-              onComposeScene={composeScene}
-              onEndCinematic={endCinematic}
-            />
-          </>
-        )}
-      </div>
+        </div>
 
-      <div
-        ref={composerRef}
-        className="pointer-events-none absolute inset-x-0 bottom-(--safe-bottom) z-20 flex flex-col"
-      >
-        <Composer
-          choices={choices}
-          offered={offered}
-          busy={busy}
-          composing={compose.modeFor("turn.action")}
-          whisper={whisper}
-          composingWhisper={compose.modeFor("turn.whisper")}
-          cast={sheet.cast}
-          isRerollingChoices={stream.isRerollingChoices}
-          onWhisperChange={setWhisper}
-          onComposeWhisper={composeWhisper}
-          onSelectChoice={selectChoice}
-          onSubmitAction={submitAction}
-          onCompose={composeAction}
-          onAbort={stream.abort}
-          onRerollChoices={stageTurn ? () => stream.regenerate(stageTurn.id, "choices") : undefined}
+        <AnimatePresence>
+          {replaying === null ? null : (
+            <ReplayOverlay
+              key={stream.replayKey}
+              turn={replaying}
+              stream={stream}
+              reduceMotion={reduceMotion}
+              typing={immersive && !reduceMotion}
+              onClose={stream.endReplay}
+            />
+          )}
+        </AnimatePresence>
+
+        <DiceOverlay
+          check={stream.pendingCheck}
+          label={sheet.labelOf(stream.pendingCheck?.stat ?? "")}
+          onSettled={stream.acknowledgeDice}
+        />
+
+        <StoryMapModal
+          visible={mapOpen}
+          turns={stream.committedTurns}
+          activeTurnId={stream.activeTurnId}
+          onClose={() => setMapOpen(false)}
+        />
+
+        <DirectorConsoleModal
+          visible={consoleOpen}
+          worldId={sheet.worldId}
+          onClose={() => setConsoleOpen(false)}
+          statDefinitions={sheet.statDefinitions}
+          stats={sheet.stats}
+          affinities={{}}
+          onApply={() => setConsoleOpen(false)}
+          onSaveCheckpoint={(name) => void saveCheckpoint(name)}
         />
       </div>
-
-      <AnimatePresence>
-        {replaying === null ? null : (
-          <ReplayOverlay
-            key={stream.replayKey}
-            turn={replaying}
-            stream={stream}
-            reduceMotion={reduceMotion}
-            typing={immersive && !reduceMotion}
-            onClose={stream.endReplay}
-          />
-        )}
-      </AnimatePresence>
-
-      <DiceOverlay
-        check={stream.pendingCheck}
-        label={sheet.labelOf(stream.pendingCheck?.stat ?? "")}
-        onSettled={stream.acknowledgeDice}
-      />
-
-      <StoryMapModal
-        visible={mapOpen}
-        turns={stream.committedTurns}
-        activeTurnId={stream.activeTurnId}
-        onClose={() => setMapOpen(false)}
-      />
-
-      <DirectorConsoleModal
-        visible={consoleOpen}
-        worldId={sheet.worldId}
-        onClose={() => setConsoleOpen(false)}
-        statDefinitions={sheet.statDefinitions}
-        stats={sheet.stats}
-        affinities={{}}
-        onApply={() => setConsoleOpen(false)}
-        onSaveCheckpoint={(name) => void saveCheckpoint(name)}
-      />
-    </div>
+    </CastProvider>
   );
 }

@@ -6,8 +6,8 @@ import { SettingsGroup } from "~/components/common/SettingsGroup";
 import { Spinner } from "~/components/common/Spinner";
 import { Button } from "~/components/ui/button";
 import { AdminScreen } from "./AdminScreen";
-import { DiffusionPresets } from "./DiffusionPresets";
 import { fieldMeta, GROUP_META } from "./fields";
+import { ImageGroup } from "./ImageGroup";
 import { SettingRow } from "./SettingRow";
 import { useSettings } from "./useSettings";
 
@@ -72,22 +72,19 @@ export function Runtime() {
         : RUNTIME_SETTING_GROUPS.map((group, index) => (
             <SettingsGroup key={group} meta={GROUP_META[group]} index={index} defaultOpen={false}>
               {group === "image" ? (
-                <DiffusionPresets
-                  image={settings.image}
-                  onApply={(values) => update({ image: values })}
-                />
-              ) : null}
-
-              {Object.entries(settings[group]).map(([field, value]) => (
-                <SettingRow
-                  key={field}
-                  field={field}
-                  meta={fieldMeta(group, field)}
-                  value={value as number | boolean | string}
-                  bound={boundFor(group, field)}
-                  onChange={(next) => update({ [group]: { [field]: next } })}
-                />
-              ))}
+                <ImageGroup image={settings.image} onUpdate={update} />
+              ) : (
+                Object.entries(settings[group]).map(([field, value]) => (
+                  <SettingRow
+                    key={field}
+                    field={field}
+                    meta={fieldMeta(group, field)}
+                    value={value as number | boolean | string}
+                    bound={boundFor(group, field)}
+                    onChange={(next) => update({ [group]: { [field]: next } })}
+                  />
+                ))
+              )}
             </SettingsGroup>
           ))}
     </AdminScreen>

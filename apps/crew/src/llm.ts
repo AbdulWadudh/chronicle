@@ -16,6 +16,7 @@ export async function completeStructured<T>(
   schemaName: string,
   schema: unknown,
   parse: (raw: unknown) => T,
+  maxTokens?: number,
 ): Promise<T> {
   const settings = await loadSettings();
   const response = await fetch(`${env().LLM_ENDPOINT}/chat/completions`, {
@@ -26,7 +27,7 @@ export async function completeStructured<T>(
       messages,
       stream: false,
       temperature: settings.structured.temperature,
-      max_tokens: settings.structured.maxTokens,
+      max_tokens: maxTokens ?? settings.structured.maxTokens,
       chat_template_kwargs: { enable_thinking: false },
       response_format: {
         type: "json_schema",

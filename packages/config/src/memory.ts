@@ -27,6 +27,7 @@ export const MEMORY = {
   dimensions: 768,
   prefix: { document: "search_document: ", query: "search_query: " },
   summaryMaxChars: 700,
+  summaryMaxTokens: 900,
   factsPerSummary: 4,
   recallLead: "Earlier in this story, further back than the turns above:",
   summariser: [

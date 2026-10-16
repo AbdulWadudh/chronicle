@@ -82,7 +82,7 @@ export function ChoiceRow({ choice, index, typing, onPress, onHold }: ChoiceRowP
         if (didHoldRef.current) event.preventDefault();
       }}
       style={{ "--rise-index": index } as CSSProperties}
-      className={`pressable rise-in group flex select-none items-start gap-3 rounded-card border-(length:--border-width-card) border-primary/40 bg-card/75 px-4 py-3 text-left shadow-(--shadow-overlay) backdrop-blur-md transition-all hover:border-primary/70 hover:bg-card/85 motion-reduce:transition-none ${
+      className={`pressable rise-in group flex select-none items-start gap-3 rounded-card border-(length:--border-width-card) border-primary/40 bg-card/75 px-4 py-3 text-left backdrop-blur-md transition-all hover:border-primary/70 hover:bg-card/85 motion-reduce:transition-none ${
         isHolding ? "scale-[0.985] border-accent/60 bg-accent/15 ring-1 ring-accent/40" : ""
       }`}
     >

@@ -26,6 +26,7 @@ export interface TurnStream {
   status: SocketStatus;
   phase: PlayPhase;
   replayTurnId: string | null;
+  replayRevealing: boolean;
   replayKey: number;
   sceneReady: boolean;
   holdNarration: boolean;
@@ -36,6 +37,7 @@ export interface TurnStream {
   sceneShape: ImageShape | null;
   pendingCheck: PendingDiceCheck | null;
   playingSentenceIndex: number | null;
+  playingSentenceSeconds: number | null;
   error: string | null;
   isRerollingChoices: boolean;
   hasOlderTurns: boolean;
@@ -89,7 +91,8 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
       ? sceneImageUrl !== null
       : latest === undefined || !painting.isPainting(latest.id);
   const cinematic = useCinematic(activeTurnId, immersive);
-  const holdNarration = cinematic.cinematicTurnId !== null && !sceneReady;
+  const holdNarration =
+    (cinematic.cinematicTurnId !== null && !sceneReady) || cinematic.replayRevealing;
   const audio = useAudioQueue(holdNarration);
 
   const handleMessage = useCallback(
@@ -256,6 +259,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
     status: socket.status,
     phase: cinematic.cinematicTurnId === null ? "decision" : "cinematic",
     replayTurnId: cinematic.replayTurnId,
+    replayRevealing: cinematic.replayRevealing,
     replayKey: cinematic.replayKey,
     sceneReady,
     holdNarration,
@@ -266,6 +270,7 @@ export function useTurnStream(characterId: string | null, immersive: boolean): T
     sceneShape,
     pendingCheck,
     playingSentenceIndex: audio.playingSentenceIndex,
+    playingSentenceSeconds: audio.playingSentenceSeconds,
     error: error ?? history.error ?? socket.lastError,
     isRerollingChoices,
     hasOlderTurns: history.hasOlderTurns,
